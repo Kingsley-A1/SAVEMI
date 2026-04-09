@@ -1,5 +1,7 @@
-import { getMessages } from '../../lib/messages';
-import MessageCard from '../../components/MessageCard';
+import { getMessages } from "../../lib/messages";
+import MessageCard from "../../components/MessageCard";
+
+export const dynamic = 'force-dynamic';
 
 export default async function MessagesPage() {
   const messages = await getMessages();

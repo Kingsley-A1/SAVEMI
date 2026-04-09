@@ -1,9 +1,9 @@
-import type { Prisma } from '@prisma/client';
-import { MessageType as DbMessageType } from '@prisma/client';
-import { isDatabaseConfigured, prisma } from './db';
-import { resolveAssetUrl } from './r2';
+import type { Prisma } from "@prisma/client";
+import { MessageType as DbMessageType } from "@prisma/client";
+import { isDatabaseConfigured, prisma } from "./db";
+import { resolveAssetUrl } from "./r2";
 
-export type MessageType = 'video' | 'audio' | 'image';
+export type MessageType = "video" | "audio" | "image";
 
 export interface Message {
   id: string;
@@ -55,7 +55,7 @@ type MessageRecord = {
   title: string;
   summary: string;
   description: string;
-  type: 'VIDEO' | 'AUDIO' | 'IMAGE';
+  type: "VIDEO" | "AUDIO" | "IMAGE";
   speaker: string | null;
   scriptureReference: string | null;
   eventDate: Date | null;
@@ -68,13 +68,13 @@ type MessageRecord = {
 
 function formatDate(value: Date | null): string {
   if (!value) {
-    return 'Date to be confirmed';
+    return "Date to be confirmed";
   }
 
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   }).format(value);
 }
 
@@ -84,27 +84,29 @@ function mapMessageType(type?: MessageType): DbMessageType | undefined {
   }
 
   switch (type) {
-    case 'video':
+    case "video":
       return DbMessageType.VIDEO;
-    case 'audio':
+    case "audio":
       return DbMessageType.AUDIO;
-    case 'image':
+    case "image":
       return DbMessageType.IMAGE;
     default:
       return undefined;
   }
 }
 
-function buildWhereClause(options: GetMessagesOptions): Prisma.MessageWhereInput {
+function buildWhereClause(
+  options: GetMessagesOptions,
+): Prisma.MessageWhereInput {
   const where: Prisma.MessageWhereInput = {
-    status: 'PUBLISHED',
+    status: "PUBLISHED",
   };
 
   if (options.search) {
     where.OR = [
-      { title: { contains: options.search, mode: 'insensitive' } },
-      { summary: { contains: options.search, mode: 'insensitive' } },
-      { description: { contains: options.search, mode: 'insensitive' } },
+      { title: { contains: options.search, mode: "insensitive" } },
+      { summary: { contains: options.search, mode: "insensitive" } },
+      { description: { contains: options.search, mode: "insensitive" } },
     ];
   }
 
@@ -117,7 +119,7 @@ function buildWhereClause(options: GetMessagesOptions): Prisma.MessageWhereInput
   if (options.speaker) {
     where.speaker = {
       contains: options.speaker,
-      mode: 'insensitive',
+      mode: "insensitive",
     };
   }
 
@@ -137,7 +139,9 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
     title: message.title,
     summary: message.summary,
     description: message.description,
-    date: formatDate(message.eventDate ?? message.publishedAt ?? message.createdAt),
+    date: formatDate(
+      message.eventDate ?? message.publishedAt ?? message.createdAt,
+    ),
     type: message.type.toLowerCase() as MessageType,
     speaker: message.speaker,
     scriptureReference: message.scriptureReference,
@@ -147,37 +151,55 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
   };
 }
 
-export async function getMessages(options: GetMessagesOptions = {}): Promise<Message[]> {
+export async function getMessages(
+  options: GetMessagesOptions = {},
+): Promise<Message[]> {
   if (!isDatabaseConfigured()) {
     return [];
   }
 
-  const records = await prisma.message.findMany({
-    where: buildWhereClause(options),
-    orderBy: [{ publishedAt: 'desc' }, { eventDate: 'desc' }, { createdAt: 'desc' }],
-    take: options.limit ?? 24,
-    select: messageSelect,
-  });
+  try {
+    const records = await prisma.message.findMany({
+      where: buildWhereClause(options),
+      orderBy: [
+        { publishedAt: "desc" },
+        { eventDate: "desc" },
+        { createdAt: "desc" },
+      ],
+      take: options.limit ?? 24,
+      select: messageSelect,
+    });
 
-  return Promise.all(records.map((message) => mapMessage(message as MessageRecord)));
+    return Promise.all(
+      records.map((message) => mapMessage(message as MessageRecord)),
+    );
+  } catch {
+    return [];
+  }
 }
 
-export async function getMessageById(idOrSlug: string): Promise<Message | undefined> {
+export async function getMessageById(
+  idOrSlug: string,
+): Promise<Message | undefined> {
   if (!isDatabaseConfigured()) {
     return undefined;
   }
 
-  const record = await prisma.message.findFirst({
-    where: {
-      status: 'PUBLISHED',
-      OR: [{ id: idOrSlug }, { slug: idOrSlug }],
-    },
-    select: messageSelect,
-  });
+  try {
+    const record = await prisma.message.findFirst({
+      where: {
+        status: "PUBLISHED",
+        OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+      },
+      select: messageSelect,
+    });
 
-  if (!record) {
+    if (!record) {
+      return undefined;
+    }
+
+    return mapMessage(record as MessageRecord);
+  } catch {
     return undefined;
   }
-
-  return mapMessage(record as MessageRecord);
 }

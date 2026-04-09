@@ -1,11 +1,18 @@
-import { NextResponse } from 'next/server';
-import { buildUploadObjectKey, getCompressionPlan, validateUploadRequest } from '../../../lib/media';
-import { createUploadUrl, isStorageConfigured } from '../../../lib/r2';
+import { NextResponse } from "next/server";
+import {
+  buildUploadObjectKey,
+  getCompressionPlan,
+  validateUploadRequest,
+} from "../../../lib/media";
+import { createUploadUrl, isStorageConfigured } from "../../../lib/r2";
 
 export async function POST(request: Request) {
   if (!isStorageConfigured()) {
     return NextResponse.json(
-      { error: 'Storage is not configured. Add the Cloudflare R2 environment variables first.' },
+      {
+        error:
+          "Storage is not configured. Add the Cloudflare R2 environment variables first.",
+      },
       { status: 503 },
     );
   }

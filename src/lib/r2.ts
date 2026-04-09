@@ -1,5 +1,9 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 interface UploadUrlOptions {
   key: string;
@@ -19,19 +23,19 @@ function getR2Endpoint(): string {
 export function isStorageConfigured(): boolean {
   return Boolean(
     process.env.CF_ACCOUNT_ID &&
-      process.env.CF_ACCESS_KEY_ID &&
-      process.env.CF_SECRET_ACCESS_KEY &&
-      process.env.CF_BUCKET,
+    process.env.CF_ACCESS_KEY_ID &&
+    process.env.CF_SECRET_ACCESS_KEY &&
+    process.env.CF_BUCKET,
   );
 }
 
 function getClient(): S3Client {
   if (!isStorageConfigured()) {
-    throw new Error('Cloudflare R2 is not configured.');
+    throw new Error("Cloudflare R2 is not configured.");
   }
 
   return new S3Client({
-    region: 'auto',
+    region: "auto",
     endpoint: getR2Endpoint(),
     credentials: {
       accessKeyId: process.env.CF_ACCESS_KEY_ID!,
@@ -41,7 +45,7 @@ function getClient(): S3Client {
 }
 
 function normalizeObjectKey(key: string): string {
-  return key.replace(/^\/+/, '');
+  return key.replace(/^\/+/, "");
 }
 
 export async function createUploadUrl({
@@ -72,17 +76,23 @@ export async function createDownloadUrl({
   return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
 }
 
-export async function resolveAssetUrl(key: string | null): Promise<string | null> {
+export async function resolveAssetUrl(
+  key: string | null,
+): Promise<string | null> {
   if (!key) {
     return null;
   }
 
-  if (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/')) {
+  if (
+    key.startsWith("http://") ||
+    key.startsWith("https://") ||
+    key.startsWith("/")
+  ) {
     return key;
   }
 
   if (process.env.CF_PUBLIC_BASE_URL) {
-    return `${process.env.CF_PUBLIC_BASE_URL.replace(/\/$/, '')}/${normalizeObjectKey(key)}`;
+    return `${process.env.CF_PUBLIC_BASE_URL.replace(/\/$/, "")}/${normalizeObjectKey(key)}`;
   }
 
   if (!isStorageConfigured()) {

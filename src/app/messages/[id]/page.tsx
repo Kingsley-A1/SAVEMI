@@ -1,7 +1,9 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getMessageById } from '../../../lib/messages';
-import MediaPlayer from '../../../components/MediaPlayer';
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getMessageById } from "../../../lib/messages";
+import MediaPlayer from "../../../components/MediaPlayer";
+
+export const dynamic = 'force-dynamic';
 
 export default async function MessageDetail({
   params,
@@ -30,7 +32,9 @@ export default async function MessageDetail({
           {message.title}
         </h1>
 
-        <p className="text-brand-muted mt-2 text-sm leading-6">{message.summary}</p>
+        <p className="text-brand-muted mt-2 text-sm leading-6">
+          {message.summary}
+        </p>
 
         <dl className="text-brand-muted mt-3 flex flex-col gap-1 text-xs">
           {message.speaker ? (
@@ -50,7 +54,11 @@ export default async function MessageDetail({
 
       {message.downloadUrl ? (
         <div className="site-panel p-4">
-          <MediaPlayer src={message.downloadUrl} type={message.type} title={message.title} />
+          <MediaPlayer
+            src={message.downloadUrl}
+            type={message.type}
+            title={message.title}
+          />
         </div>
       ) : (
         <div className="site-panel p-6 text-center">
@@ -63,9 +71,15 @@ export default async function MessageDetail({
       {message.description ? (
         <div className="site-panel p-4 sm:p-6">
           <h2 className="eyebrow text-brand-primary">Overview</h2>
-          <p className="text-brand-muted mt-2 text-sm leading-6">{message.description}</p>
+          <p className="text-brand-muted mt-2 text-sm leading-6">
+            {message.description}
+          </p>
           {message.downloadUrl ? (
-            <a href={message.downloadUrl} download className="button-tertiary mt-4 inline-flex">
+            <a
+              href={message.downloadUrl}
+              download
+              className="button-tertiary mt-4 inline-flex"
+            >
               Download
             </a>
           ) : null}

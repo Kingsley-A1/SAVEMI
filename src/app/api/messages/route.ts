@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { isDatabaseConfigured } from '../../../lib/db';
-import { getMessages, type MessageType } from '../../../lib/messages';
+import { NextResponse } from "next/server";
+import { isDatabaseConfigured } from "../../../lib/db";
+import { getMessages, type MessageType } from "../../../lib/messages";
 
 function parseLimit(value: string | null): number | undefined {
   if (!value) {
@@ -17,7 +17,7 @@ function parseLimit(value: string | null): number | undefined {
 }
 
 function parseType(value: string | null): MessageType | undefined {
-  if (value === 'video' || value === 'audio' || value === 'image') {
+  if (value === "video" || value === "audio" || value === "image") {
     return value;
   }
 
@@ -27,18 +27,21 @@ function parseType(value: string | null): MessageType | undefined {
 export async function GET(request: Request) {
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
-      { error: 'Message data is not available until the database is configured.' },
+      {
+        error:
+          "Message data is not available until the database is configured.",
+      },
       { status: 503 },
     );
   }
 
   const { searchParams } = new URL(request.url);
   const messages = await getMessages({
-    limit: parseLimit(searchParams.get('limit')),
-    search: searchParams.get('search')?.trim() || undefined,
-    category: searchParams.get('category')?.trim() || undefined,
-    speaker: searchParams.get('speaker')?.trim() || undefined,
-    type: parseType(searchParams.get('type')),
+    limit: parseLimit(searchParams.get("limit")),
+    search: searchParams.get("search")?.trim() || undefined,
+    category: searchParams.get("category")?.trim() || undefined,
+    speaker: searchParams.get("speaker")?.trim() || undefined,
+    type: parseType(searchParams.get("type")),
   });
 
   return NextResponse.json({

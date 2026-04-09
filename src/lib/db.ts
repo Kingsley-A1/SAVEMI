@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 declare global {
   var __savemiPrisma__: PrismaClient | undefined;
@@ -6,7 +6,7 @@ declare global {
 
 export const prisma = globalThis.__savemiPrisma__ ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   globalThis.__savemiPrisma__ = prisma;
 }
 

@@ -1,4 +1,4 @@
-import ContactForm from '../../components/ContactForm';
+import ContactForm from "../../components/ContactForm";
 
 export default function ContactPage() {
   return (
@@ -7,8 +7,8 @@ export default function ContactPage() {
         <p className="eyebrow text-brand-primary">Contact</p>
         <h1 className="section-title mt-2">Reach the ministry</h1>
         <p className="section-copy mt-2">
-          Send a message to the SAVEMI team. All submissions are stored securely for ministry
-          follow-up.
+          Send a message to the SAVEMI team. All submissions are stored securely
+          for ministry follow-up.
         </p>
       </div>
       <ContactForm />

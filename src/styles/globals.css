@@ -10,7 +10,8 @@
   --brand-border: rgba(10, 79, 60, 0.11);
   --brand-text: #16352b;
   --brand-text-soft: #5a7268;
-  --brand-shadow: 0 1px 3px rgba(6, 55, 39, 0.07), 0 1px 2px rgba(6, 55, 39, 0.04);
+  --brand-shadow:
+    0 1px 3px rgba(6, 55, 39, 0.07), 0 1px 2px rgba(6, 55, 39, 0.04);
 }
 
 html {
@@ -87,9 +88,15 @@ a {
   }
 
   /* ── Colour utilities ────────────────────────────────── */
-  .text-brand-primary { color: var(--brand-primary); }
-  .text-brand-muted   { color: var(--brand-text-soft); }
-  .border-brand-muted { border-color: var(--brand-border); }
+  .text-brand-primary {
+    color: var(--brand-primary);
+  }
+  .text-brand-muted {
+    color: var(--brand-text-soft);
+  }
+  .border-brand-muted {
+    border-color: var(--brand-border);
+  }
 
   /* ── Eyebrow label ───────────────────────────────────── */
   .eyebrow {
@@ -101,6 +108,48 @@ a {
     color: var(--brand-primary);
     background: rgba(10, 79, 60, 0.07);
     @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
+  }
+
+  /* ── Video Hero ──────────────────────────────────────── */
+  .video-hero {
+    @apply relative flex min-h-[92vh] w-full items-center justify-center overflow-hidden;
+  }
+
+  .video-hero__video {
+    @apply absolute inset-0 h-full w-full object-cover;
+  }
+
+  .video-hero__fallback {
+    @apply absolute inset-0;
+    background: linear-gradient(
+      160deg,
+      var(--brand-primary-deep) 0%,
+      var(--brand-primary) 50%,
+      var(--brand-primary-soft) 100%
+    );
+  }
+
+  .video-hero__overlay {
+    @apply absolute inset-0;
+    background: linear-gradient(
+      to bottom,
+      rgba(6, 55, 39, 0.68) 0%,
+      rgba(6, 55, 39, 0.5) 50%,
+      rgba(6, 55, 39, 0.72) 100%
+    );
+  }
+
+  /* Hero CTA buttons (on dark video) */
+  .hero-btn-primary {
+    background: #22c55e;
+    color: #052e16;
+    @apply inline-flex items-center justify-center rounded px-6 py-2.5 text-sm font-semibold tracking-wide transition-opacity duration-150 hover:opacity-90 active:opacity-75;
+  }
+
+  .hero-btn-secondary {
+    border: 1.5px solid rgba(74, 222, 128, 0.55);
+    color: #86efac;
+    @apply inline-flex items-center justify-center rounded px-6 py-2.5 text-sm font-semibold tracking-wide backdrop-blur-sm transition-colors duration-150 hover:bg-white/10;
   }
 
   /* ── Form ────────────────────────────────────────────── */
@@ -120,5 +169,4 @@ a {
     border-color: var(--brand-primary);
     box-shadow: 0 0 0 3px rgba(10, 79, 60, 0.09);
   }
-
 }

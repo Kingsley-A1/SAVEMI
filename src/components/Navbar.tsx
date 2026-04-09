@@ -1,11 +1,11 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
 const navigation = [
-  { href: '/', label: 'Home' },
-  { href: '/messages', label: 'Messages' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
+  { href: "/", label: "Home" },
+  { href: "/messages", label: "Messages" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export default function Navbar() {
@@ -13,8 +13,8 @@ export default function Navbar() {
     <header
       className="sticky top-0 z-30 backdrop-blur-sm"
       style={{
-        background: 'var(--brand-surface-strong)',
-        borderBottom: '1px solid var(--brand-border)',
+        background: "var(--brand-surface-strong)",
+        borderBottom: "1px solid var(--brand-border)",
       }}
     >
       <div className="site-container">

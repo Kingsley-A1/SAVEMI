@@ -2,8 +2,8 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: 'var(--brand-surface-strong)',
-        borderTop: '1px solid var(--brand-border)',
+        background: "var(--brand-surface-strong)",
+        borderTop: "1px solid var(--brand-border)",
       }}
     >
       <div className="site-container py-5">
@@ -15,7 +15,8 @@ export default function Footer() {
             </p>
           </div>
           <p className="text-brand-muted">
-            &copy; {new Date().getFullYear()} SAVEMI Ministry. All rights reserved.
+            &copy; {new Date().getFullYear()} SAVEMI Ministry. All rights
+            reserved.
           </p>
         </div>
       </div>
