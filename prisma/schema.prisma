@@ -1,0 +1,65 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Message {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  title              String
+  summary            String
+  description        String
+  type               MessageType
+  status             MessageStatus @default(DRAFT)
+  speaker            String?
+  scriptureReference String?
+  eventDate          DateTime?
+  coverImageKey      String?
+  mediaKey           String?
+  durationSeconds    Int?
+  publishedAt        DateTime?
+  categoryId         String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  category           Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([status, publishedAt])
+  @@index([eventDate])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+}
+
+model ContactSubmission {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  message    String
+  createdAt  DateTime @default(now())
+  respondedAt DateTime?
+
+  @@index([createdAt])
+}
+
+enum MessageType {
+  VIDEO
+  AUDIO
+  IMAGE
+}
+
+enum MessageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}

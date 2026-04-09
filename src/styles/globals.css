@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #0a4f3c;
+  --brand-primary-deep: #063727;
+  --brand-primary-soft: #2f6f5a;
+  --brand-accent: #f1e7c9;
+  --brand-surface: #fffdf7;
+  --brand-surface-strong: rgba(255, 253, 247, 0.98);
+  --brand-border: rgba(10, 79, 60, 0.11);
+  --brand-text: #16352b;
+  --brand-text-soft: #5a7268;
+  --brand-shadow: 0 1px 3px rgba(6, 55, 39, 0.07), 0 1px 2px rgba(6, 55, 39, 0.04);
+}
+
+html {
+  background: #f3efe4;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f6f2e8 0%, #faf8f2 60%, #f5f1e8 100%);
+  color: var(--brand-text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(10, 79, 60, 0.15);
+}
+
+@layer components {
+  /* ── Layout ──────────────────────────────────────────── */
+  .site-container {
+    @apply mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* ── Card / Panel ────────────────────────────────────── */
+  .site-panel {
+    background: var(--brand-surface-strong);
+    border: 1px solid var(--brand-border);
+    box-shadow: var(--brand-shadow);
+    @apply rounded-lg;
+  }
+
+  /* ── Hero banner ─────────────────────────────────────── */
+  .hero-surface {
+    background: linear-gradient(
+      135deg,
+      var(--brand-primary-deep) 0%,
+      var(--brand-primary) 55%,
+      var(--brand-primary-soft) 100%
+    );
+    @apply relative overflow-hidden rounded-lg;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────── */
+  .button-primary {
+    background: var(--brand-primary);
+    color: var(--brand-accent);
+    @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium tracking-wide transition-opacity duration-150 hover:opacity-85 active:opacity-75;
+  }
+
+  .button-secondary {
+    border: 1px solid rgba(241, 231, 201, 0.3);
+    color: var(--brand-accent);
+    @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium tracking-wide transition-colors duration-150 hover:bg-white/10;
+  }
+
+  .button-tertiary {
+    border: 1px solid var(--brand-border);
+    color: var(--brand-primary);
+    @apply inline-flex items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-colors duration-150 hover:bg-white;
+  }
+
+  /* ── Typography ──────────────────────────────────────── */
+  .section-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+
+  .section-copy {
+    color: var(--brand-text-soft);
+    @apply max-w-2xl text-sm leading-6 sm:text-base sm:leading-7;
+  }
+
+  /* ── Colour utilities ────────────────────────────────── */
+  .text-brand-primary { color: var(--brand-primary); }
+  .text-brand-muted   { color: var(--brand-text-soft); }
+  .border-brand-muted { border-color: var(--brand-border); }
+
+  /* ── Eyebrow label ───────────────────────────────────── */
+  .eyebrow {
+    @apply inline-block text-xs font-semibold uppercase tracking-[0.18em];
+  }
+
+  /* ── Type / category badge ───────────────────────────── */
+  .type-badge {
+    color: var(--brand-primary);
+    background: rgba(10, 79, 60, 0.07);
+    @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
+  }
+
+  /* ── Form ────────────────────────────────────────────── */
+  .field-label {
+    color: var(--brand-text);
+    @apply mb-1.5 block text-sm font-medium;
+  }
+
+  .field-input {
+    background: white;
+    border: 1px solid var(--brand-border);
+    color: var(--brand-text);
+    @apply block w-full rounded px-3 py-2 text-sm outline-none transition-colors;
+  }
+
+  .field-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(10, 79, 60, 0.09);
+  }
+
+}
