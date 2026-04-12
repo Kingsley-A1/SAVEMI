@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "../styles/globals.css";
+import AppShell from "../components/AppShell";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -15,12 +16,10 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body className="flex min-h-screen flex-col antialiased">
-        <Navbar />
-        <main className="flex-1">
-          <div className="site-container py-6 sm:py-8">{children}</div>
-        </main>
-        <Footer />
+      <body className="min-h-screen antialiased">
+        <AppShell header={<Navbar />} footer={<Footer />}>
+          {children}
+        </AppShell>
       </body>
     </html>
   );

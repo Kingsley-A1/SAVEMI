@@ -16,6 +16,7 @@ model Message {
   description        String
   type               MessageType
   status             MessageStatus @default(DRAFT)
+  placement          MessagePlacement @default(STANDARD)
   speaker            String?
   scriptureReference String?
   eventDate          DateTime?
@@ -71,4 +72,9 @@ enum MessageStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum MessagePlacement {
+  STANDARD
+  HERO
 }

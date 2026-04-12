@@ -4,24 +4,37 @@ import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogIn, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, UserPlus } from "lucide-react";
 
-export default function AdminLoginPage() {
+export default function AdminRegisterPage() {
   const router = useRouter();
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/admin";
-  const justRegistered = params.get("registered") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setError("");
     setLoading(true);
+
+    const response = await fetch("/api/admin/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setLoading(false);
+      setError(payload.error ?? "Unable to create admin account.");
+      return;
+    }
 
     const result = await signIn("credentials", {
       email,
@@ -32,7 +45,7 @@ export default function AdminLoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password.");
+      router.replace("/admin/login?registered=1");
       return;
     }
 
@@ -40,30 +53,16 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f6f2e8] px-4">
+    <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
       <div className="site-panel w-full max-w-sm p-6 sm:p-8">
-        {/* Logotype */}
         <div className="mb-6 text-center">
           <p className="eyebrow text-brand-primary">SAVEMI</p>
-          <h1 className="mt-1 text-xl font-semibold">Admin Login</h1>
+          <h1 className="mt-1 text-xl font-semibold">Register Admin</h1>
           <p className="text-brand-muted mt-1 text-xs leading-5">
-            Sign in with your registered email and the shared 6-character
-            ministry access code.
+            Use your email address and the shared 6-character ministry access
+            code.
           </p>
         </div>
-
-        {justRegistered ? (
-          <p
-            className="mb-4 rounded px-3 py-2 text-xs"
-            style={{
-              background: "rgba(22,163,74,0.08)",
-              color: "#15803d",
-              border: "1px solid rgba(22,163,74,0.18)",
-            }}
-          >
-            Admin account created. Sign in with the same shared password.
-          </p>
-        ) : null}
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
@@ -77,38 +76,38 @@ export default function AdminLoginPage() {
               required
               className="field-input"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               disabled={loading}
             />
           </div>
 
           <div>
             <label htmlFor="password" className="field-label">
-              Password
+              Shared Password
             </label>
             <div className="relative">
               <input
                 id="password"
-                type={showPw ? "text" : "password"}
-                autoComplete="current-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
                 required
                 className="field-input pr-10"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 disabled={loading}
               />
               <button
                 type="button"
-                onClick={() => setShowPw((v) => !v)}
+                onClick={() => setShowPassword((value) => !value)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5a7268]"
-                aria-label={showPw ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
-          {error && (
+          {error ? (
             <p
               role="alert"
               className="rounded px-3 py-2 text-xs"
@@ -120,25 +119,22 @@ export default function AdminLoginPage() {
             >
               {error}
             </p>
-          )}
+          ) : null}
 
           <button
             type="submit"
             className="button-primary w-full"
             disabled={loading}
           >
-            <LogIn size={15} className="mr-1.5" />
-            {loading ? "Signing in…" : "Sign in"}
+            <UserPlus size={15} className="mr-1.5" />
+            {loading ? "Creating account..." : "Register admin"}
           </button>
         </form>
 
         <p className="text-brand-muted mt-5 text-center text-xs">
-          Need a new admin account?{" "}
-          <Link
-            href={`/admin/register?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="text-brand-primary underline"
-          >
-            Register here
+          Already registered?{" "}
+          <Link href="/admin/login" className="text-brand-primary underline">
+            Sign in here
           </Link>
         </p>
       </div>

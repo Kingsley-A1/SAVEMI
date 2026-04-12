@@ -1,8 +1,15 @@
-import { prisma, isDatabaseConfigured } from '../../lib/db';
-import Link from 'next/link';
-import { MessageSquare, Mail, FileEdit, PlusCircle } from 'lucide-react';
+import { prisma, isDatabaseConfigured } from "../../lib/db";
+import Link from "next/link";
+import {
+  MessageSquare,
+  Mail,
+  FileEdit,
+  PlusCircle,
+  UserPlus,
+  Clapperboard,
+} from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function getStats() {
   if (!isDatabaseConfigured()) {
@@ -11,8 +18,8 @@ async function getStats() {
   try {
     const [total, published, drafts, contacts] = await Promise.all([
       prisma.message.count(),
-      prisma.message.count({ where: { status: 'PUBLISHED' } }),
-      prisma.message.count({ where: { status: 'DRAFT' } }),
+      prisma.message.count({ where: { status: "PUBLISHED" } }),
+      prisma.message.count({ where: { status: "DRAFT" } }),
       prisma.contactSubmission.count(),
     ]);
     return { total, published, drafts, contacts };
@@ -26,28 +33,28 @@ export default async function AdminDashboard() {
 
   const cards = [
     {
-      label: 'Total Messages',
+      label: "Total Messages",
       value: stats.total,
       icon: MessageSquare,
-      color: 'var(--brand-primary)',
+      color: "var(--brand-primary)",
     },
     {
-      label: 'Published',
+      label: "Published",
       value: stats.published,
       icon: FileEdit,
-      color: '#16a34a',
+      color: "#16a34a",
     },
     {
-      label: 'Drafts',
+      label: "Drafts",
       value: stats.drafts,
       icon: FileEdit,
-      color: '#d97706',
+      color: "#d97706",
     },
     {
-      label: 'Contact Submissions',
+      label: "Contact Submissions",
       value: stats.contacts,
       icon: Mail,
-      color: '#0369a1',
+      color: "#0369a1",
     },
   ];
 
@@ -83,6 +90,20 @@ export default async function AdminDashboard() {
           >
             <PlusCircle size={14} />
             New Message
+          </Link>
+          <Link
+            href="/admin/messages/new?placement=HERO"
+            className="button-tertiary flex items-center gap-1.5"
+          >
+            <Clapperboard size={14} />
+            New Hero Media
+          </Link>
+          <Link
+            href="/admin/register"
+            className="button-tertiary flex items-center gap-1.5"
+          >
+            <UserPlus size={14} />
+            Register Admin
           </Link>
           <Link href="/admin/messages" className="button-tertiary">
             View All Messages

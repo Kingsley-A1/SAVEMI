@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getMessageById } from "../../../lib/messages";
 import MediaPlayer from "../../../components/MediaPlayer";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function MessageDetail({
   params,

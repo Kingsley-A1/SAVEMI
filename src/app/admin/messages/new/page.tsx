@@ -1,108 +1,136 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Upload, Save, X } from 'lucide-react';
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Upload, Save, X } from "lucide-react";
 
-const MESSAGE_TYPES = ['VIDEO', 'AUDIO', 'IMAGE'] as const;
-const MESSAGE_STATUSES = ['DRAFT', 'PUBLISHED'] as const;
+const MESSAGE_TYPES = ["VIDEO", "AUDIO", "IMAGE"] as const;
+const MESSAGE_PLACEMENTS = ["STANDARD", "HERO"] as const;
+const MESSAGE_STATUSES = ["DRAFT", "PUBLISHED"] as const;
 
-type UploadState = 'idle' | 'uploading' | 'done' | 'error';
+type UploadState = "idle" | "uploading" | "done" | "error";
 
 export default function NewMessagePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialPlacement = searchParams.get("placement") === "HERO"
+    ? "HERO"
+    : "STANDARD";
 
   const [form, setForm] = useState({
-    title: '',
-    slug: '',
-    summary: '',
-    description: '',
-    type: 'VIDEO' as (typeof MESSAGE_TYPES)[number],
-    status: 'DRAFT' as (typeof MESSAGE_STATUSES)[number],
-    speaker: '',
-    scriptureReference: '',
-    eventDate: '',
-    durationSeconds: '',
+    title: "",
+    slug: "",
+    summary: "",
+    description: "",
+    type: "VIDEO" as (typeof MESSAGE_TYPES)[number],
+    placement: initialPlacement as (typeof MESSAGE_PLACEMENTS)[number],
+    status: "DRAFT" as (typeof MESSAGE_STATUSES)[number],
+    speaker: "",
+    scriptureReference: "",
+    eventDate: "",
+    durationSeconds: "",
   });
 
   const [file, setFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [uploadState, setUploadState] = useState<UploadState>('idle');
-  const [mediaKey, setMediaKey] = useState('');
-  const [coverKey, setCoverKey] = useState('');
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [mediaKey, setMediaKey] = useState("");
+  const [coverKey, setCoverKey] = useState("");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   function slugify(v: string) {
     return v
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
       .slice(0, 80);
   }
 
   function handleChange(
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) {
     const { name, value } = e.target;
     setForm((prev) => {
       const next = { ...prev, [name]: value };
-      if (name === 'title' && !prev.slug) {
+      if (name === "title" && !prev.slug) {
         next.slug = slugify(value);
+      }
+      if (name === "type" && value === "AUDIO") {
+        next.placement = "STANDARD";
       }
       return next;
     });
   }
 
-  async function uploadFile(f: File, field: 'media' | 'cover') {
-    setUploadState('uploading');
+  async function uploadFile(f: File, field: "media" | "cover") {
+    setUploadState("uploading");
     try {
-      const ext = f.name.split('.').pop() ?? 'bin';
-      const prefix = field === 'media' ? 'messages' : 'covers';
-      const res = await fetch('/api/upload-url', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const res = await fetch("/api/upload-url", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          filename: `${prefix}/${Date.now()}.${ext}`,
+          fileName: `${form.placement.toLowerCase()}-${field}-${Date.now()}-${f.name}`,
           contentType: f.type,
+          contentLength: f.size,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? 'Upload URL failed');
+        throw new Error(data.error ?? "Upload URL failed");
       }
 
-      const { uploadUrl, key } = await res.json();
+      const payload = await res.json();
+      const uploadUrl = payload?.data?.uploadUrl;
+      const objectKey = payload?.data?.objectKey;
+
+      if (!uploadUrl || !objectKey) {
+        throw new Error("Upload URL failed");
+      }
 
       const put = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'content-type': f.type },
+        method: "PUT",
+        headers: { "content-type": f.type },
         body: f,
       });
 
-      if (!put.ok) throw new Error('Upload to storage failed');
+      if (!put.ok) throw new Error("Upload to storage failed");
 
-      if (field === 'media') setMediaKey(key);
-      else setCoverKey(key);
+      if (field === "media") setMediaKey(objectKey);
+      else setCoverKey(objectKey);
 
-      setUploadState('done');
+      setUploadState("done");
+      return objectKey as string;
     } catch (err) {
-      setUploadState('error');
-      setError(err instanceof Error ? err.message : 'Upload error');
+      setUploadState("error");
+      setError(err instanceof Error ? err.message : "Upload error");
+      return null;
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     setSaving(true);
 
     // Upload files first if selected
-    if (file && !mediaKey) await uploadFile(file, 'media');
-    if (coverFile && !coverKey) await uploadFile(coverFile, 'cover');
+    let nextMediaKey = mediaKey;
+    let nextCoverKey = coverKey;
+
+    if (file && !nextMediaKey) {
+      nextMediaKey = (await uploadFile(file, "media")) ?? "";
+    }
+    if (coverFile && !nextCoverKey) {
+      nextCoverKey = (await uploadFile(coverFile, "cover")) ?? "";
+    }
+
+    if (file && !nextMediaKey) {
+      setSaving(false);
+      return;
+    }
 
     const payload = {
       ...form,
@@ -110,13 +138,13 @@ export default function NewMessagePage() {
         ? Number(form.durationSeconds)
         : null,
       eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : null,
-      mediaKey: mediaKey || null,
-      coverImageKey: coverKey || null,
+      mediaKey: nextMediaKey || null,
+      coverImageKey: nextCoverKey || null,
     };
 
-    const res = await fetch('/api/admin/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
+    const res = await fetch("/api/admin/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -124,21 +152,21 @@ export default function NewMessagePage() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? 'Failed to save message.');
+      setError(data.error ?? "Failed to save message.");
       return;
     }
 
-    router.push('/admin/messages');
+    router.push("/admin/messages");
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">New Message</h1>
         <button
           type="button"
           onClick={() => router.back()}
-          className="button-tertiary flex items-center gap-1.5"
+          className="button-tertiary inline-flex items-center gap-1.5 self-start"
         >
           <X size={14} /> Cancel
         </button>
@@ -231,6 +259,29 @@ export default function NewMessagePage() {
             </div>
 
             <div>
+              <label htmlFor="placement" className="field-label">
+                Placement *
+              </label>
+              <select
+                id="placement"
+                name="placement"
+                className="field-input"
+                value={form.placement}
+                onChange={handleChange}
+                disabled={form.type === "AUDIO"}
+              >
+                {MESSAGE_PLACEMENTS.map((placement) => (
+                  <option key={placement} value={placement}>
+                    {placement}
+                  </option>
+                ))}
+              </select>
+              <p className="text-brand-muted mt-1 text-xs">
+                Hero placement is available for video and image uploads only.
+              </p>
+            </div>
+
+            <div>
               <label htmlFor="status" className="field-label">
                 Status *
               </label>
@@ -312,17 +363,17 @@ export default function NewMessagePage() {
 
           <div>
             <label className="field-label">
-              {form.type === 'IMAGE' ? 'Image File' : `${form.type} File`}
+              {form.type === "IMAGE" ? "Image File" : `${form.type} File`}
             </label>
             <div
               className="rounded border border-dashed px-4 py-4 text-center text-sm"
               style={{
-                borderColor: 'var(--brand-border)',
-                color: 'var(--brand-text-soft)',
+                borderColor: "var(--brand-border)",
+                color: "var(--brand-text-soft)",
               }}
             >
               {mediaKey ? (
-                <p className="text-xs" style={{ color: '#16a34a' }}>
+                <p className="text-xs" style={{ color: "#16a34a" }}>
                   ✓ File uploaded
                 </p>
               ) : (
@@ -334,18 +385,16 @@ export default function NewMessagePage() {
                       type="file"
                       className="sr-only"
                       accept={
-                        form.type === 'VIDEO'
-                          ? 'video/*'
-                          : form.type === 'AUDIO'
-                          ? 'audio/*'
-                          : 'image/*'
+                        form.type === "VIDEO"
+                          ? "video/*"
+                          : form.type === "AUDIO"
+                            ? "audio/*"
+                            : "image/*"
                       }
                       onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                     />
                   </label>
-                  {file && (
-                    <p className="mt-1 text-xs">{file.name}</p>
-                  )}
+                  {file && <p className="mt-1 text-xs">{file.name}</p>}
                 </>
               )}
             </div>
@@ -356,12 +405,12 @@ export default function NewMessagePage() {
             <div
               className="rounded border border-dashed px-4 py-4 text-center text-sm"
               style={{
-                borderColor: 'var(--brand-border)',
-                color: 'var(--brand-text-soft)',
+                borderColor: "var(--brand-border)",
+                color: "var(--brand-text-soft)",
               }}
             >
               {coverKey ? (
-                <p className="text-xs" style={{ color: '#16a34a' }}>
+                <p className="text-xs" style={{ color: "#16a34a" }}>
                   ✓ Cover uploaded
                 </p>
               ) : (
@@ -386,8 +435,8 @@ export default function NewMessagePage() {
             </div>
           </div>
 
-          {uploadState === 'uploading' && (
-            <p className="text-xs" style={{ color: 'var(--brand-text-soft)' }}>
+          {uploadState === "uploading" && (
+            <p className="text-xs" style={{ color: "var(--brand-text-soft)" }}>
               Uploading…
             </p>
           )}
@@ -397,9 +446,9 @@ export default function NewMessagePage() {
           <p
             className="rounded px-3 py-2 text-xs"
             style={{
-              background: 'rgba(220,38,38,0.07)',
-              color: '#b91c1c',
-              border: '1px solid rgba(220,38,38,0.2)',
+              background: "rgba(220,38,38,0.07)",
+              color: "#b91c1c",
+              border: "1px solid rgba(220,38,38,0.2)",
             }}
           >
             {error}
@@ -417,10 +466,10 @@ export default function NewMessagePage() {
           <button
             type="submit"
             className="button-primary flex items-center gap-1.5"
-            disabled={saving || uploadState === 'uploading'}
+            disabled={saving || uploadState === "uploading"}
           >
             <Save size={14} />
-            {saving ? 'Saving…' : 'Save Message'}
+            {saving ? "Saving..." : "Save Message"}
           </button>
         </div>
       </form>

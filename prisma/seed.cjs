@@ -3,6 +3,29 @@ const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
+function getConfiguredAdminAccessCode() {
+  const candidate = (
+    process.env.ADMIN_ACCESS_CODE || process.env.ADMIN_PASSWORD || ""
+  ).trim();
+
+  return candidate.length === 6 ? candidate : null;
+}
+
+function formatAdminNameFromEmail(email) {
+  const localPart = String(email).split("@")[0]?.trim();
+
+  if (!localPart) {
+    return "SAVEMI Admin";
+  }
+
+  return localPart
+    .replace(/[._-]+/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 async function main() {
   await prisma.message.deleteMany();
   await prisma.category.deleteMany();
@@ -31,6 +54,7 @@ async function main() {
           "A reflective message shaped to slow the pace of the evening and re-center attention on God's care, hope, and Sabbath peace.",
         type: MessageType.VIDEO,
         status: MessageStatus.PUBLISHED,
+        placement: "STANDARD",
         speaker: "SAVEMI Ministry Team",
         scriptureReference: "Psalm 4:8",
         eventDate: new Date("2026-02-10T18:30:00.000Z"),
@@ -50,6 +74,7 @@ async function main() {
           "A short set of devotional hymns intended to support quiet reflection and spiritual restoration as Sabbath worship approaches.",
         type: MessageType.AUDIO,
         status: MessageStatus.PUBLISHED,
+        placement: "STANDARD",
         speaker: "SAVEMI Music Ministry",
         scriptureReference: "Psalm 92:1-2",
         eventDate: new Date("2026-02-17T18:30:00.000Z"),
@@ -69,6 +94,7 @@ async function main() {
           "A contemplative visual piece that pairs scripture-centered reflection with the quiet atmosphere of the SAVEMI visual identity.",
         type: MessageType.IMAGE,
         status: MessageStatus.PUBLISHED,
+        placement: "STANDARD",
         speaker: "SAVEMI Creative Team",
         scriptureReference: "Matthew 11:28",
         eventDate: new Date("2026-01-30T18:30:00.000Z"),
@@ -92,19 +118,22 @@ main()
   });
 
 async function seedAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL || "deblessedking001@gmail.com";
-  const adminPassword = process.env.ADMIN_PASSWORD || "Kingsley.A1";
-  const adminName = process.env.ADMIN_NAME || "SAVEMI Admin";
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@savemi.org").trim().toLowerCase();
+  const adminPassword = getConfiguredAdminAccessCode();
+  const adminName = process.env.ADMIN_NAME || formatAdminNameFromEmail(adminEmail);
 
-  const existing = await prisma.adminUser.findUnique({ where: { email: adminEmail } });
-  if (existing) {
-    console.log("Admin user already exists:", adminEmail);
+  if (!adminPassword) {
+    console.log(
+      "Skipping admin seed: set ADMIN_ACCESS_CODE or ADMIN_PASSWORD to an exact 6-character value.",
+    );
     return;
   }
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.adminUser.create({
-    data: { email: adminEmail, passwordHash, name: adminName },
+  await prisma.adminUser.upsert({
+    where: { email: adminEmail },
+    update: { passwordHash, name: adminName },
+    create: { email: adminEmail, passwordHash, name: adminName },
   });
-  console.log("Admin user created:", adminEmail);
+  console.log("Admin user synced:", adminEmail);
 }

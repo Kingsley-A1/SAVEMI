@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Play, Volume2, ArrowRight } from 'lucide-react';
+import Link from "next/link";
+import { Play, Volume2, ArrowRight } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -11,7 +11,7 @@ interface MediaItem {
   scriptureReference?: string | null;
   coverImageKey?: string | null;
   slug: string;
-  type: 'VIDEO' | 'AUDIO';
+  type: "VIDEO" | "AUDIO";
 }
 
 function VideoCard({ item }: { item: MediaItem }) {
@@ -20,7 +20,7 @@ function VideoCard({ item }: { item: MediaItem }) {
       {/* Thumbnail placeholder */}
       <div
         className="relative aspect-video w-full overflow-hidden"
-        style={{ background: 'var(--brand-primary-deep)' }}
+        style={{ background: "var(--brand-primary-deep)" }}
       >
         {item.coverImageKey ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -34,7 +34,7 @@ function VideoCard({ item }: { item: MediaItem }) {
             <Play
               size={36}
               className="opacity-40"
-              style={{ color: '#4ade80' }}
+              style={{ color: "#4ade80" }}
             />
           </div>
         )}
@@ -72,28 +72,28 @@ function VideoCard({ item }: { item: MediaItem }) {
 const PLACEHOLDER_VIDEOS: MediaItem[] = Array.from({ length: 8 }, (_, i) => ({
   id: `v${i + 1}`,
   slug: `video-message-${i + 1}`,
-  type: 'VIDEO' as const,
+  type: "VIDEO" as const,
   title: [
-    'The Rest That God Provides',
-    'Be Still and Know',
-    'Evening Grace',
-    'Renewing the Weary Soul',
-    'Light at Eventide',
+    "The Rest That God Provides",
+    "Be Still and Know",
+    "Evening Grace",
+    "Renewing the Weary Soul",
+    "Light at Eventide",
     "The Shepherd's Rest",
-    'Sabbath Peace',
-    'Coming Home',
+    "Sabbath Peace",
+    "Coming Home",
   ][i],
-  summary: 'A devotional message for the close of day.',
-  speaker: 'The Covener',
+  summary: "A devotional message for the close of day.",
+  speaker: "The Covener",
   scriptureReference: [
-    'Matthew 11:28',
-    'Psalm 46:10',
-    'Isaiah 40:31',
-    'Psalm 23:2–3',
-    'John 14:27',
-    'Psalm 62:1',
-    'Exodus 20:8–11',
-    'Luke 15:20',
+    "Matthew 11:28",
+    "Psalm 46:10",
+    "Isaiah 40:31",
+    "Psalm 23:2–3",
+    "John 14:27",
+    "Psalm 62:1",
+    "Exodus 20:8–11",
+    "Luke 15:20",
   ][i],
   coverImageKey: null,
 }));
@@ -103,7 +103,8 @@ export default function FeaturedVideos({
 }: {
   items?: MediaItem[];
 }) {
-  const displayItems = items.length > 0 ? items.slice(0, 8) : PLACEHOLDER_VIDEOS;
+  const displayItems =
+    items.length > 0 ? items.slice(0, 8) : PLACEHOLDER_VIDEOS;
 
   return (
     <section>

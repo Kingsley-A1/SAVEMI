@@ -1,9 +1,13 @@
 import type { Prisma } from "@prisma/client";
-import { MessageType as DbMessageType } from "@prisma/client";
+import {
+  MessagePlacement as DbMessagePlacement,
+  MessageType as DbMessageType,
+} from "@prisma/client";
 import { isDatabaseConfigured, prisma } from "./db";
 import { resolveAssetUrl } from "./r2";
 
 export type MessageType = "video" | "audio" | "image";
+export type MessagePlacement = "standard" | "hero";
 
 export interface Message {
   id: string;
@@ -13,6 +17,7 @@ export interface Message {
   description: string;
   date: string;
   type: MessageType;
+  placement: MessagePlacement;
   speaker: string | null;
   scriptureReference: string | null;
   category: string | null;
@@ -26,6 +31,7 @@ export interface GetMessagesOptions {
   category?: string;
   speaker?: string;
   type?: MessageType;
+  placement?: MessagePlacement;
 }
 
 const messageSelect = {
@@ -35,6 +41,7 @@ const messageSelect = {
   summary: true,
   description: true,
   type: true,
+  placement: true,
   speaker: true,
   scriptureReference: true,
   eventDate: true,
@@ -56,6 +63,7 @@ type MessageRecord = {
   summary: string;
   description: string;
   type: "VIDEO" | "AUDIO" | "IMAGE";
+  placement: "STANDARD" | "HERO";
   speaker: string | null;
   scriptureReference: string | null;
   eventDate: Date | null;
@@ -95,11 +103,31 @@ function mapMessageType(type?: MessageType): DbMessageType | undefined {
   }
 }
 
+function mapMessagePlacement(
+  placement?: MessagePlacement,
+): DbMessagePlacement | undefined {
+  if (!placement) {
+    return undefined;
+  }
+
+  switch (placement) {
+    case "hero":
+      return DbMessagePlacement.HERO;
+    case "standard":
+      return DbMessagePlacement.STANDARD;
+    default:
+      return undefined;
+  }
+}
+
 function buildWhereClause(
   options: GetMessagesOptions,
 ): Prisma.MessageWhereInput {
   const where: Prisma.MessageWhereInput = {
     status: "PUBLISHED",
+    placement: options.placement
+      ? mapMessagePlacement(options.placement)
+      : DbMessagePlacement.STANDARD,
   };
 
   if (options.search) {
@@ -143,6 +171,7 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
       message.eventDate ?? message.publishedAt ?? message.createdAt,
     ),
     type: message.type.toLowerCase() as MessageType,
+    placement: message.placement.toLowerCase() as MessagePlacement,
     speaker: message.speaker,
     scriptureReference: message.scriptureReference,
     category: message.category?.name ?? null,
@@ -191,6 +220,35 @@ export async function getMessageById(
         status: "PUBLISHED",
         OR: [{ id: idOrSlug }, { slug: idOrSlug }],
       },
+      select: messageSelect,
+    });
+
+    if (!record) {
+      return undefined;
+    }
+
+    return mapMessage(record as MessageRecord);
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getHeroMessage(): Promise<Message | undefined> {
+  if (!isDatabaseConfigured()) {
+    return undefined;
+  }
+
+  try {
+    const record = await prisma.message.findFirst({
+      where: {
+        status: "PUBLISHED",
+        placement: DbMessagePlacement.HERO,
+      },
+      orderBy: [
+        { publishedAt: "desc" },
+        { eventDate: "desc" },
+        { createdAt: "desc" },
+      ],
       select: messageSelect,
     });
 

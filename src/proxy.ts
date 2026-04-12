@@ -7,6 +7,8 @@ export default auth((req) => {
   // Allow login page and auth API through without a session
   if (
     pathname === '/admin/login' ||
+    pathname === '/admin/register' ||
+    pathname === '/api/admin/register' ||
     pathname.startsWith('/api/auth')
   ) {
     return NextResponse.next();

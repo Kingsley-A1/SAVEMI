@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Headphones, ArrowRight } from 'lucide-react';
+import Link from "next/link";
+import { Headphones, ArrowRight } from "lucide-react";
 
 interface AudioItem {
   id: string;
@@ -16,7 +16,7 @@ interface AudioItem {
 function formatDuration(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function AudioCard({ item }: { item: AudioItem }) {
@@ -25,9 +25,9 @@ function AudioCard({ item }: { item: AudioItem }) {
       {/* Icon */}
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded"
-        style={{ background: 'rgba(10,79,60,0.08)' }}
+        style={{ background: "rgba(10,79,60,0.08)" }}
       >
-        <Headphones size={19} style={{ color: 'var(--brand-primary)' }} />
+        <Headphones size={19} style={{ color: "var(--brand-primary)" }} />
       </div>
 
       {/* Content */}
@@ -65,22 +65,22 @@ const PLACEHOLDER_AUDIOS: AudioItem[] = Array.from({ length: 6 }, (_, i) => ({
   id: `a${i + 1}`,
   slug: `audio-message-${i + 1}`,
   title: [
-    'Draw Near to God',
-    'The Still Small Voice',
-    'Vesper Prayers',
-    'Songs of the Night',
-    'Eventide Devotion',
-    'Rest in His Presence',
+    "Draw Near to God",
+    "The Still Small Voice",
+    "Vesper Prayers",
+    "Songs of the Night",
+    "Eventide Devotion",
+    "Rest in His Presence",
   ][i],
-  summary: 'A quiet audio devotional for Sabbath evening.',
-  speaker: 'The Covener',
+  summary: "A quiet audio devotional for Sabbath evening.",
+  speaker: "The Covener",
   scriptureReference: [
-    'James 4:8',
-    '1 Kings 19:12',
-    'Psalm 141:2',
-    'Psalm 77:6',
-    'Psalm 104:23',
-    'Matthew 11:29',
+    "James 4:8",
+    "1 Kings 19:12",
+    "Psalm 141:2",
+    "Psalm 77:6",
+    "Psalm 104:23",
+    "Matthew 11:29",
   ][i],
   durationSeconds: [1320, 1560, 980, 1140, 1240, 1080][i],
 }));
@@ -90,7 +90,8 @@ export default function FeaturedAudios({
 }: {
   items?: AudioItem[];
 }) {
-  const displayItems = items.length > 0 ? items.slice(0, 6) : PLACEHOLDER_AUDIOS;
+  const displayItems =
+    items.length > 0 ? items.slice(0, 6) : PLACEHOLDER_AUDIOS;
 
   return (
     <section>
