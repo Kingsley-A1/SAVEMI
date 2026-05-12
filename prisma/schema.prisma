@@ -22,7 +22,7 @@ model Message {
   eventDate          DateTime?
   coverImageKey      String?
   mediaKey           String?
-  durationSeconds    Int?
+  durationSeconds    BigInt?
   publishedAt        DateTime?
   categoryId         String?
   createdAt          DateTime      @default(now())
@@ -53,6 +53,48 @@ model ContactSubmission {
   @@index([createdAt])
 }
 
+model Book {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  tagline      String
+  description  String
+  author       String
+  coverImageKey String?
+  downloadUrl  String?
+  purchaseUrl  String?
+  priceLabel   String?
+  format       String?
+  pageCount    Int?
+  featured     Boolean       @default(false)
+  availability BookAvailability @default(FREE)
+  status       MessageStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([availability])
+}
+
+model Quote {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  title              String
+  text               String
+  attribution        String?
+  source             String?
+  scriptureReference String?
+  imageKey           String?
+  featured           Boolean       @default(false)
+  status             MessageStatus @default(DRAFT)
+  publishedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status, publishedAt])
+}
+
 model AdminUser {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -77,4 +119,9 @@ enum MessageStatus {
 enum MessagePlacement {
   STANDARD
   HERO
+}
+
+enum BookAvailability {
+  FREE
+  PAID
 }
