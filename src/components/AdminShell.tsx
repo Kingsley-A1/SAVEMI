@@ -18,7 +18,8 @@ export default function AdminShell({
   const pathname = usePathname();
   const isLoginPage = pathname === "/admin/login";
   const isRegisterPage = pathname === "/admin/register";
-  const showStandaloneAuthPage = isLoginPage || (!isAuthenticated && isRegisterPage);
+  const showStandaloneAuthPage =
+    isLoginPage || (!isAuthenticated && isRegisterPage);
 
   if (showStandaloneAuthPage) {
     return <div className="min-h-screen bg-[#f6f2e8]">{children}</div>;

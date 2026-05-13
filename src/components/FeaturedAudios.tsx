@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Headphones, ArrowRight } from "lucide-react";
 
@@ -61,37 +62,44 @@ function AudioCard({ item }: { item: AudioItem }) {
   );
 }
 
-const PLACEHOLDER_AUDIOS: AudioItem[] = Array.from({ length: 6 }, (_, i) => ({
-  id: `a${i + 1}`,
-  slug: `audio-message-${i + 1}`,
-  title: [
-    "Draw Near to God",
-    "The Still Small Voice",
-    "Vesper Prayers",
-    "Songs of the Night",
-    "Eventide Devotion",
-    "Rest in His Presence",
-  ][i],
-  summary: "A quiet audio devotional for Sabbath evening.",
-  speaker: "The Covener",
-  scriptureReference: [
-    "James 4:8",
-    "1 Kings 19:12",
-    "Psalm 141:2",
-    "Psalm 77:6",
-    "Psalm 104:23",
-    "Matthew 11:29",
-  ][i],
-  durationSeconds: [1320, 1560, 980, 1140, 1240, 1080][i],
-}));
-
 export default function FeaturedAudios({
-  items = PLACEHOLDER_AUDIOS,
+  items = [],
 }: {
   items?: AudioItem[];
 }) {
-  const displayItems =
-    items.length > 0 ? items.slice(0, 6) : PLACEHOLDER_AUDIOS;
+  const [fetchedItems, setFetchedItems] = useState<AudioItem[]>([]);
+  const [isLoading, setIsLoading] = useState(items.length === 0);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetch("/api/messages?type=audio&limit=6", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          return [];
+        }
+
+        const payload = await response.json().catch(() => null);
+        return Array.isArray(payload?.data) ? payload.data : [];
+      })
+      .then((data) => {
+        setFetchedItems(data);
+      })
+      .catch(() => {
+        setFetchedItems([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [items]);
+
+  const displayItems = (items.length > 0 ? items : fetchedItems).slice(0, 6);
 
   return (
     <section>
@@ -109,11 +117,21 @@ export default function FeaturedAudios({
         </Link>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {displayItems.map((item) => (
-          <AudioCard key={item.id} item={item} />
-        ))}
-      </div>
+      {isLoading && displayItems.length === 0 ? (
+        <div className="site-panel p-5 text-sm text-brand-muted">
+          Loading published audio messages...
+        </div>
+      ) : displayItems.length === 0 ? (
+        <div className="site-panel p-5 text-sm text-brand-muted">
+          No published audio messages are available yet.
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {displayItems.map((item) => (
+            <AudioCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

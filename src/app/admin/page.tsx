@@ -7,24 +7,36 @@ import {
   PlusCircle,
   UserPlus,
   Clapperboard,
+  BookOpen,
+  Quote,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 async function getStats() {
   if (!isDatabaseConfigured()) {
-    return { total: 0, published: 0, drafts: 0, contacts: 0 };
+    return {
+      total: 0, published: 0, drafts: 0, contacts: 0,
+      totalBooks: 0, publishedBooks: 0, totalQuotes: 0, publishedQuotes: 0,
+    };
   }
   try {
-    const [total, published, drafts, contacts] = await Promise.all([
+    const [total, published, drafts, contacts, totalBooks, publishedBooks, totalQuotes, publishedQuotes] = await Promise.all([
       prisma.message.count(),
       prisma.message.count({ where: { status: "PUBLISHED" } }),
       prisma.message.count({ where: { status: "DRAFT" } }),
       prisma.contactSubmission.count(),
+      prisma.book.count(),
+      prisma.book.count({ where: { status: "PUBLISHED" } }),
+      prisma.quote.count(),
+      prisma.quote.count({ where: { status: "PUBLISHED" } }),
     ]);
-    return { total, published, drafts, contacts };
+    return { total, published, drafts, contacts, totalBooks, publishedBooks, totalQuotes, publishedQuotes };
   } catch {
-    return { total: 0, published: 0, drafts: 0, contacts: 0 };
+    return {
+      total: 0, published: 0, drafts: 0, contacts: 0,
+      totalBooks: 0, publishedBooks: 0, totalQuotes: 0, publishedQuotes: 0,
+    };
   }
 }
 
@@ -55,6 +67,30 @@ export default async function AdminDashboard() {
       value: stats.contacts,
       icon: Mail,
       color: "#0369a1",
+    },
+    {
+      label: "Total Books",
+      value: stats.totalBooks,
+      icon: BookOpen,
+      color: "var(--brand-primary-soft)",
+    },
+    {
+      label: "Published Books",
+      value: stats.publishedBooks,
+      icon: BookOpen,
+      color: "#16a34a",
+    },
+    {
+      label: "Total Quotes",
+      value: stats.totalQuotes,
+      icon: Quote,
+      color: "#7c3aed",
+    },
+    {
+      label: "Published Quotes",
+      value: stats.publishedQuotes,
+      icon: Quote,
+      color: "#16a34a",
     },
   ];
 
@@ -110,6 +146,26 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/contacts" className="button-tertiary">
             View Contacts
+          </Link>
+          <Link
+            href="/admin/books/new"
+            className="button-primary flex items-center gap-1.5"
+          >
+            <PlusCircle size={14} />
+            New Book
+          </Link>
+          <Link
+            href="/admin/quotes/new"
+            className="button-primary flex items-center gap-1.5"
+          >
+            <PlusCircle size={14} />
+            New Quote
+          </Link>
+          <Link href="/admin/books" className="button-tertiary">
+            View All Books
+          </Link>
+          <Link href="/admin/quotes" className="button-tertiary">
+            View All Quotes
           </Link>
         </div>
       </div>

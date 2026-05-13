@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
 
+function parseDurationSeconds(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return BigInt(Math.trunc(parsed));
+}
+
+function serializeMessage<T extends { durationSeconds?: bigint | null }>(
+  message: T,
+) {
+  return {
+    ...message,
+    durationSeconds:
+      typeof message.durationSeconds === "bigint"
+        ? Number(message.durationSeconds)
+        : message.durationSeconds ?? null,
+  };
+}
+
 function guardDb() {
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
@@ -34,7 +64,7 @@ export async function GET(req: NextRequest) {
     include: { category: true },
   });
 
-  return NextResponse.json(messages);
+  return NextResponse.json(messages.map((message) => serializeMessage(message)));
 }
 
 // POST /api/admin/messages — create
@@ -85,10 +115,7 @@ export async function POST(req: NextRequest) {
   const finalPlacement = String(placement ?? "STANDARD");
 
   if (!allowedPlacements.includes(finalPlacement)) {
-    return NextResponse.json(
-      { error: "Invalid placement" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid placement" }, { status: 400 });
   }
 
   if (finalPlacement === "HERO" && type === "AUDIO") {
@@ -117,7 +144,7 @@ export async function POST(req: NextRequest) {
             ? String(scriptureReference)
             : null,
           eventDate: eventDate ? new Date(String(eventDate)) : null,
-          durationSeconds: durationSeconds ? Number(durationSeconds) : null,
+          durationSeconds: parseDurationSeconds(durationSeconds),
           mediaKey: mediaKey ? String(mediaKey) : null,
           coverImageKey: coverImageKey ? String(coverImageKey) : null,
           publishedAt: status === "PUBLISHED" ? new Date() : null,
@@ -140,7 +167,7 @@ export async function POST(req: NextRequest) {
       return created;
     });
 
-    return NextResponse.json(message, { status: 201 });
+    return NextResponse.json(serializeMessage(message), { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     if (message.includes("Unique constraint")) {

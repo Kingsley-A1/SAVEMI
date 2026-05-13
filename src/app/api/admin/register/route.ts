@@ -28,8 +28,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const email = typeof body.email === "string" ? normalizeAdminEmail(body.email) : "";
-  const password = typeof body.password === "string" ? body.password.trim() : "";
+  const email =
+    typeof body.email === "string" ? normalizeAdminEmail(body.email) : "";
+  const password =
+    typeof body.password === "string" ? body.password.trim() : "";
 
   if (!email || !password) {
     return NextResponse.json(

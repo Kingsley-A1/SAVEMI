@@ -74,7 +74,7 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     setUploadState("uploading");
 
     try {
-      const response = await fetch("/api/upload-url", {
+      const response = await fetch("/api/admin/upload-url", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

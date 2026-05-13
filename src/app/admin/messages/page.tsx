@@ -86,7 +86,9 @@ export default async function AdminMessagesPage() {
                 <div key={msg.id} className="space-y-3 px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{msg.title}</p>
+                      <p className="truncate text-sm font-semibold">
+                        {msg.title}
+                      </p>
                       <p className="text-brand-muted mt-1 text-xs">
                         {msg.speaker ?? "No speaker"}
                       </p>
@@ -147,15 +149,22 @@ export default async function AdminMessagesPage() {
 
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
-              <thead>
-                <tr
-                  style={{
-                    borderBottom: "1px solid var(--brand-border)",
-                    background: "rgba(10,79,60,0.03)",
-                  }}
-                >
-                  {["Title", "Type", "Placement", "Speaker", "Status", "Date", ""].map(
-                    (h) => (
+                <thead>
+                  <tr
+                    style={{
+                      borderBottom: "1px solid var(--brand-border)",
+                      background: "rgba(10,79,60,0.03)",
+                    }}
+                  >
+                    {[
+                      "Title",
+                      "Type",
+                      "Placement",
+                      "Speaker",
+                      "Status",
+                      "Date",
+                      "",
+                    ].map((h) => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide"
@@ -163,79 +172,78 @@ export default async function AdminMessagesPage() {
                       >
                         {h}
                       </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {messages.map((msg) => (
-                  <tr
-                    key={msg.id}
-                    style={{ borderBottom: "1px solid var(--brand-border)" }}
-                    className="hover:bg-[rgba(10,79,60,0.02)] transition-colors"
-                  >
-                    <td className="max-w-[200px] truncate px-4 py-3 font-medium">
-                      {msg.title}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="type-badge">{msg.type}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
-                        style={Object.fromEntries(
-                          (PLACEMENT_STYLE[msg.placement] ?? "")
-                            .split(";")
-                            .filter(Boolean)
-                            .map((segment) =>
-                              segment.split(":").map((value) => value.trim()),
-                            ),
-                        )}
-                      >
-                        {msg.placement}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-brand-muted">
-                      {msg.speaker ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
-                        style={Object.fromEntries(
-                          (STATUS_STYLE[msg.status] ?? "")
-                            .split(";")
-                            .filter(Boolean)
-                            .map((s) => s.split(":").map((x) => x.trim())),
-                        )}
-                      >
-                        {msg.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-brand-muted text-xs">
-                      {new Date(msg.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/messages/${msg.slug}`}
-                          className="text-brand-muted hover:text-brand-primary"
-                          target="_blank"
-                          aria-label="Preview"
-                        >
-                          <Eye size={14} />
-                        </Link>
-                        <Link
-                          href={`/admin/messages/${msg.id}/edit`}
-                          className="text-brand-muted hover:text-brand-primary"
-                          aria-label="Edit"
-                        >
-                          <Edit2 size={14} />
-                        </Link>
-                      </div>
-                    </td>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
+                </thead>
+                <tbody>
+                  {messages.map((msg) => (
+                    <tr
+                      key={msg.id}
+                      style={{ borderBottom: "1px solid var(--brand-border)" }}
+                      className="hover:bg-[rgba(10,79,60,0.02)] transition-colors"
+                    >
+                      <td className="max-w-[200px] truncate px-4 py-3 font-medium">
+                        {msg.title}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="type-badge">{msg.type}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
+                          style={Object.fromEntries(
+                            (PLACEMENT_STYLE[msg.placement] ?? "")
+                              .split(";")
+                              .filter(Boolean)
+                              .map((segment) =>
+                                segment.split(":").map((value) => value.trim()),
+                              ),
+                          )}
+                        >
+                          {msg.placement}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-brand-muted">
+                        {msg.speaker ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
+                          style={Object.fromEntries(
+                            (STATUS_STYLE[msg.status] ?? "")
+                              .split(";")
+                              .filter(Boolean)
+                              .map((s) => s.split(":").map((x) => x.trim())),
+                          )}
+                        >
+                          {msg.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-brand-muted text-xs">
+                        {new Date(msg.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/messages/${msg.slug}`}
+                            className="text-brand-muted hover:text-brand-primary"
+                            target="_blank"
+                            aria-label="Preview"
+                          >
+                            <Eye size={14} />
+                          </Link>
+                          <Link
+                            href={`/admin/messages/${msg.id}/edit`}
+                            className="text-brand-muted hover:text-brand-primary"
+                            aria-label="Edit"
+                          >
+                            <Edit2 size={14} />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </>

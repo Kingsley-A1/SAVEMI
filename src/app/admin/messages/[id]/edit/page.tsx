@@ -45,5 +45,15 @@ export default async function EditMessagePage({ params }: Props) {
   }
   if (!message) notFound();
 
-  return <EditMessageForm message={message} />;
+  return (
+    <EditMessageForm
+      message={{
+        ...message,
+        durationSeconds:
+          typeof message.durationSeconds === "bigint"
+            ? Number(message.durationSeconds)
+            : null,
+      }}
+    />
+  );
 }

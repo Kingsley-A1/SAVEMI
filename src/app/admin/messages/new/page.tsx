@@ -13,9 +13,8 @@ type UploadState = "idle" | "uploading" | "done" | "error";
 export default function NewMessagePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialPlacement = searchParams.get("placement") === "HERO"
-    ? "HERO"
-    : "STANDARD";
+  const initialPlacement =
+    searchParams.get("placement") === "HERO" ? "HERO" : "STANDARD";
 
   const [form, setForm] = useState({
     title: "",
@@ -68,7 +67,7 @@ export default function NewMessagePage() {
   async function uploadFile(f: File, field: "media" | "cover") {
     setUploadState("uploading");
     try {
-      const res = await fetch("/api/upload-url", {
+      const res = await fetch("/api/admin/upload-url", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

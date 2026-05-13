@@ -34,6 +34,36 @@ function normalizePlacementForType(
   return undefined;
 }
 
+function parseDurationSeconds(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return BigInt(Math.trunc(parsed));
+}
+
+function serializeMessage<T extends { durationSeconds?: bigint | null }>(
+  message: T,
+) {
+  return {
+    ...message,
+    durationSeconds:
+      typeof message.durationSeconds === "bigint"
+        ? Number(message.durationSeconds)
+        : message.durationSeconds ?? null,
+  };
+}
+
 // PATCH /api/admin/messages/:id — update
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const session = await auth();
@@ -116,7 +146,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
             eventDate: eventDate ? new Date(String(eventDate)) : null,
           }),
           ...(durationSeconds !== undefined && {
-            durationSeconds: durationSeconds ? Number(durationSeconds) : null,
+            durationSeconds: parseDurationSeconds(durationSeconds),
           }),
           ...(mediaKey !== undefined && {
             mediaKey: mediaKey ? String(mediaKey) : null,
@@ -144,7 +174,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return updated;
     });
 
-    return NextResponse.json(message);
+    return NextResponse.json(serializeMessage(message));
   } catch {
     return NextResponse.json(
       { error: "Failed to update message" },
