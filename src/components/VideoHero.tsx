@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Play, Mail } from "lucide-react";
 
@@ -17,11 +18,17 @@ interface HeroMediaPayload {
  * Pass `videoSrc` as a publicly accessible URL or leave blank
  * to get a dark gradient fallback while a video is pending upload.
  */
-export default function VideoHero({ videoSrc }: { videoSrc?: string }) {
-  const [heroMedia, setHeroMedia] = useState<HeroMediaPayload | null>(null);
+export default function VideoHero({ 
+  videoSrc,
+  initialHeroMedia,
+}: { 
+  videoSrc?: string;
+  initialHeroMedia?: HeroMediaPayload | null;
+}) {
+  const [heroMedia, setHeroMedia] = useState<HeroMediaPayload | null>(initialHeroMedia ?? null);
 
   useEffect(() => {
-    if (videoSrc) {
+    if (videoSrc || initialHeroMedia !== undefined) {
       return;
     }
 
@@ -49,12 +56,12 @@ export default function VideoHero({ videoSrc }: { videoSrc?: string }) {
   const resolvedVideoSrc =
     videoSrc ||
     (heroMedia?.type === "video"
-      ? heroMedia.downloadUrl ?? heroMedia.coverImageUrl
+      ? (heroMedia.downloadUrl ?? heroMedia.coverImageUrl)
       : undefined);
   const resolvedImageSrc =
     !resolvedVideoSrc && heroMedia
       ? heroMedia.type === "image"
-        ? heroMedia.downloadUrl ?? heroMedia.coverImageUrl
+        ? (heroMedia.downloadUrl ?? heroMedia.coverImageUrl)
         : heroMedia.coverImageUrl
       : undefined;
 
@@ -72,12 +79,16 @@ export default function VideoHero({ videoSrc }: { videoSrc?: string }) {
           aria-hidden="true"
         />
       ) : resolvedImageSrc ? (
-        <img
-          className="video-hero__video"
-          src={resolvedImageSrc}
-          alt=""
-          aria-hidden="true"
-        />
+        <div className="video-hero__video" aria-hidden="true">
+          <Image
+            src={resolvedImageSrc}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+          />
+        </div>
       ) : (
         <div className="video-hero__fallback" aria-hidden="true" />
       )}
@@ -107,7 +118,7 @@ export default function VideoHero({ videoSrc }: { videoSrc?: string }) {
           style={{ color: "rgba(255,255,255,0.65)" }}
         >
           {heroMedia?.summary ||
-            "Reflective worship at eventide — sermons, music, and devotional messages for quiet hearts."}
+            "Biblical reflection on the seventh-day Sabbath for meditation, spiritual recovery, and renewed understanding of God's plan."}
         </p>
 
         {heroMedia?.title ? (

@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { Play, Volume2, ArrowRight } from "lucide-react";
+import { Play, ArrowRight } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -9,9 +11,8 @@ interface MediaItem {
   summary: string;
   speaker?: string | null;
   scriptureReference?: string | null;
-  coverImageKey?: string | null;
+  coverImageUrl?: string | null;
   slug: string;
-  type: "VIDEO" | "AUDIO";
 }
 
 function VideoCard({ item }: { item: MediaItem }) {
@@ -22,12 +23,13 @@ function VideoCard({ item }: { item: MediaItem }) {
         className="relative aspect-video w-full overflow-hidden"
         style={{ background: "var(--brand-primary-deep)" }}
       >
-        {item.coverImageKey ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.coverImageKey}
+        {item.coverImageUrl ? (
+          <Image
+            src={item.coverImageUrl}
             alt={item.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -69,42 +71,44 @@ function VideoCard({ item }: { item: MediaItem }) {
   );
 }
 
-const PLACEHOLDER_VIDEOS: MediaItem[] = Array.from({ length: 8 }, (_, i) => ({
-  id: `v${i + 1}`,
-  slug: `video-message-${i + 1}`,
-  type: "VIDEO" as const,
-  title: [
-    "The Rest That God Provides",
-    "Be Still and Know",
-    "Evening Grace",
-    "Renewing the Weary Soul",
-    "Light at Eventide",
-    "The Shepherd's Rest",
-    "Sabbath Peace",
-    "Coming Home",
-  ][i],
-  summary: "A devotional message for the close of day.",
-  speaker: "The Covener",
-  scriptureReference: [
-    "Matthew 11:28",
-    "Psalm 46:10",
-    "Isaiah 40:31",
-    "Psalm 23:2–3",
-    "John 14:27",
-    "Psalm 62:1",
-    "Exodus 20:8–11",
-    "Luke 15:20",
-  ][i],
-  coverImageKey: null,
-}));
-
 export default function FeaturedVideos({
-  items = PLACEHOLDER_VIDEOS,
+  items = [],
 }: {
   items?: MediaItem[];
 }) {
-  const displayItems =
-    items.length > 0 ? items.slice(0, 8) : PLACEHOLDER_VIDEOS;
+  const [fetchedItems, setFetchedItems] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(items.length === 0);
+
+  useEffect(() => {
+    if (items.length > 0) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetch("/api/messages?type=video&limit=8", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) {
+          return [];
+        }
+
+        const payload = await response.json().catch(() => null);
+        return Array.isArray(payload?.data) ? payload.data : [];
+      })
+      .then((data) => {
+        setFetchedItems(data);
+      })
+      .catch(() => {
+        setFetchedItems([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [items]);
+
+  const displayItems = (items.length > 0 ? items : fetchedItems).slice(0, 8);
 
   return (
     <section>
@@ -122,11 +126,21 @@ export default function FeaturedVideos({
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {displayItems.map((item) => (
-          <VideoCard key={item.id} item={item} />
-        ))}
-      </div>
+      {isLoading && displayItems.length === 0 ? (
+        <div className="site-panel p-5 text-sm text-brand-muted">
+          Loading published video messages...
+        </div>
+      ) : displayItems.length === 0 ? (
+        <div className="site-panel p-5 text-sm text-brand-muted">
+          No published video messages are available yet.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {displayItems.map((item) => (
+            <VideoCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

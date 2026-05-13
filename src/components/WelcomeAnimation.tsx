@@ -2,17 +2,42 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Returns true when the user has requested reduced motion via their OS settings.
+ * Uses matchMedia so it reacts to live changes (e.g. user toggles the setting).
+ */
+function usePrefersReducedMotion(): boolean {
+  const [prefersReduced, setPrefersReduced] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
+
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  return prefersReduced;
+}
+
+
 const TAGLINE = ["Repose.", "Renewal.", "Restoration."];
 const SAVEMI_CHARS = "SAVEMI".split("");
 
 type Phase =
   | "welcome" // "Welcome to"
-  | "typing" // typing SAVEMI
+  | "typing"  // typing SAVEMI
   | "tagline" // tagline words appear
   | "underline" // green line draws
   | "dismiss"; // whole overlay fades out
 
 export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
+  // Respect the user's OS-level reduced-motion preference.
+  // If they've requested reduced motion, skip the animation entirely.
+  const prefersReduced = usePrefersReducedMotion();
+
   const [phase, setPhase] = useState<Phase>("welcome");
   const [typedCount, setTypedCount] = useState(0);
   const [shownWords, setShownWords] = useState(0);
@@ -20,38 +45,45 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
   const [opacity, setOpacity] = useState(1);
   const taglineRef = useRef<HTMLParagraphElement>(null);
 
+  // Skip immediately if prefers-reduced-motion is set
+  useEffect(() => {
+    if (prefersReduced) {
+      onDone();
+    }
+  }, [prefersReduced, onDone]);
+
   // welcome → typing after 600ms
   useEffect(() => {
+    if (prefersReduced) return;
     const t = setTimeout(() => setPhase("typing"), 600);
     return () => clearTimeout(t);
-  }, []);
+  }, [prefersReduced]);
 
   // typing SAVEMI one char per 95ms
   useEffect(() => {
-    if (phase !== "typing") return;
+    if (prefersReduced || phase !== "typing") return;
     if (typedCount < SAVEMI_CHARS.length) {
       const t = setTimeout(() => setTypedCount((c) => c + 1), 95);
       return () => clearTimeout(t);
     }
-    // all chars typed → move to tagline after short pause
     const t = setTimeout(() => setPhase("tagline"), 400);
     return () => clearTimeout(t);
-  }, [phase, typedCount]);
+  }, [prefersReduced, phase, typedCount]);
 
   // tagline words appear one per 340ms
   useEffect(() => {
-    if (phase !== "tagline") return;
+    if (prefersReduced || phase !== "tagline") return;
     if (shownWords < TAGLINE.length) {
       const t = setTimeout(() => setShownWords((n) => n + 1), 340);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setPhase("underline"), 200);
     return () => clearTimeout(t);
-  }, [phase, shownWords]);
+  }, [prefersReduced, phase, shownWords]);
 
   // underline draws from 0 → 100% in 500ms
   useEffect(() => {
-    if (phase !== "underline") return;
+    if (prefersReduced || phase !== "underline") return;
     const start = performance.now();
     const duration = 500;
     let raf: number;
@@ -66,11 +98,11 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
     }
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [phase]);
+  }, [prefersReduced, phase]);
 
   // dismiss: fade out, then call onDone
   useEffect(() => {
-    if (phase !== "dismiss") return;
+    if (prefersReduced || phase !== "dismiss") return;
     const start = performance.now();
     const duration = 500;
     let raf: number;
@@ -85,7 +117,10 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
     }
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [phase, onDone]);
+  }, [prefersReduced, phase, onDone]);
+
+  // Don't render anything if reduced motion was requested
+  if (prefersReduced) return null;
 
   return (
     <div
@@ -95,7 +130,22 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
         opacity,
         pointerEvents: phase === "dismiss" ? "none" : "auto",
       }}
+      role="status"
+      aria-label="SAVEMI welcome animation"
     >
+      {/* Skip button — keyboard and low-patience users */}
+      <button
+        onClick={onDone}
+        className="absolute right-4 top-4 rounded px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-100"
+        style={{
+          color: "rgba(241,231,201,0.55)",
+          background: "rgba(255,255,255,0.06)",
+        }}
+        aria-label="Skip welcome animation"
+      >
+        Skip
+      </button>
+
       {/* "Welcome to" */}
       <p
         className="text-sm font-medium uppercase tracking-[0.25em] transition-opacity duration-300"
@@ -143,6 +193,7 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
         ref={taglineRef}
         className="mt-3 flex gap-3 text-lg font-light tracking-wide sm:text-xl"
         style={{ color: "rgba(241,231,201,0.8)" }}
+        aria-hidden="true"
       >
         {TAGLINE.map((word, i) => (
           <span
@@ -162,6 +213,7 @@ export default function WelcomeAnimation({ onDone }: { onDone: () => void }) {
       <div
         className="mt-3 h-px overflow-hidden"
         style={{ width: taglineRef.current?.offsetWidth ?? 240 }}
+        aria-hidden="true"
       >
         <div
           style={{
