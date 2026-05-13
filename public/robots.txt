@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Admin area — never crawled
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://savemi.org/sitemap.xml

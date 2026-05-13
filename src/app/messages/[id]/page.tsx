@@ -1,9 +1,34 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMessageById } from "../../../lib/messages";
 import MediaPlayer from "../../../components/MediaPlayer";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const message = await getMessageById(id);
+
+  if (!message) {
+    return { title: "Message Not Found" };
+  }
+
+  return {
+    title: message.title,
+    description: message.summary,
+    openGraph: {
+      title: `${message.title} | SAVEMI`,
+      description: message.summary,
+      type: "article",
+    },
+    alternates: { canonical: `/messages/${id}` },
+  };
+}
 
 export default async function MessageDetail({
   params,

@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import { getMessages } from "../../lib/messages";
 import MessageCard from "../../components/MessageCard";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Messages",
+  description:
+    "Browse sermons, devotionals, and worship content from the Sabbath Vesper Ministry — video, audio, and image messages rooted in Scripture.",
+  openGraph: {
+    title: "Messages | SAVEMI",
+    description:
+      "Sermons, devotionals, and music from the Sabbath Vesper Ministry.",
+  },
+  alternates: { canonical: "/messages" },
+};
 
 export default async function MessagesPage() {
   const messages = await getMessages();
