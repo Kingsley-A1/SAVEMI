@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Upload } from "lucide-react";
+import { Save, X, Upload, Link as LinkIcon } from "lucide-react";
 
 const AVAILABILITIES = ["FREE", "PAID"] as const;
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -31,6 +31,7 @@ export default function NewBookPage() {
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverKey, setCoverKey] = useState("");
+  const [coverImageUrl, setCoverImageUrl] = useState("");
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -101,7 +102,7 @@ export default function NewBookPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          coverImageKey: coverKey || undefined,
+          coverImageKey: coverKey || (coverImageUrl || undefined),
           pageCount: form.pageCount ? Number(form.pageCount) : undefined,
           downloadUrl: form.downloadUrl || undefined,
           purchaseUrl: form.purchaseUrl || undefined,
@@ -141,7 +142,6 @@ export default function NewBookPage() {
           </div>
         ) : null}
 
-        {/* Cover upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Cover Image</h2>
           <label className="block">
@@ -153,6 +153,7 @@ export default function NewBookPage() {
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
                 setCoverFile(file);
+                setCoverImageUrl("");
                 if (file) uploadCover(file);
               }}
             />
@@ -170,6 +171,26 @@ export default function NewBookPage() {
               Upload failed. You can proceed without a cover.
             </p>
           )}
+
+          {/* OR separator for cover URL */}
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+          </div>
+          <div className="relative">
+            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
+            <input
+              type="url"
+              className="field-input pl-8"
+              placeholder="https://example.com/book-cover.jpg"
+              value={coverImageUrl}
+              onChange={(e) => {
+                setCoverImageUrl(e.target.value);
+                if (e.target.value) { setCoverFile(null); setCoverKey(""); setUploadState("idle"); }
+              }}
+            />
+          </div>
         </div>
 
         {/* Core fields */}

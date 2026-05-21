@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Trash2, Upload } from "lucide-react";
+import { Save, X, Trash2, Upload, Link as LinkIcon } from "lucide-react";
 
 const AVAILABILITIES = ["FREE", "PAID"] as const;
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -48,6 +48,9 @@ export default function EditBookForm({ book }: { book: BookData }) {
   });
 
   const [coverKey, setCoverKey] = useState(book.coverImageKey ?? "");
+  const [coverImageUrl, setCoverImageUrl] = useState(
+    (book.coverImageKey?.startsWith("http") ? book.coverImageKey : "") ?? ""
+  );
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -105,7 +108,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          coverImageKey: coverKey || null,
+          coverImageKey: coverKey || (coverImageUrl || null),
           pageCount: form.pageCount ? Number(form.pageCount) : null,
           downloadUrl: form.downloadUrl || null,
           purchaseUrl: form.purchaseUrl || null,
@@ -178,7 +181,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
         {/* Cover upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Cover Image</h2>
-          {coverKey ? (
+          {coverKey && !coverKey.startsWith("http") ? (
             <p className="text-brand-muted text-xs">Current key: <code>{coverKey}</code></p>
           ) : null}
           <label className="block">
@@ -189,6 +192,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
               className="mt-1 block w-full text-sm text-brand-muted"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
+                setCoverImageUrl("");
                 if (file) uploadCover(file);
               }}
             />
@@ -202,6 +206,26 @@ export default function EditBookForm({ book }: { book: BookData }) {
           {uploadState === "error" && (
             <p className="text-xs" style={{ color: "#b91c1c" }}>Upload failed.</p>
           )}
+
+          {/* OR separator for cover URL */}
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+          </div>
+          <div className="relative">
+            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
+            <input
+              type="url"
+              className="field-input pl-8"
+              placeholder="https://example.com/book-cover.jpg"
+              value={coverImageUrl}
+              onChange={(e) => {
+                setCoverImageUrl(e.target.value);
+                if (e.target.value) { setCoverKey(""); setUploadState("idle"); }
+              }}
+            />
+          </div>
         </div>
 
         {/* Core fields */}

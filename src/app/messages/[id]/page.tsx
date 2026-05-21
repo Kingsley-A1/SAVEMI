@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMessageById } from "../../../lib/messages";
 import MediaPlayer from "../../../components/MediaPlayer";
+import { isEmbeddableUrl } from "../../../lib/embed";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,12 @@ export default async function MessageDetail({
     notFound();
   }
 
+  // Determine the best media source: prefer external URL, fall back to R2
+  const mediaSrc = message.externalMediaUrl || message.downloadUrl;
+  const isEmbed = message.externalMediaUrl
+    ? isEmbeddableUrl(message.externalMediaUrl)
+    : false;
+
   return (
     <article className="mx-auto max-w-3xl space-y-4">
       <div className="site-panel p-4 sm:p-6">
@@ -77,10 +84,10 @@ export default async function MessageDetail({
         </dl>
       </div>
 
-      {message.downloadUrl ? (
-        <div className="site-panel p-4">
+      {mediaSrc ? (
+        <div className="site-panel overflow-hidden p-4">
           <MediaPlayer
-            src={message.downloadUrl}
+            src={mediaSrc}
             type={message.type}
             title={message.title}
           />
@@ -99,13 +106,27 @@ export default async function MessageDetail({
           <p className="text-brand-muted mt-2 text-sm leading-6">
             {message.description}
           </p>
-          {message.downloadUrl ? (
+
+          {/* Show download only for direct files, not for embeds */}
+          {message.downloadUrl && !isEmbed ? (
             <a
               href={message.downloadUrl}
               download
               className="button-tertiary mt-4 inline-flex"
             >
               Download
+            </a>
+          ) : null}
+
+          {/* For embeds, link to the original platform */}
+          {isEmbed && message.externalMediaUrl ? (
+            <a
+              href={message.externalMediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="button-tertiary mt-4 inline-flex"
+            >
+              Watch on original platform ↗
             </a>
           ) : null}
         </div>

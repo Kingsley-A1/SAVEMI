@@ -88,6 +88,7 @@ export async function POST(req: NextRequest) {
     durationSeconds,
     mediaKey,
     coverImageKey,
+    externalMediaUrl,
   } = body as Record<string, string | null | number | undefined>;
 
   if (!title || !slug || !summary || !description || !type) {
@@ -136,6 +137,7 @@ export async function POST(req: NextRequest) {
           durationSeconds: parseDurationSeconds(durationSeconds),
           mediaKey: mediaKey ? String(mediaKey) : null,
           coverImageKey: coverImageKey ? String(coverImageKey) : null,
+          externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
           publishedAt: status === "PUBLISHED" ? new Date() : null,
         },
       });

@@ -97,6 +97,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     durationSeconds,
     mediaKey,
     coverImageKey,
+    externalMediaUrl,
   } = body as Record<string, string | null | number | undefined>;
 
   if (placement === "HERO" && type === "AUDIO") {
@@ -154,6 +155,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
           }),
           ...(coverImageKey !== undefined && {
             coverImageKey: coverImageKey ? String(coverImageKey) : null,
+          }),
+          ...(externalMediaUrl !== undefined && {
+            externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
           }),
           ...(willPublish && { publishedAt: new Date() }),
         },
