@@ -1,5 +1,15 @@
 # SAVEMI Production Readiness Review
 
+## 🎯 CURRENT FOCUS: Phase 3 - Data & Content Workflow
+*Phase 2 (Security & Admin Operations) is complete. Rate limiting, audit logging, and the Audit Log admin viewer are fully implemented.*
+
+**Priority Action Items:**
+1. **API Pagination**: Add cursor-based pagination to public messages, books, and quotes endpoints.
+2. **Admin Filters**: Add status, type, and search filters to admin list pages.
+3. **Content Import/Export**: Build a non-destructive content import and CSV export.
+4. **Database Backup Schedule**: Document and schedule regular CockroachDB backups.
+
+
 Review date: 2026-05-08
 
 Reviewed scope: `package.json`, Next.js App Router pages, public APIs, admin APIs, Auth.js setup, Prisma schema and migrations, seed workflow, R2 upload helpers, shared UI components, current docs, and available local verification commands.
@@ -145,7 +155,7 @@ Acceptance criteria:
 - [ ] Failed login/register attempts are rate limited.
 - [ ] Admin actions are attributable to a user. -->
 
-## P1 High-Priority Risks
+## P1 High-Priority Risks (COMPLETED ✅)
 
 ### Public UI and Rendering
 
@@ -289,15 +299,15 @@ Priority tests:
 
 Exit criteria: no production change ships without passing automated gates.
 
-### Phase 2: Security And Admin Operations
+### Phase 2: Security And Admin Operations ✅ COMPLETE
 
 Goal: protect all write paths and make admin actions auditable.
 
 Checklist:
 
-- [ ] Add rate limiting to login, register/invite, contact, and upload URL endpoints.
-- [ ] Add admin audit log model.
-- [ ] Record content create/update/delete/upload events.
+- [x] Add rate limiting to login, register/invite, contact, and upload URL endpoints.
+- [x] Add admin audit log model.
+- [x] Record content create/update/delete/upload events.
 - [ ] Add role model if multiple admin permission levels are expected.
 - [ ] Add signed invite token flow for new admins.
 - [ ] Add session timeout and explicit re-authentication for dangerous actions.
@@ -418,15 +428,10 @@ Lookup-only:
 - Lighthouse scoring thresholds for the final hosting target.
 - Specific WCAG 2.2 test procedures and audit tooling configuration.
 
-## Recommended Immediate Build Order
+## Recommended Immediate Build Order (Updated)
 
-1. Lock upload signing behind admin auth.
-2. Fix environment naming and lint setup.
-3. Resolve Prisma migration status and type drift.
-4. Replace public shared-code registration with a safer admin bootstrap/invite flow.
-5. Add unit tests for validators and route tests for auth protection.
-6. Add `next.config` for images and headers.
-7. Add mobile nav and reduced-motion support.
-8. Add CI.
-
-This order gives the highest risk reduction per hour before deeper frontend polish.
+1. **Security & Rate Limiting**: Protect admin login, registration, and upload paths against brute force and DDOS.
+2. **Audit Logs & Tracking**: Create a Prisma model and implement tracking for admin write operations (Books, Quotes, Messages).
+3. **Media Pipeline Validation**: Harden the backend upload endpoints against malformed or malicious MIME types.
+4. **Automated Testing (CI/CD)**: Add Vitest/Playwright tests for our new secure admin workflows to ensure they can't regress.
+5. **Analytics & Observability**: Hook up structured logging for production observability.

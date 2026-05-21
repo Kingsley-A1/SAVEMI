@@ -4,6 +4,11 @@ import {
   validateContactSubmission,
 } from "../../../lib/contact";
 import { isDatabaseConfigured } from "../../../lib/db";
+import {
+  contactLimiter,
+  getClientIp,
+  rateLimitResponse,
+} from "../../../lib/rate-limit";
 
 async function parseRequestPayload(request: Request): Promise<unknown> {
   const contentType = request.headers.get("content-type") ?? "";
@@ -30,6 +35,11 @@ async function parseRequestPayload(request: Request): Promise<unknown> {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 5 submissions per 10 minutes per IP.
+  const ip = getClientIp(request);
+  const limit = contactLimiter.check(`contact:${ip}`);
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfterMs);
+
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
       {

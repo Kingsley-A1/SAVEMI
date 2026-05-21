@@ -7,12 +7,24 @@ import {
   normalizeAdminEmail,
 } from "../../../../lib/admin-access";
 import { isDatabaseConfigured, prisma } from "../../../../lib/db";
+import {
+  registerLimiter,
+  getClientIp,
+  rateLimitResponse,
+} from "../../../../lib/rate-limit";
+import { audit } from "../../../../lib/audit";
+import { auth } from "../../../../../auth";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 5 registration attempts per hour per IP.
+  const ip = getClientIp(request);
+  const limit = registerLimiter.check(`register:${ip}`);
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfterMs);
+
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
       { error: "Database not configured" },
@@ -77,6 +89,19 @@ export async function POST(request: Request) {
         name: true,
         createdAt: true,
       },
+    });
+
+    // Audit: log who performed this registration.
+    // The registering user is either the current session holder or the new
+    // admin themselves (bootstrap case). We try the session first.
+    const session = await auth().catch(() => null);
+    await audit({
+      session: session ?? { user: { id: admin.id, email: admin.email } },
+      request,
+      action: "admin.register",
+      entityType: "AdminUser",
+      entityId: admin.id,
+      detail: { email: admin.email, name: admin.name },
     });
 
     return NextResponse.json({ data: admin }, { status: 201 });

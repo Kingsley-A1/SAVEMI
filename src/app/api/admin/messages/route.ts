@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
+import { audit } from "../../../../lib/audit";
 
 function parseDurationSeconds(value: unknown) {
-  if (value === undefined) {
-    return undefined;
-  }
-
-  if (value === null || value === "") {
-    return null;
-  }
-
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
   const parsed = Number(value);
-
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    return null;
-  }
-
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
   return BigInt(Math.trunc(parsed));
 }
 
@@ -28,7 +19,7 @@ function serializeMessage<T extends { durationSeconds?: bigint | null }>(
     durationSeconds:
       typeof message.durationSeconds === "bigint"
         ? Number(message.durationSeconds)
-        : message.durationSeconds ?? null,
+        : (message.durationSeconds ?? null),
   };
 }
 
@@ -64,7 +55,7 @@ export async function GET(req: NextRequest) {
     include: { category: true },
   });
 
-  return NextResponse.json(messages.map((message) => serializeMessage(message)));
+  return NextResponse.json(messages.map((m) => serializeMessage(m)));
 }
 
 // POST /api/admin/messages — create
@@ -113,7 +104,6 @@ export async function POST(req: NextRequest) {
 
   const allowedPlacements = ["STANDARD", "HERO"];
   const finalPlacement = String(placement ?? "STANDARD");
-
   if (!allowedPlacements.includes(finalPlacement)) {
     return NextResponse.json({ error: "Invalid placement" }, { status: 400 });
   }
@@ -125,7 +115,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Ensure slug uniqueness
   const finalSlug = String(slug) || slugify(String(title));
 
   try {
@@ -158,19 +147,27 @@ export async function POST(req: NextRequest) {
             placement: "HERO",
             status: "PUBLISHED",
           },
-          data: {
-            placement: "STANDARD",
-          },
+          data: { placement: "STANDARD" },
         });
       }
 
       return created;
     });
 
+    // Audit: record message creation.
+    await audit({
+      session,
+      request: req,
+      action: "message.create",
+      entityType: "Message",
+      entityId: message.id,
+      detail: { title: message.title, status: message.status, type: message.type },
+    });
+
     return NextResponse.json(serializeMessage(message), { status: 201 });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    if (message.includes("Unique constraint")) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    if (msg.includes("Unique constraint")) {
       return NextResponse.json(
         { error: "Slug already exists" },
         { status: 409 },

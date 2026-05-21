@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
+import { audit } from "../../../../lib/audit";
 
 function guardDb() {
   if (!isDatabaseConfigured()) {
@@ -108,6 +109,15 @@ export async function POST(req: NextRequest) {
         status: resolvedStatus,
         publishedAt: resolvedStatus === "PUBLISHED" ? new Date() : null,
       },
+    });
+    // Audit: record book creation.
+    await audit({
+      session,
+      request: req,
+      action: "book.create",
+      entityType: "Book",
+      entityId: book.id,
+      detail: { title: book.title, status: book.status, availability: book.availability },
     });
     return NextResponse.json(book, { status: 201 });
   } catch (err: unknown) {

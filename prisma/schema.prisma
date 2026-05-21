@@ -96,12 +96,30 @@ model Quote {
 }
 
 model AdminUser {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   passwordHash String
   name         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  adminId    String
+  adminEmail String
+  action     String    // e.g. "message.create", "book.delete", "admin.register"
+  entityType String    // "Message" | "Book" | "Quote" | "AdminUser"
+  entityId   String?
+  detail     String?   // JSON summary of key changed fields
+  ip         String?
+  createdAt  DateTime  @default(now())
+  admin      AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId, createdAt])
+  @@index([entityType, createdAt])
+  @@index([createdAt])
 }
 
 enum MessageType {

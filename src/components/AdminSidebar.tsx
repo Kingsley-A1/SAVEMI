@@ -9,6 +9,7 @@ import {
   BookOpen,
   Quote,
   Mail,
+  ScrollText,
   LogOut,
   Menu,
   X,
@@ -23,6 +24,7 @@ const NAV = [
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
   { href: "/admin/contacts", label: "Contacts", icon: Mail },
   { href: "/admin/register", label: "Register Admin", icon: UserPlus },
+  { href: "/admin/audit-log", label: "Audit Log", icon: ScrollText },
 ];
 
 export default function AdminSidebar({ userName }: { userName: string }) {

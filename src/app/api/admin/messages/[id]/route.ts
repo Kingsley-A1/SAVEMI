@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
+import { audit } from "../../../../../lib/audit";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -174,6 +175,16 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return updated;
     });
 
+    // Audit: record message update.
+    await audit({
+      session,
+      request: req,
+      action: "message.update",
+      entityType: "Message",
+      entityId: message.id,
+      detail: { title: message.title, status: message.status, placement: message.placement },
+    });
+
     return NextResponse.json(serializeMessage(message));
   } catch {
     return NextResponse.json(
@@ -195,7 +206,19 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
 
   try {
+    const deleted = await prisma.message.findUnique({ where: { id }, select: { id: true, title: true } });
     await prisma.message.delete({ where: { id } });
+
+    // Audit: record message deletion.
+    await audit({
+      session,
+      request: _req,
+      action: "message.delete",
+      entityType: "Message",
+      entityId: id,
+      detail: { title: deleted?.title },
+    });
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(

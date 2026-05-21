@@ -5,7 +5,7 @@ This repository contains the source code and documentation for the **SAVEMI Mini
 ## Repository Structure
 
 ```
-avemi-website/
+SAVEMI/
 ├── public/               # Public assets served by Next.js
 │   └── images/           # Logos and other static images
 ├── src/

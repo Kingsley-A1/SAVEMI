@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
+import { audit } from "../../../../../lib/audit";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -67,6 +68,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ...(publishedAt !== undefined && { publishedAt }),
       },
     });
+    // Audit: record quote update.
+    await audit({
+      session,
+      request: req,
+      action: "quote.update",
+      entityType: "Quote",
+      entityId: updated.id,
+      detail: { title: updated.title, status: updated.status },
+    });
     return NextResponse.json(updated);
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
@@ -91,7 +101,19 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const { id } = await params;
 
   try {
+    const deleted = await prisma.quote.findUnique({ where: { id }, select: { id: true, title: true } });
     await prisma.quote.delete({ where: { id } });
+
+    // Audit: record quote deletion.
+    await audit({
+      session,
+      request: _req,
+      action: "quote.delete",
+      entityType: "Quote",
+      entityId: id,
+      detail: { title: deleted?.title },
+    });
+
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
