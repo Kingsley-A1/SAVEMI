@@ -1,13 +1,13 @@
 # SAVEMI Production Readiness Review
 
-## 🎯 CURRENT FOCUS: Phase 3 - Data & Content Workflow
-*Phase 2 (Security & Admin Operations) is complete. Rate limiting, audit logging, and the Audit Log admin viewer are fully implemented.*
+## 🎯 CURRENT FOCUS: Phase 4 - Observability & Performance
+*Phase 3 (Data & Content Workflow) is complete. Cursor pagination, admin filters, and CSV export are fully implemented across all three domains.*
 
 **Priority Action Items:**
-1. **API Pagination**: Add cursor-based pagination to public messages, books, and quotes endpoints.
-2. **Admin Filters**: Add status, type, and search filters to admin list pages.
-3. **Content Import/Export**: Build a non-destructive content import and CSV export.
-4. **Database Backup Schedule**: Document and schedule regular CockroachDB backups.
+1. **Error Monitoring**: Integrate Sentry for production error tracking and alerting.
+2. **Analytics**: Add anonymous page-view analytics (e.g. Plausible) for content performance.
+3. **Cache Strategy**: Implement `next/cache` revalidation tags for stale-while-revalidate on public pages.
+4. **Health Check Endpoint**: Add `/api/health` for Railway uptime monitoring.
 
 
 Review date: 2026-05-08
