@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Upload, Link as LinkIcon } from "lucide-react";
+import { Save, X } from "lucide-react";
+import AdminUploadField from "../../../../components/AdminUploadField";
 
 const AVAILABILITIES = ["FREE", "PAID"] as const;
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
@@ -144,53 +145,27 @@ export default function NewBookPage() {
 
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Cover Image</h2>
-          <label className="block">
-            <span className="field-label">Upload cover (optional)</span>
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 block w-full text-sm text-brand-muted"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setCoverFile(file);
-                setCoverImageUrl("");
-                if (file) uploadCover(file);
-              }}
-            />
-          </label>
-          {uploadState === "uploading" && (
-            <p className="text-brand-muted text-xs">Uploading…</p>
-          )}
-          {uploadState === "done" && (
-            <p className="text-xs" style={{ color: "#15803d" }}>
-              Cover uploaded ✓
-            </p>
-          )}
-          {uploadState === "error" && (
-            <p className="text-xs" style={{ color: "#b91c1c" }}>
-              Upload failed. You can proceed without a cover.
-            </p>
-          )}
-
-          {/* OR separator for cover URL */}
-          <div className="flex items-center gap-3 my-2">
-            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
-            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-          </div>
-          <div className="relative">
-            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-            <input
-              type="url"
-              className="field-input pl-8"
-              placeholder="https://example.com/book-cover.jpg"
-              value={coverImageUrl}
-              onChange={(e) => {
-                setCoverImageUrl(e.target.value);
-                if (e.target.value) { setCoverFile(null); setCoverKey(""); setUploadState("idle"); }
-              }}
-            />
-          </div>
+          <AdminUploadField
+            label="Upload cover (optional)"
+            mediaKind="cover"
+            accept="image/*"
+            file={coverFile}
+            objectKey={coverKey}
+            externalUrl={coverImageUrl}
+            uploadState={uploadState}
+            showUrlInput={true}
+            urlPlaceholder="https://example.com/book-cover.jpg"
+            successLabel="Cover image uploaded"
+            onFileChange={(f) => {
+              setCoverFile(f);
+              setCoverImageUrl("");
+              if (f) uploadCover(f);
+            }}
+            onUrlChange={(url) => {
+              setCoverImageUrl(url);
+              if (url) { setCoverFile(null); setCoverKey(""); setUploadState("idle"); }
+            }}
+          />
         </div>
 
         {/* Core fields */}

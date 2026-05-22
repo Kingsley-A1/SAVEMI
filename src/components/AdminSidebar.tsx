@@ -14,14 +14,12 @@ import {
   Menu,
   X,
   UserPlus,
-  Headphones,
 } from "lucide-react";
 import { useState } from "react";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
-  { href: "/admin/messages?type=AUDIO", label: "Audio", icon: Headphones },
   { href: "/admin/books", label: "Books", icon: BookOpen },
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
   { href: "/admin/contacts", label: "Contacts", icon: Mail },

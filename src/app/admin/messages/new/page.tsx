@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Upload, Save, X, Link as LinkIcon } from "lucide-react";
+import { Save, X } from "lucide-react";
+import AdminUploadField from "../../../../components/AdminUploadField";
 
 const MESSAGE_TYPES = ["VIDEO", "AUDIO", "IMAGE"] as const;
 const MESSAGE_PLACEMENTS = ["STANDARD", "HERO"] as const;
@@ -363,138 +364,37 @@ export default function NewMessagePage() {
         <div className="site-panel p-5 space-y-4">
           <h2 className="text-sm font-semibold">Media Files</h2>
 
-          {/* ─── Media source: file upload OR external URL ─── */}
-          <div>
-            <label className="field-label">
-              {form.type === "IMAGE" ? "Image File" : `${form.type} File`}
-            </label>
-            <div
-              className="rounded border border-dashed px-4 py-4 text-center text-sm"
-              style={{
-                borderColor: "var(--brand-border)",
-                color: "var(--brand-text-soft)",
-              }}
-            >
-              {mediaKey ? (
-                <p className="text-xs" style={{ color: "#16a34a" }}>
-                  ✓ File uploaded
-                </p>
-              ) : (
-                <>
-                  <Upload size={20} className="mx-auto mb-1 opacity-40" />
-                  <label className="cursor-pointer underline text-xs">
-                    Choose file
-                    <input
-                      type="file"
-                      className="sr-only"
-                      accept={
-                        form.type === "VIDEO"
-                          ? "video/*"
-                          : form.type === "AUDIO"
-                            ? "audio/*"
-                            : "image/*"
-                      }
-                      onChange={(e) => {
-                        setFile(e.target.files?.[0] ?? null);
-                        setExternalMediaUrl("");
-                      }}
-                    />
-                  </label>
-                  {file && <p className="mt-1 text-xs">{file.name}</p>}
-                </>
-              )}
-            </div>
+          <AdminUploadField
+            label={form.type === "IMAGE" ? "Image File" : `${form.type} File`}
+            mediaKind={form.type.toLowerCase() as "video" | "audio" | "image"}
+            accept={
+              form.type === "VIDEO" ? "video/*" : form.type === "AUDIO" ? "audio/*" : "image/*"
+            }
+            file={file}
+            objectKey={mediaKey}
+            externalUrl={externalMediaUrl}
+            uploadState={uploadState}
+            showUrlInput={true}
+            urlPlaceholder="https://youtube.com/watch?v=…  or  https://facebook.com/…/videos/…"
+            successLabel="Media file uploaded"
+            onFileChange={(f) => { setFile(f); if (f) setExternalMediaUrl(""); }}
+            onUrlChange={(url) => { setExternalMediaUrl(url); if (url) { setFile(null); setMediaKey(""); } }}
+          />
 
-            {/* OR separator */}
-            <div className="flex items-center gap-3 my-3">
-              <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-              <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste a URL</span>
-              <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-            </div>
-
-            <div className="relative">
-              <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-              <input
-                type="url"
-                className="field-input pl-8"
-                placeholder="https://youtube.com/watch?v=…  or  https://facebook.com/…/videos/…"
-                value={externalMediaUrl}
-                onChange={(e) => {
-                  setExternalMediaUrl(e.target.value);
-                  if (e.target.value) { setFile(null); setMediaKey(""); }
-                }}
-              />
-            </div>
-            {externalMediaUrl && (
-              <p className="text-xs mt-1" style={{ color: "#16a34a" }}>
-                ✓ External URL set — YouTube and Facebook videos will be embedded automatically
-              </p>
-            )}
-          </div>
-
-          {/* ─── Cover image: file upload OR URL ─── */}
-          <div>
-            <label className="field-label">Cover Image</label>
-            <div
-              className="rounded border border-dashed px-4 py-4 text-center text-sm"
-              style={{
-                borderColor: "var(--brand-border)",
-                color: "var(--brand-text-soft)",
-              }}
-            >
-              {coverKey ? (
-                <p className="text-xs" style={{ color: "#16a34a" }}>
-                  ✓ Cover uploaded
-                </p>
-              ) : (
-                <>
-                  <Upload size={20} className="mx-auto mb-1 opacity-40" />
-                  <label className="cursor-pointer underline text-xs">
-                    Choose image
-                    <input
-                      type="file"
-                      className="sr-only"
-                      accept="image/*"
-                      onChange={(e) => {
-                        setCoverFile(e.target.files?.[0] ?? null);
-                        setCoverImageUrl("");
-                      }}
-                    />
-                  </label>
-                  {coverFile && (
-                    <p className="mt-1 text-xs">{coverFile.name}</p>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* OR separator for cover */}
-            <div className="flex items-center gap-3 my-3">
-              <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-              <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
-              <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-            </div>
-
-            <div className="relative">
-              <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-              <input
-                type="url"
-                className="field-input pl-8"
-                placeholder="https://example.com/cover-image.jpg"
-                value={coverImageUrl}
-                onChange={(e) => {
-                  setCoverImageUrl(e.target.value);
-                  if (e.target.value) { setCoverFile(null); setCoverKey(""); }
-                }}
-              />
-            </div>
-          </div>
-
-          {uploadState === "uploading" && (
-            <p className="text-xs" style={{ color: "var(--brand-text-soft)" }}>
-              Uploading…
-            </p>
-          )}
+          <AdminUploadField
+            label="Cover Image"
+            mediaKind="cover"
+            accept="image/*"
+            file={coverFile}
+            objectKey={coverKey}
+            externalUrl={coverImageUrl}
+            uploadState={coverKey ? "done" : "idle"}
+            showUrlInput={true}
+            urlPlaceholder="https://example.com/cover-image.jpg"
+            successLabel="Cover image uploaded"
+            onFileChange={(f) => { setCoverFile(f); if (f) setCoverImageUrl(""); }}
+            onUrlChange={(url) => { setCoverImageUrl(url); if (url) { setCoverFile(null); setCoverKey(""); } }}
+          />
         </div>
 
         {error && (
