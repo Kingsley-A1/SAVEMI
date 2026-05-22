@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         hostname: "*.r2.dev",
         pathname: "/**",
       },
+      // Allow any HTTPS image source for admin-pasted cover image URLs
+      {
+        protocol: "https",
+        hostname: "**",
+        pathname: "/**",
+      },
     ],
     // Reasonable quality/format defaults for a ministry site
     formats: ["image/avif", "image/webp"],
