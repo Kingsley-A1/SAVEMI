@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X } from "lucide-react";
+import { Save, X, Link as LinkIcon } from "lucide-react";
 
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
 
@@ -24,6 +24,7 @@ export default function NewQuotePage() {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageKey, setImageKey] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -94,7 +95,7 @@ export default function NewQuotePage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          imageKey: imageKey || undefined,
+          imageKey: imageKey || (imageUrl || undefined),
           attribution: form.attribution || undefined,
           source: form.source || undefined,
           scriptureReference: form.scriptureReference || undefined,
@@ -132,7 +133,6 @@ export default function NewQuotePage() {
           </div>
         ) : null}
 
-        {/* Image upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Quote Image (optional)</h2>
           <label className="block">
@@ -144,6 +144,7 @@ export default function NewQuotePage() {
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
                 setImageFile(file);
+                setImageUrl("");
                 if (file) uploadImage(file);
               }}
             />
@@ -159,6 +160,26 @@ export default function NewQuotePage() {
               Upload failed. You can proceed without an image.
             </p>
           )}
+
+          {/* OR separator for image URL */}
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+          </div>
+          <div className="relative">
+            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
+            <input
+              type="url"
+              className="field-input pl-8"
+              placeholder="https://example.com/quote-image.jpg"
+              value={imageUrl}
+              onChange={(e) => {
+                setImageUrl(e.target.value);
+                if (e.target.value) { setImageFile(null); setImageKey(""); setUploadState("idle"); }
+              }}
+            />
+          </div>
         </div>
 
         {/* Quote content */}

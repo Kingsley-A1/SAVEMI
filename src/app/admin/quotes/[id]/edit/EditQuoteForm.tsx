@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Trash2 } from "lucide-react";
+import { Save, X, Trash2, Link as LinkIcon } from "lucide-react";
 
 const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
 
@@ -36,6 +36,9 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
   });
 
   const [imageKey, setImageKey] = useState(quote.imageKey ?? "");
+  const [imageUrl, setImageUrl] = useState(
+    (quote.imageKey?.startsWith("http") ? quote.imageKey : "") ?? ""
+  );
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -93,7 +96,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          imageKey: imageKey || null,
+          imageKey: imageKey || (imageUrl || null),
           attribution: form.attribution || null,
           source: form.source || null,
           scriptureReference: form.scriptureReference || null,
@@ -164,7 +167,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
         {/* Image upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Quote Image (optional)</h2>
-          {imageKey ? (
+          {imageKey && !imageKey.startsWith("http") ? (
             <p className="text-brand-muted text-xs">Current key: <code>{imageKey}</code></p>
           ) : null}
           <label className="block">
@@ -175,6 +178,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
               className="mt-1 block w-full text-sm text-brand-muted"
               onChange={(e) => {
                 const file = e.target.files?.[0] ?? null;
+                setImageUrl("");
                 if (file) uploadImage(file);
               }}
             />
@@ -188,6 +192,26 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
           {uploadState === "error" && (
             <p className="text-xs" style={{ color: "#b91c1c" }}>Upload failed.</p>
           )}
+
+          {/* OR separator for image URL */}
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
+            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
+          </div>
+          <div className="relative">
+            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
+            <input
+              type="url"
+              className="field-input pl-8"
+              placeholder="https://example.com/quote-image.jpg"
+              value={imageUrl}
+              onChange={(e) => {
+                setImageUrl(e.target.value);
+                if (e.target.value) { setImageKey(""); setUploadState("idle"); }
+              }}
+            />
+          </div>
         </div>
 
         {/* Quote content */}
