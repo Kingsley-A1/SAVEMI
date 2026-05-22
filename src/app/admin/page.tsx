@@ -49,48 +49,56 @@ export default async function AdminDashboard() {
       value: stats.total,
       icon: MessageSquare,
       color: "var(--brand-primary)",
+      href: "/admin/messages",
     },
     {
       label: "Published",
       value: stats.published,
       icon: FileEdit,
       color: "#16a34a",
+      href: "/admin/messages?status=PUBLISHED",
     },
     {
       label: "Drafts",
       value: stats.drafts,
       icon: FileEdit,
       color: "#d97706",
+      href: "/admin/messages?status=DRAFT",
     },
     {
       label: "Contact Submissions",
       value: stats.contacts,
       icon: Mail,
       color: "#0369a1",
+      href: "/admin/contacts",
     },
     {
       label: "Total Books",
       value: stats.totalBooks,
       icon: BookOpen,
       color: "var(--brand-primary-soft)",
+      href: "/admin/books",
     },
     {
       label: "Published Books",
       value: stats.publishedBooks,
       icon: BookOpen,
       color: "#16a34a",
+      href: "/admin/books", // Books page doesn't currently support status filter, just link to books
     },
     {
       label: "Total Quotes",
       value: stats.totalQuotes,
       icon: Quote,
       color: "#7c3aed",
+      href: "/admin/quotes",
     },
     {
       label: "Published Quotes",
       value: stats.publishedQuotes,
       icon: Quote,
       color: "#16a34a",
+      href: "/admin/quotes", // Quotes page doesn't currently support status filter
     },
   ];
 
@@ -105,14 +113,14 @@ export default async function AdminDashboard() {
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="site-panel p-4">
+        {cards.map(({ label, value, icon: Icon, color, href }) => (
+          <Link key={label} href={href} className="site-panel p-4 block hover:bg-black/5 transition-colors">
             <div className="flex items-center justify-between">
               <p className="text-brand-muted text-xs font-medium">{label}</p>
               <Icon size={18} style={{ color }} />
             </div>
             <p className="mt-2 text-2xl font-semibold">{value}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
