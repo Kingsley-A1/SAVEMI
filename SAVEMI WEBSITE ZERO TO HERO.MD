@@ -1,8 +1,8 @@
 # SAVEMI Website Zero To Hero
 
-Written by Bespoke Technologies  
-bespoketech.com.ng  
-Motto: Engineering the solutions for this and the next generation.  
+Written by Bespoke Technologies
+bespoketech.com.ng
+Motto: Engineering the solutions for this and the next generation.
 Document date: 2026-06-03
 
 ## What This Book Gives You
