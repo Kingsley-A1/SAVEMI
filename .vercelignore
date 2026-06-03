@@ -1,0 +1,16 @@
+# Local secrets must be configured in Vercel project environment variables.
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Local build and dependency output.
+.next
+node_modules
+out
+build
+dist
+
+# Local logs and generated artifacts.
+*.log
+*.tsbuildinfo
