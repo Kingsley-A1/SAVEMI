@@ -4,11 +4,11 @@ export default function AboutPage() {
       <div className="site-panel p-4 sm:p-6">
         <p className="eyebrow text-brand-primary">About SAVEMI</p>
         <h1 className="section-title mt-2">
-          A Sabbath-centered ministry of reflection and biblical study
+          A Seventh-day Sabbath ministry of reflection and biblical study
         </h1>
         <p className="section-copy mt-2">
-          SAVEMI, the Sabbath Vesper Ministry, is a ministry based in Calabar,
-          Nigeria, committed to exploring the seventh-day Sabbath from biblical
+          SAVEMI, the Sabbath Vesper Ministry, is based in Calabar, Nigeria,
+          committed to exploring the Seventh-day Sabbath from biblical
           perspectives. Its work emphasizes meditation, spiritual reflection,
           and clearer understanding of God&apos;s grand plan for humanity.
         </p>
@@ -18,9 +18,9 @@ export default function AboutPage() {
         <article className="site-panel p-4 sm:p-5">
           <h2 className="eyebrow text-brand-primary">Mission</h2>
           <p className="text-brand-muted mt-2 text-sm leading-6">
-            Present biblically grounded Sabbath teachings and Reflection at
-            Eventide resources that help believers rest, reflect, and recover
-            in the presence of God.
+            Present biblically grounded Seventh-day Sabbath teachings and
+            Reflection at Eventide resources that help believers remember,
+            delight, and rest in the presence of God.
           </p>
         </article>
         <article className="site-panel p-4 sm:p-5">
@@ -55,8 +55,8 @@ export default function AboutPage() {
           <h2 className="eyebrow text-brand-primary">Themes</h2>
           <p className="text-brand-muted mt-2 text-sm leading-6">
             The ministry&apos;s recurring content includes Reflection at Eventide,
-            Sabbath teachings, short motivational clips, and messages on faith,
-            healing, and spiritual restoration.
+            Seventh-day Sabbath teachings, short devotional clips, and messages
+            on faith, healing, and spiritual restoration.
           </p>
         </article>
         <article className="site-panel p-4 sm:p-5">

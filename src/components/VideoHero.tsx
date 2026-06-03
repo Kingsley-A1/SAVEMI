@@ -51,7 +51,7 @@ export default function VideoHero({
       });
 
     return () => controller.abort();
-  }, [videoSrc]);
+  }, [initialHeroMedia, videoSrc]);
 
   const resolvedVideoSrc =
     videoSrc ||
@@ -111,14 +111,14 @@ export default function VideoHero({
           className="mt-2 text-base font-light tracking-wider sm:text-lg"
           style={{ color: "rgba(241,231,201,0.75)" }}
         >
-          Repose&nbsp;·&nbsp;Renewal&nbsp;·&nbsp;Restoration
+          Remember&nbsp;·&nbsp;Delight&nbsp;·&nbsp;Restore
         </p>
         <p
           className="mt-4 max-w-md text-sm leading-6 sm:text-base sm:leading-7"
           style={{ color: "rgba(255,255,255,0.65)" }}
         >
           {heroMedia?.summary ||
-            "Biblical reflection on the seventh-day Sabbath for meditation, spiritual recovery, and renewed understanding of God's plan."}
+            "Biblical reflection on the Seventh-day Sabbath for meditation, spiritual recovery, and renewed understanding of God's plan."}
         </p>
 
         {heroMedia?.title ? (

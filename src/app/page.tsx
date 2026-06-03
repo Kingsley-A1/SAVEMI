@@ -11,25 +11,25 @@ export const dynamic = "force-dynamic";
 /* ── Scripture-backed pillars ───────────────────────────────── */
 const pillars = [
   {
-    label: "Repose",
+    label: "Remembrance",
     icon: Moon,
-    heading: '"Come to Me and I will give you rest"',
-    verse: "Matthew 11:28",
-    body: "A quiet place shaped for the soul at day's end — unhurried, undistracted, fully present.",
+    heading: '"Remember the sabbath day, to keep it holy"',
+    verse: "Exodus 20:8",
+    body: "A Seventh-day Sabbath witness shaped by Scripture, worship, and holy time with God.",
   },
   {
-    label: "Renewal",
+    label: "Delight",
     icon: Sunrise,
-    heading: '"They shall mount up with wings like eagles"',
-    verse: "Isaiah 40:31",
-    body: "Strength replenished by the Word — minds renewed, spirits refreshed, hope confirmed.",
+    heading: '"Call the sabbath a delight"',
+    verse: "Isaiah 58:13",
+    body: "Reflection at Eventide helps believers enter the Sabbath with reverence, gratitude, and joy.",
   },
   {
     label: "Restoration",
     icon: Heart,
-    heading: '"He restores my soul"',
-    verse: "Psalm 23:3",
-    body: "The ministry that gathers in brokenness and sends out whole — because the Shepherd never fails.",
+    heading: '"The sabbath was made for man"',
+    verse: "Mark 2:27",
+    body: "Sabbath rest points weary hearts back to Christ, the Lord of the Sabbath and giver of life.",
   },
 ];
 
@@ -59,14 +59,14 @@ export default async function HomePage() {
               className="mt-3 text-2xl font-semibold leading-snug sm:text-3xl"
               style={{ color: "#fff8ea" }}
             >
-              Biblical Sabbath reflection rooted in Scripture
+              Seventh-day Sabbath reflection rooted in Scripture
             </h2>
             <p
               className="mt-3 max-w-lg text-sm leading-6 sm:text-base sm:leading-7"
               style={{ color: "rgba(241,231,201,0.72)" }}
             >
               Sabbath Vesper Ministry (SAVEMI), based in Calabar, Nigeria,
-              studies the seventh-day Sabbath from biblical perspectives and
+              studies the Seventh-day Sabbath from biblical perspectives and
               calls believers into meditation, spiritual reflection, and a
               deeper understanding of God&apos;s grand plan.
             </p>
@@ -117,7 +117,7 @@ export default async function HomePage() {
 
       {/* 4. Featured videos */}
       <section className="site-container">
-        <FeaturedVideos items={featuredVideos as any} />
+        <FeaturedVideos items={featuredVideos} />
       </section>
 
       {/* 5. Facebook feed */}
@@ -170,7 +170,7 @@ export default async function HomePage() {
 
       {/* 6. Featured audios */}
       <section className="site-container">
-        <FeaturedAudios items={featuredAudios as any} />
+        <FeaturedAudios items={featuredAudios} />
       </section>
 
       {/* 7. CTA strip */}
@@ -195,8 +195,8 @@ export default async function HomePage() {
             className="mx-auto mt-3 max-w-md text-sm leading-6"
             style={{ color: "rgba(241,231,201,0.72)" }}
           >
-            Reach out with a prayer request, testimony, or any question — the
-            ministry door is always open.
+            Reach out with a prayer request, testimony, or Sabbath question.
+            The ministry door is always open.
           </p>
           <Link href="/contact" className="hero-btn-primary mt-6 inline-flex">
             Send a message

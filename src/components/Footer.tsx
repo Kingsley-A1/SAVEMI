@@ -11,7 +11,7 @@ export default function Footer() {
           <div>
             <p className="text-brand-primary font-semibold">SAVEMI Ministry</p>
             <p className="text-brand-muted mt-0.5">
-              Sabbath Vesper Ministry — Repose · Renewal · Restoration
+              Sabbath Vesper Ministry - Remember · Delight · Restore
             </p>
           </div>
           <p className="text-brand-muted">
