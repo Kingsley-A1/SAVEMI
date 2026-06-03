@@ -16,7 +16,7 @@ export default auth((req) => {
   // Allow login page and auth API through
   // If they are logged in and hit login/register, redirect to dashboard
   if (isAuthRoute) {
-    if (isLoggedIn && (pathname === "/admin/login" || pathname === "/admin/register")) {
+    if (isLoggedIn && pathname === "/admin/login") {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
     return NextResponse.next();

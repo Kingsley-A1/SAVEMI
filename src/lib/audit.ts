@@ -31,7 +31,10 @@ export type AuditAction =
   | "quote.create"
   | "quote.update"
   | "quote.delete"
-  | "admin.register";
+  | "admin.register"
+  | "admin.create"
+  | "admin.update"
+  | "admin.delete";
 
 export type AuditEntityType = "Message" | "Book" | "Quote" | "AdminUser";
 

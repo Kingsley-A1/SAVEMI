@@ -1,7 +1,7 @@
 -- Add AuditLog table for admin action tracking (Phase 2: Security & Admin Operations)
 
 CREATE TABLE "AuditLog" (
-    "id"         STRING NOT NULL DEFAULT gen_random_id(),
+    "id"         STRING NOT NULL,
     "adminId"    STRING NOT NULL,
     "adminEmail" STRING NOT NULL,
     "action"     STRING NOT NULL,

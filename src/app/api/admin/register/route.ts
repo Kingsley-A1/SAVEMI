@@ -14,6 +14,7 @@ import {
 } from "../../../../lib/rate-limit";
 import { audit } from "../../../../lib/audit";
 import { auth } from "../../../../../auth";
+import { isSuperAdminEmail } from "../../../../lib/admin-permissions";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -29,6 +30,31 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Database not configured" },
       { status: 503 },
+    );
+  }
+
+  const session = await auth().catch(() => null);
+
+  try {
+    const adminCount = await prisma.adminUser.count();
+
+    if (adminCount > 0 && !session?.user?.email) {
+      return NextResponse.json(
+        { error: "Admin session required to register another admin." },
+        { status: 401 },
+      );
+    }
+
+    if (adminCount > 0 && !isSuperAdminEmail(session?.user?.email)) {
+      return NextResponse.json(
+        { error: "Super admin access is required to register another admin." },
+        { status: 403 },
+      );
+    }
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to verify admin registration state." },
+      { status: 500 },
     );
   }
 
@@ -91,10 +117,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Audit: log who performed this registration.
-    // The registering user is either the current session holder or the new
-    // admin themselves (bootstrap case). We try the session first.
-    const session = await auth().catch(() => null);
     await audit({
       session: session ?? { user: { id: admin.id, email: admin.email } },
       request,

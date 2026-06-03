@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
 import { audit } from "../../../../../lib/audit";
+import { createUniqueMessageSlug } from "../../../../../lib/slugs";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -85,7 +86,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   const {
     title,
-    slug,
     summary,
     description,
     type,
@@ -122,13 +122,17 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         placement ? String(placement) : existing.placement,
         nextType,
       ) ?? existing.placement;
+    const nextSlug =
+      title !== undefined
+        ? await createUniqueMessageSlug(String(title), id)
+        : undefined;
 
     const message = await prisma.$transaction(async (tx) => {
       const updated = await tx.message.update({
         where: { id },
         data: {
           ...(title && { title: String(title) }),
-          ...(slug && { slug: String(slug) }),
+          ...(nextSlug && { slug: nextSlug }),
           ...(summary && { summary: String(summary) }),
           ...(description && { description: String(description) }),
           ...(type && { type: type as "VIDEO" | "AUDIO" | "IMAGE" }),

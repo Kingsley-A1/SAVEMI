@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
 import { audit } from "../../../../../lib/audit";
+import { createUniqueBookSlug } from "../../../../../lib/slugs";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,7 +34,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   const {
     title,
-    slug,
     tagline,
     description,
     author,
@@ -56,13 +56,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       publishedAt = new Date();
     }
   }
+  const nextSlug =
+    title !== undefined ? await createUniqueBookSlug(String(title), id) : undefined;
 
   try {
     const updated = await prisma.book.update({
       where: { id },
       data: {
         ...(title !== undefined && { title: String(title) }),
-        ...(slug !== undefined && { slug: String(slug) }),
+        ...(nextSlug !== undefined && { slug: nextSlug }),
         ...(tagline !== undefined && { tagline: String(tagline) }),
         ...(description !== undefined && { description: String(description) }),
         ...(author !== undefined && { author: String(author) }),
@@ -94,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: "A generated slug already exists" }, { status: 409 });
     }
     return NextResponse.json({ error: "Failed to update book" }, { status: 500 });
   }

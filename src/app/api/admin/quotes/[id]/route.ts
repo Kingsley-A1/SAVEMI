@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
 import { audit } from "../../../../../lib/audit";
+import { createUniqueQuoteSlug } from "../../../../../lib/slugs";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -33,7 +34,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
   const {
     title,
-    slug,
     text,
     attribution,
     source,
@@ -51,13 +51,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       publishedAt = new Date();
     }
   }
+  const nextSlug =
+    title !== undefined ? await createUniqueQuoteSlug(String(title), id) : undefined;
 
   try {
     const updated = await prisma.quote.update({
       where: { id },
       data: {
         ...(title !== undefined && { title: String(title) }),
-        ...(slug !== undefined && { slug: String(slug) }),
+        ...(nextSlug !== undefined && { slug: nextSlug }),
         ...(text !== undefined && { text: String(text) }),
         ...(attribution !== undefined && { attribution: typeof attribution === "string" ? attribution || null : null }),
         ...(source !== undefined && { source: typeof source === "string" ? source || null : null }),
@@ -84,7 +86,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: "A generated slug already exists" }, { status: 409 });
     }
     return NextResponse.json({ error: "Failed to update quote" }, { status: 500 });
   }

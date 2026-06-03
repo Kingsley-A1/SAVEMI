@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
 import { audit } from "../../../../lib/audit";
+import { createUniqueMessageSlug } from "../../../../lib/slugs";
 
 function parseDurationSeconds(value: unknown) {
   if (value === undefined) return undefined;
@@ -33,16 +34,8 @@ function guardDb() {
   return null;
 }
 
-function slugify(v: string) {
-  return v
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .slice(0, 80);
-}
-
 // GET /api/admin/messages — list for admin (all statuses)
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const session = await auth();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -76,7 +69,6 @@ export async function POST(req: NextRequest) {
 
   const {
     title,
-    slug,
     summary,
     description,
     type,
@@ -91,7 +83,7 @@ export async function POST(req: NextRequest) {
     externalMediaUrl,
   } = body as Record<string, string | null | number | undefined>;
 
-  if (!title || !slug || !summary || !description || !type) {
+  if (!title || !summary || !description || !type) {
     return NextResponse.json(
       { error: "Missing required fields" },
       { status: 400 },
@@ -116,7 +108,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const finalSlug = String(slug) || slugify(String(title));
+  const finalSlug = await createUniqueMessageSlug(String(title));
 
   try {
     const message = await prisma.$transaction(async (tx) => {

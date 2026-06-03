@@ -2,20 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
 import { audit } from "../../../../lib/audit";
+import { createUniqueQuoteSlug } from "../../../../lib/slugs";
 
 function guardDb() {
   if (!isDatabaseConfigured()) {
     return NextResponse.json({ error: "Database not configured" }, { status: 503 });
   }
   return null;
-}
-
-function slugify(v: string): string {
-  return v
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .slice(0, 80);
 }
 
 // GET /api/admin/quotes — list all (all statuses)
@@ -53,7 +46,6 @@ export async function POST(req: NextRequest) {
 
   const {
     title,
-    slug,
     text,
     attribution,
     source,
@@ -70,10 +62,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const resolvedSlug =
-    typeof slug === "string" && slug.trim()
-      ? slug.trim()
-      : slugify(String(title));
+  const resolvedSlug = await createUniqueQuoteSlug(String(title));
 
   const resolvedStatus =
     status === "PUBLISHED"
@@ -110,7 +99,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
     if (code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: "A generated slug already exists" }, { status: 409 });
     }
     return NextResponse.json({ error: "Failed to create quote" }, { status: 500 });
   }
