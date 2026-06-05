@@ -4,12 +4,30 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, X } from "lucide-react";
 import AdminUploadField from "../../../../../components/AdminUploadField";
+import { uploadAdminFile } from "../../../../../lib/admin-upload-client";
 
-const AVAILABILITIES = ["FREE", "PAID"] as const;
-const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
+const AVAILABILITIES = [
+  { value: "FREE", label: "Free" },
+  { value: "PAID", label: "Paid" },
+] as const;
+const STATUSES = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "ARCHIVED", label: "Archived" },
+] as const;
 const FORMATS = ["PDF", "EPUB", "MOBI", "Paperback", "Hardcover"] as const;
 
 type UploadState = "idle" | "uploading" | "done" | "error";
+
+interface UploadSlot {
+  state: UploadState;
+  progress: number;
+  error: string;
+}
+
+function initialUploadSlot(): UploadSlot {
+  return { state: "idle", progress: 0, error: "" };
+}
 
 export default function NewBookPage() {
   const router = useRouter();
@@ -25,14 +43,14 @@ export default function NewBookPage() {
     format: "",
     pageCount: "",
     featured: false,
-    availability: "FREE" as (typeof AVAILABILITIES)[number],
-    status: "DRAFT" as (typeof STATUSES)[number],
+    availability: "FREE" as (typeof AVAILABILITIES)[number]["value"],
+    status: "DRAFT" as (typeof STATUSES)[number]["value"],
   });
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverKey, setCoverKey] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [uploadState, setUploadState] = useState<UploadSlot>(initialUploadSlot);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -47,33 +65,23 @@ export default function NewBookPage() {
   }
 
   async function uploadCover(file: File) {
-    setUploadState("uploading");
+    setUploadState({ state: "uploading", progress: 0, error: "" });
     try {
-      const res = await fetch("/api/admin/upload-url", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          fileName: `book-cover-${Date.now()}-${file.name}`,
-          contentType: file.type,
-          contentLength: file.size,
-        }),
+      const result = await uploadAdminFile({
+        file,
+        fileName: `book-cover-${Date.now()}-${file.name}`,
+        onProgress: (progress) =>
+          setUploadState({ state: "uploading", progress, error: "" }),
       });
-      if (!res.ok) throw new Error("Upload URL failed");
-      const payload = await res.json();
-      const { uploadUrl, objectKey } = payload?.data ?? {};
-      if (!uploadUrl || !objectKey) throw new Error("Upload URL failed");
 
-      const put = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "content-type": file.type },
+      setCoverKey(result.objectKey);
+      setUploadState({ state: "done", progress: 100, error: "" });
+    } catch (err) {
+      setUploadState({
+        state: "error",
+        progress: 0,
+        error: err instanceof Error ? err.message : "Upload failed.",
       });
-      if (!put.ok) throw new Error("Upload failed");
-
-      setCoverKey(objectKey);
-      setUploadState("done");
-    } catch {
-      setUploadState("error");
     }
   }
 
@@ -137,18 +145,29 @@ export default function NewBookPage() {
             file={coverFile}
             objectKey={coverKey}
             externalUrl={coverImageUrl}
-            uploadState={uploadState}
+            uploadState={uploadState.state}
+            progress={uploadState.progress}
             showUrlInput={true}
             urlPlaceholder="https://example.com/book-cover.jpg"
             successLabel="Cover image uploaded"
+            errorMessage={uploadState.error}
             onFileChange={(f) => {
               setCoverFile(f);
               setCoverImageUrl("");
+              setCoverKey("");
+              setUploadState(initialUploadSlot());
               if (f) uploadCover(f);
             }}
             onUrlChange={(url) => {
               setCoverImageUrl(url);
-              if (url) { setCoverFile(null); setCoverKey(""); setUploadState("idle"); }
+              if (url) { setCoverFile(null); setCoverKey(""); setUploadState(initialUploadSlot()); }
+            }}
+            onRetry={() => {
+              if (coverFile) void uploadCover(coverFile);
+            }}
+            onValidationError={(message) => {
+              setUploadState({ state: "error", progress: 0, error: message });
+              setError(message);
             }}
           />
         </div>
@@ -252,8 +271,8 @@ export default function NewBookPage() {
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
                 style={{ borderColor: "var(--brand-border)" }}
               >
-                {AVAILABILITIES.map((a) => (
-                  <option key={a} value={a}>{a}</option>
+                {AVAILABILITIES.map((availability) => (
+                  <option key={availability.value} value={availability.value}>{availability.label}</option>
                 ))}
               </select>
             </label>
@@ -312,8 +331,8 @@ export default function NewBookPage() {
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
                 style={{ borderColor: "var(--brand-border)" }}
               >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {STATUSES.map((status) => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
                 ))}
               </select>
             </label>
@@ -335,7 +354,7 @@ export default function NewBookPage() {
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={saving || uploadState === "uploading"}
+            disabled={saving || uploadState.state === "uploading"}
             className="button-primary flex items-center gap-1.5"
           >
             <Save size={14} />

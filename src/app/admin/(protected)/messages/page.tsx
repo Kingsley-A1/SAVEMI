@@ -1,6 +1,6 @@
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
 import Link from "next/link";
-import { PlusCircle, Edit2, Eye, Clapperboard } from "lucide-react";
+import { PlusCircle, Edit2, Eye } from "lucide-react";
 import { Suspense } from "react";
 import AdminFilterBar from "../../../../components/AdminFilterBar";
 
@@ -27,7 +27,7 @@ async function getMessages(filters: { search?: string; status?: string; type?: s
         }),
       },
       select: {
-        id: true, title: true, type: true, placement: true,
+        id: true, title: true, type: true,
         status: true, speaker: true, publishedAt: true, createdAt: true, slug: true,
       },
     });
@@ -42,10 +42,9 @@ const STATUS_STYLE: Record<string, { background: string; color: string }> = {
   ARCHIVED: { background: "rgba(100,116,139,0.1)", color: "#475569" },
 };
 
-const PLACEMENT_STYLE: Record<string, { background: string; color: string }> = {
-  HERO: { background: "rgba(10,79,60,0.1)", color: "#0a4f3c" },
-  STANDARD: { background: "rgba(15,23,42,0.06)", color: "#334155" },
-};
+function humanizeEnum(value: string) {
+  return value.charAt(0) + value.slice(1).toLowerCase();
+}
 
 export default async function AdminMessagesPage({ searchParams }: PageProps) {
   const params = await searchParams;
@@ -64,9 +63,6 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/admin/messages/new?placement=HERO" className="button-tertiary flex items-center gap-1.5">
-            <Clapperboard size={14} /> New Hero Media
-          </Link>
           <Link href="/admin/messages/new" className="button-primary flex items-center gap-1.5">
             <PlusCircle size={14} /> New Message
           </Link>
@@ -133,12 +129,9 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="type-badge">{msg.type}</span>
+                    <span className="type-badge">{humanizeEnum(msg.type)}</span>
                     <span className="inline-block rounded px-2 py-0.5 font-semibold" style={STATUS_STYLE[msg.status]}>
-                      {msg.status}
-                    </span>
-                    <span className="inline-block rounded px-2 py-0.5 font-semibold" style={PLACEMENT_STYLE[msg.placement]}>
-                      {msg.placement}
+                      {humanizeEnum(msg.status)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -158,7 +151,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--brand-border)", background: "rgba(10,79,60,0.03)" }}>
-                    {["Title", "Type", "Placement", "Speaker", "Status", "Date", ""].map((h) => (
+                    {["Title", "Type", "Speaker", "Status", "Date", ""].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide" style={{ color: "var(--brand-text-soft)" }}>
                         {h}
                       </th>
@@ -169,16 +162,11 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
                   {messages.map((msg) => (
                     <tr key={msg.id} style={{ borderBottom: "1px solid var(--brand-border)" }} className="hover:bg-[rgba(10,79,60,0.02)] transition-colors">
                       <td className="max-w-[200px] truncate px-4 py-3 font-medium">{msg.title}</td>
-                      <td className="px-4 py-3"><span className="type-badge">{msg.type}</span></td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block rounded px-2 py-0.5 text-xs font-semibold" style={PLACEMENT_STYLE[msg.placement]}>
-                          {msg.placement}
-                        </span>
-                      </td>
+                      <td className="px-4 py-3"><span className="type-badge">{humanizeEnum(msg.type)}</span></td>
                       <td className="px-4 py-3 text-brand-muted">{msg.speaker ?? "—"}</td>
                       <td className="px-4 py-3">
                         <span className="inline-block rounded px-2 py-0.5 text-xs font-semibold" style={STATUS_STYLE[msg.status]}>
-                          {msg.status}
+                          {humanizeEnum(msg.status)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-brand-muted text-xs">{new Date(msg.createdAt).toLocaleDateString()}</td>

@@ -98,7 +98,7 @@ export default function AdminRegisterForm({
 
           <div>
             <label htmlFor="password" className="field-label">
-              Shared Password
+              Shared access code
             </label>
             <div className="relative">
               <input
@@ -115,7 +115,8 @@ export default function AdminRegisterForm({
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5a7268]"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide access code" : "Show access code"}
+                aria-pressed={showPassword}
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>

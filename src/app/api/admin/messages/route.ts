@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     externalMediaUrl,
   } = body as Record<string, string | null | number | undefined>;
 
-  if (!title || !summary || !description || !type) {
+  if (!title || !type) {
     return NextResponse.json(
       { error: "Missing required fields" },
       { status: 400 },
@@ -95,57 +95,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
 
-  const allowedPlacements = ["STANDARD", "HERO"];
-  const finalPlacement = String(placement ?? "STANDARD");
-  if (!allowedPlacements.includes(finalPlacement)) {
-    return NextResponse.json({ error: "Invalid placement" }, { status: 400 });
-  }
-
-  if (finalPlacement === "HERO" && type === "AUDIO") {
+  const requestedPlacement = placement ? String(placement) : "STANDARD";
+  if (requestedPlacement === "HERO") {
     return NextResponse.json(
-      { error: "Hero media must be a video or image." },
+      { error: "Hero placement has been retired. Create a standard message instead." },
       { status: 400 },
     );
   }
 
+  if (requestedPlacement !== "STANDARD") {
+    return NextResponse.json({ error: "Invalid placement" }, { status: 400 });
+  }
+
   const finalSlug = await createUniqueMessageSlug(String(title));
+  const finalSummary = summary ? String(summary) : String(title);
+  const finalDescription = description ? String(description) : finalSummary;
 
   try {
-    const message = await prisma.$transaction(async (tx) => {
-      const created = await tx.message.create({
-        data: {
-          title: String(title),
-          slug: finalSlug,
-          summary: String(summary),
-          description: String(description),
-          type: type as "VIDEO" | "AUDIO" | "IMAGE",
-          status: (status as "DRAFT" | "PUBLISHED") ?? "DRAFT",
-          placement: finalPlacement as "STANDARD" | "HERO",
-          speaker: speaker ? String(speaker) : null,
-          scriptureReference: scriptureReference
-            ? String(scriptureReference)
-            : null,
-          eventDate: eventDate ? new Date(String(eventDate)) : null,
-          durationSeconds: parseDurationSeconds(durationSeconds),
-          mediaKey: mediaKey ? String(mediaKey) : null,
-          coverImageKey: coverImageKey ? String(coverImageKey) : null,
-          externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
-          publishedAt: status === "PUBLISHED" ? new Date() : null,
-        },
-      });
-
-      if (created.placement === "HERO" && created.status === "PUBLISHED") {
-        await tx.message.updateMany({
-          where: {
-            id: { not: created.id },
-            placement: "HERO",
-            status: "PUBLISHED",
-          },
-          data: { placement: "STANDARD" },
-        });
-      }
-
-      return created;
+    const message = await prisma.message.create({
+      data: {
+        title: String(title),
+        slug: finalSlug,
+        summary: finalSummary,
+        description: finalDescription,
+        type: type as "VIDEO" | "AUDIO" | "IMAGE",
+        status: (status as "DRAFT" | "PUBLISHED") ?? "DRAFT",
+        placement: "STANDARD",
+        speaker: speaker ? String(speaker) : null,
+        scriptureReference: scriptureReference
+          ? String(scriptureReference)
+          : null,
+        eventDate: eventDate ? new Date(String(eventDate)) : null,
+        durationSeconds: parseDurationSeconds(durationSeconds),
+        mediaKey: mediaKey ? String(mediaKey) : null,
+        coverImageKey: coverImageKey ? String(coverImageKey) : null,
+        externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
+        publishedAt: status === "PUBLISHED" ? new Date() : null,
+      },
     });
 
     // Audit: record message creation.

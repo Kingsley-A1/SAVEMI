@@ -29,7 +29,6 @@ export default async function EditMessagePage({ params }: Props) {
         summary: true,
         description: true,
         type: true,
-        placement: true,
         status: true,
         speaker: true,
         scriptureReference: true,

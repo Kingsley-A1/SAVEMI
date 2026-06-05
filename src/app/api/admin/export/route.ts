@@ -25,7 +25,6 @@ async function exportMessages(): Promise<string> {
       slug: true,
       type: true,
       status: true,
-      placement: true,
       speaker: true,
       scriptureReference: true,
       summary: true,
@@ -34,10 +33,10 @@ async function exportMessages(): Promise<string> {
     },
   });
 
-  const header = "id,title,slug,type,status,placement,speaker,scriptureReference,summary,createdAt,publishedAt";
+  const header = "id,title,slug,type,status,speaker,scriptureReference,summary,createdAt,publishedAt";
   const lines = rows.map((r) =>
     rowToCsv([
-      r.id, r.title, r.slug, r.type, r.status, r.placement,
+      r.id, r.title, r.slug, r.type, r.status,
       r.speaker, r.scriptureReference, r.summary,
       r.createdAt.toISOString(), r.publishedAt?.toISOString() ?? "",
     ])

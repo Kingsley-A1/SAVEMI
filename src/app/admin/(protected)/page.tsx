@@ -8,7 +8,6 @@ import {
   FileEdit,
   PlusCircle,
   UserPlus,
-  Clapperboard,
   BookOpen,
   Quote,
   Activity,
@@ -174,13 +173,6 @@ export default async function AdminDashboard() {
           >
             <PlusCircle size={14} />
             New Message
-          </Link>
-          <Link
-            href="/admin/messages/new?placement=HERO"
-            className="button-tertiary flex items-center gap-1.5"
-          >
-            <Clapperboard size={14} />
-            New Hero Media
           </Link>
           {isSuperAdmin ? (
             <Link

@@ -2,11 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Trash2, Link as LinkIcon } from "lucide-react";
+import { Save, X, Trash2 } from "lucide-react";
+import AdminUploadField from "../../../../../../components/AdminUploadField";
+import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
 
-const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
+const STATUSES = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "ARCHIVED", label: "Archived" },
+] as const;
 
 type UploadState = "idle" | "uploading" | "done" | "error";
+
+interface UploadSlot {
+  state: UploadState;
+  progress: number;
+  error: string;
+}
+
+function initialUploadSlot(): UploadSlot {
+  return { state: "idle", progress: 0, error: "" };
+}
 
 interface QuoteData {
   id: string;
@@ -37,7 +53,8 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
   const [imageUrl, setImageUrl] = useState(
     (quote.imageKey?.startsWith("http") ? quote.imageKey : "") ?? ""
   );
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadState, setUploadState] = useState<UploadSlot>(initialUploadSlot);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -53,33 +70,23 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
   }
 
   async function uploadImage(file: File) {
-    setUploadState("uploading");
+    setUploadState({ state: "uploading", progress: 0, error: "" });
     try {
-      const res = await fetch("/api/admin/upload-url", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const result = await uploadAdminFile({
+        file,
           fileName: `quote-image-${Date.now()}-${file.name}`,
-          contentType: file.type,
-          contentLength: file.size,
-        }),
+        onProgress: (progress) =>
+          setUploadState({ state: "uploading", progress, error: "" }),
       });
-      if (!res.ok) throw new Error("Upload URL failed");
-      const payload = await res.json();
-      const { uploadUrl, objectKey } = payload?.data ?? {};
-      if (!uploadUrl || !objectKey) throw new Error("Upload URL failed");
 
-      const put = await fetch(uploadUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "content-type": file.type },
+      setImageKey(result.objectKey);
+      setUploadState({ state: "done", progress: 100, error: "" });
+    } catch (err) {
+      setUploadState({
+        state: "error",
+        progress: 0,
+        error: err instanceof Error ? err.message : "Upload failed.",
       });
-      if (!put.ok) throw new Error("Upload failed");
-
-      setImageKey(objectKey);
-      setUploadState("done");
-    } catch {
-      setUploadState("error");
     }
   }
 
@@ -165,51 +172,42 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
         {/* Image upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Quote Image (optional)</h2>
-          {imageKey && !imageKey.startsWith("http") ? (
-            <p className="text-brand-muted text-xs">Current key: <code>{imageKey}</code></p>
-          ) : null}
-          <label className="block">
-            <span className="field-label">Replace image</span>
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-1 block w-full text-sm text-brand-muted"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setImageUrl("");
-                if (file) uploadImage(file);
-              }}
-            />
-          </label>
-          {uploadState === "uploading" && (
-            <p className="text-brand-muted text-xs">Uploading…</p>
-          )}
-          {uploadState === "done" && (
-            <p className="text-xs" style={{ color: "#15803d" }}>Image uploaded ✓</p>
-          )}
-          {uploadState === "error" && (
-            <p className="text-xs" style={{ color: "#b91c1c" }}>Upload failed.</p>
-          )}
-
-          {/* OR separator for image URL */}
-          <div className="flex items-center gap-3 my-2">
-            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-            <span className="text-xs font-medium" style={{ color: "var(--brand-text-soft)" }}>OR paste image URL</span>
-            <div className="flex-1 border-t" style={{ borderColor: "var(--brand-border)" }} />
-          </div>
-          <div className="relative">
-            <LinkIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-            <input
-              type="url"
-              className="field-input pl-8"
-              placeholder="https://example.com/quote-image.jpg"
-              value={imageUrl}
-              onChange={(e) => {
-                setImageUrl(e.target.value);
-                if (e.target.value) { setImageKey(""); setUploadState("idle"); }
-              }}
-            />
-          </div>
+          <AdminUploadField
+            label="Replace image"
+            mediaKind="image"
+            accept="image/*"
+            file={imageFile}
+            objectKey={imageKey && !imageKey.startsWith("http") ? imageKey : ""}
+            externalUrl={imageUrl}
+            uploadState={uploadState.state}
+            progress={uploadState.progress}
+            showUrlInput={true}
+            urlPlaceholder="https://example.com/quote-image.jpg"
+            successLabel={imageKey ? "Current image linked" : "Image uploaded"}
+            errorMessage={uploadState.error}
+            onFileChange={(file) => {
+              setImageFile(file);
+              setImageUrl("");
+              setImageKey("");
+              setUploadState(initialUploadSlot());
+              if (file) void uploadImage(file);
+            }}
+            onUrlChange={(url) => {
+              setImageUrl(url);
+              if (url) {
+                setImageFile(null);
+                setImageKey("");
+                setUploadState(initialUploadSlot());
+              }
+            }}
+            onRetry={() => {
+              if (imageFile) void uploadImage(imageFile);
+            }}
+            onValidationError={(message) => {
+              setUploadState({ state: "error", progress: 0, error: message });
+              setError(message);
+            }}
+          />
         </div>
 
         {/* Quote content */}
@@ -267,7 +265,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
               <select name="status" value={form.status} onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
                 style={{ borderColor: "var(--brand-border)" }}>
-                {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                {STATUSES.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
               </select>
             </label>
 
@@ -280,7 +278,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || uploadState === "uploading"}
+          <button type="submit" disabled={saving || uploadState.state === "uploading"}
             className="button-primary flex items-center gap-1.5">
             <Save size={14} />
             {saving ? "Saving…" : "Save Changes"}

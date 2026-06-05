@@ -18,24 +18,6 @@ function guardDb() {
   return null;
 }
 
-function normalizePlacementForType(
-  placement: string | null | undefined,
-  type: string | null | undefined,
-) {
-  const nextPlacement = placement ?? undefined;
-  const nextType = type ?? undefined;
-
-  if (nextType === "AUDIO") {
-    return "STANDARD" as const;
-  }
-
-  if (nextPlacement === "HERO" || nextPlacement === "STANDARD") {
-    return nextPlacement;
-  }
-
-  return undefined;
-}
-
 function parseDurationSeconds(value: unknown) {
   if (value === undefined) {
     return undefined;
@@ -100,11 +82,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     externalMediaUrl,
   } = body as Record<string, string | null | number | undefined>;
 
-  if (placement === "HERO" && type === "AUDIO") {
+  if (placement === "HERO") {
     return NextResponse.json(
-      { error: "Hero media must be a video or image." },
+      { error: "Hero placement has been retired. Save this as a standard message instead." },
       { status: 400 },
     );
+  }
+
+  if (placement !== undefined && placement !== null && placement !== "STANDARD") {
+    return NextResponse.json({ error: "Invalid placement" }, { status: 400 });
   }
 
   try {
@@ -115,72 +101,61 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     const willPublish =
       status === "PUBLISHED" && existing.status !== "PUBLISHED";
-    const nextType = type ? String(type) : existing.type;
-    const nextStatus = status ? String(status) : existing.status;
-    const nextPlacement =
-      normalizePlacementForType(
-        placement ? String(placement) : existing.placement,
-        nextType,
-      ) ?? existing.placement;
     const nextSlug =
       title !== undefined
         ? await createUniqueMessageSlug(String(title), id)
         : undefined;
+    const nextTitle = title !== undefined ? String(title) : existing.title;
+    const nextSummary =
+      summary !== undefined
+        ? summary
+          ? String(summary)
+          : nextTitle
+        : undefined;
+    const nextDescription =
+      description !== undefined
+        ? description
+          ? String(description)
+          : nextSummary ?? existing.summary
+        : undefined;
 
-    const message = await prisma.$transaction(async (tx) => {
-      const updated = await tx.message.update({
-        where: { id },
-        data: {
-          ...(title && { title: String(title) }),
-          ...(nextSlug && { slug: nextSlug }),
-          ...(summary && { summary: String(summary) }),
-          ...(description && { description: String(description) }),
-          ...(type && { type: type as "VIDEO" | "AUDIO" | "IMAGE" }),
-          placement: nextPlacement as "STANDARD" | "HERO",
-          ...(status && {
-            status: status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
-          }),
-          ...(speaker !== undefined && {
-            speaker: speaker ? String(speaker) : null,
-          }),
-          ...(scriptureReference !== undefined && {
-            scriptureReference: scriptureReference
-              ? String(scriptureReference)
-              : null,
-          }),
-          ...(eventDate !== undefined && {
-            eventDate: eventDate ? new Date(String(eventDate)) : null,
-          }),
-          ...(durationSeconds !== undefined && {
-            durationSeconds: parseDurationSeconds(durationSeconds),
-          }),
-          ...(mediaKey !== undefined && {
-            mediaKey: mediaKey ? String(mediaKey) : null,
-          }),
-          ...(coverImageKey !== undefined && {
-            coverImageKey: coverImageKey ? String(coverImageKey) : null,
-          }),
-          ...(externalMediaUrl !== undefined && {
-            externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
-          }),
-          ...(willPublish && { publishedAt: new Date() }),
-        },
-      });
-
-      if (nextPlacement === "HERO" && nextStatus === "PUBLISHED") {
-        await tx.message.updateMany({
-          where: {
-            id: { not: updated.id },
-            placement: "HERO",
-            status: "PUBLISHED",
-          },
-          data: {
-            placement: "STANDARD",
-          },
-        });
-      }
-
-      return updated;
+    const message = await prisma.message.update({
+      where: { id },
+      data: {
+        ...(title && { title: nextTitle }),
+        ...(nextSlug && { slug: nextSlug }),
+        ...(nextSummary !== undefined && { summary: nextSummary }),
+        ...(nextDescription !== undefined && { description: nextDescription }),
+        ...(type && { type: type as "VIDEO" | "AUDIO" | "IMAGE" }),
+        placement: "STANDARD",
+        ...(status && {
+          status: status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
+        }),
+        ...(speaker !== undefined && {
+          speaker: speaker ? String(speaker) : null,
+        }),
+        ...(scriptureReference !== undefined && {
+          scriptureReference: scriptureReference
+            ? String(scriptureReference)
+            : null,
+        }),
+        ...(eventDate !== undefined && {
+          eventDate: eventDate ? new Date(String(eventDate)) : null,
+        }),
+        ...(durationSeconds !== undefined && {
+          durationSeconds: parseDurationSeconds(durationSeconds),
+        }),
+        ...(mediaKey !== undefined && {
+          mediaKey: mediaKey ? String(mediaKey) : null,
+        }),
+        ...(coverImageKey !== undefined && {
+          coverImageKey: coverImageKey ? String(coverImageKey) : null,
+        }),
+        ...(externalMediaUrl !== undefined && {
+          externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
+        }),
+        ...(willPublish && { publishedAt: new Date() }),
+      },
     });
 
     // Audit: record message update.

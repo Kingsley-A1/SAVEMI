@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Eye, EyeOff } from "lucide-react";
@@ -16,27 +16,106 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
+  const [slowMessage, setSlowMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSlowMessage("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+    slowTimerRef.current = setTimeout(() => {
+      setSlowMessage(
+        "This is taking longer than normal. Keep this page open while the admin session is checked.",
+      );
+    }, 10000);
 
-    setLoading(false);
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password.");
-      return;
+      if (result?.error) {
+        setError("Invalid email or access code.");
+        return;
+      }
+
+      router.replace(callbackUrl);
+    } catch {
+      setError("The admin login request failed. Check your connection and try again.");
+    } finally {
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+      slowTimerRef.current = null;
+      setSlowMessage("");
+      setLoading(false);
+    }
+  }
+
+  function toggleAccessCodeVisibility() {
+    setShowPw((value) => !value);
+  }
+
+  function handleCodeChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+
+    setPassword(value);
+    if (error) setError("");
+    if (slowMessage) setSlowMessage("");
+  }
+
+  function handleEmailChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = event.target.value;
+
+    setEmail(value);
+    if (error) setError("");
+    if (slowMessage) setSlowMessage("");
+  }
+
+  function renderFeedback() {
+    if (error) {
+      return (
+        <p
+          role="alert"
+          className="rounded px-3 py-2 text-xs"
+          style={{
+            background: "rgba(220,38,38,0.07)",
+            color: "#b91c1c",
+            border: "1px solid rgba(220,38,38,0.2)",
+          }}
+        >
+          {error}
+        </p>
+      );
     }
 
-    router.replace(callbackUrl);
+    if (slowMessage) {
+      return (
+        <p
+          role="status"
+          className="rounded px-3 py-2 text-xs"
+          style={{
+            background: "rgba(217,119,6,0.08)",
+            color: "#92400e",
+            border: "1px solid rgba(217,119,6,0.2)",
+          }}
+        >
+          {slowMessage}
+        </p>
+      );
+    }
+
+    return null;
   }
 
   return (
@@ -61,7 +140,7 @@ export default function AdminLoginPage() {
               border: "1px solid rgba(22,163,74,0.18)",
             }}
           >
-            Admin account created. Sign in with the same shared password.
+            Admin account created. Sign in with the same shared access code.
           </p>
         ) : null}
 
@@ -77,14 +156,14 @@ export default function AdminLoginPage() {
               required
               className="field-input"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               disabled={loading}
             />
           </div>
 
           <div>
             <label htmlFor="password" className="field-label">
-              Password
+              Access code
             </label>
             <div className="relative">
               <input
@@ -94,33 +173,22 @@ export default function AdminLoginPage() {
                 required
                 className="field-input pr-10"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handleCodeChange}
                 disabled={loading}
               />
               <button
                 type="button"
-                onClick={() => setShowPw((v) => !v)}
+                onClick={toggleAccessCodeVisibility}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#5a7268]"
-                aria-label={showPw ? "Hide password" : "Show password"}
+                aria-label={showPw ? "Hide access code" : "Show access code"}
+                aria-pressed={showPw}
               >
                 {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
-          {error && (
-            <p
-              role="alert"
-              className="rounded px-3 py-2 text-xs"
-              style={{
-                background: "rgba(220,38,38,0.07)",
-                color: "#b91c1c",
-                border: "1px solid rgba(220,38,38,0.2)",
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {renderFeedback()}
 
           <button
             type="submit"

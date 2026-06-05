@@ -2,23 +2,40 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Trash2 } from "lucide-react";
+import { Eye, Save, Send, Trash2, X } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
+import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
 
-const MESSAGE_TYPES = ["VIDEO", "AUDIO", "IMAGE"] as const;
-const MESSAGE_PLACEMENTS = ["STANDARD", "HERO"] as const;
-const MESSAGE_STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
+const MESSAGE_TYPES = [
+  { value: "VIDEO", label: "Video" },
+  { value: "AUDIO", label: "Audio" },
+  { value: "IMAGE", label: "Image" },
+] as const;
 
+const MESSAGE_STATUSES = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "PUBLISHED", label: "Published" },
+  { value: "ARCHIVED", label: "Archived" },
+] as const;
+
+type MessageType = (typeof MESSAGE_TYPES)[number]["value"];
+type MessageStatus = (typeof MESSAGE_STATUSES)[number]["value"];
+type SaveAction = "draft" | "preview" | "publish";
 type UploadState = "idle" | "uploading" | "done" | "error";
+
+interface UploadSlot {
+  state: UploadState;
+  progress: number;
+  error: string;
+}
 
 interface MessageData {
   id: string;
   title: string;
   summary: string;
   description: string;
-  type: "VIDEO" | "AUDIO" | "IMAGE";
-  placement: "STANDARD" | "HERO";
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  type: MessageType;
+  status: MessageStatus;
   speaker: string | null;
   scriptureReference: string | null;
   eventDate: Date | null;
@@ -26,6 +43,29 @@ interface MessageData {
   mediaKey: string | null;
   coverImageKey: string | null;
   externalMediaUrl: string | null;
+}
+
+interface SavedMessage {
+  id: string;
+  slug: string;
+}
+
+function initialUploadSlot(): UploadSlot {
+  return { state: "idle", progress: 0, error: "" };
+}
+
+function getMessageTypeLabel(type: MessageType) {
+  return MESSAGE_TYPES.find((item) => item.value === type)?.label ?? type;
+}
+
+function getSubmitAction(event: React.FormEvent<HTMLFormElement>): SaveAction {
+  const submitter = (event.nativeEvent as SubmitEvent).submitter as
+    | HTMLButtonElement
+    | null;
+  const value = submitter?.value;
+
+  if (value === "preview" || value === "publish") return value;
+  return "draft";
 }
 
 export default function EditMessageForm({ message }: { message: MessageData }) {
@@ -36,7 +76,6 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     summary: message.summary,
     description: message.description,
     type: message.type,
-    placement: message.placement,
     status: message.status,
     speaker: message.speaker ?? "",
     scriptureReference: message.scriptureReference ?? "",
@@ -46,146 +85,167 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     durationSeconds: message.durationSeconds?.toString() ?? "",
   });
 
-  const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<SaveAction | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [mediaUpload, setMediaUpload] = useState<UploadSlot>(initialUploadSlot);
+  const [coverUpload, setCoverUpload] = useState<UploadSlot>(initialUploadSlot);
   const [file, setFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [mediaKey, setMediaKey] = useState(message.mediaKey ?? "");
   const [coverKey, setCoverKey] = useState(message.coverImageKey ?? "");
-  const [externalMediaUrl, setExternalMediaUrl] = useState(message.externalMediaUrl ?? "");
+  const [externalMediaUrl, setExternalMediaUrl] = useState(
+    message.externalMediaUrl ?? "",
+  );
   const [coverImageUrl, setCoverImageUrl] = useState(
-    (message.coverImageKey?.startsWith("http") ? message.coverImageKey : "") ?? ""
+    (message.coverImageKey?.startsWith("http") ? message.coverImageKey : "") ??
+      "",
   );
   const [error, setError] = useState("");
 
+  const isUploading =
+    mediaUpload.state === "uploading" || coverUpload.state === "uploading";
+
   function handleChange(
-    e: React.ChangeEvent<
+    event: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >,
   ) {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-      ...(name === "type" && value === "AUDIO"
-        ? { placement: "STANDARD" }
-        : {}),
-    }));
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   }
 
   async function uploadFile(uploadedFile: File, field: "media" | "cover") {
-    setUploadState("uploading");
+    const setSlot = field === "media" ? setMediaUpload : setCoverUpload;
+    const setKey = field === "media" ? setMediaKey : setCoverKey;
+
+    setError("");
+    setSlot({ state: "uploading", progress: 0, error: "" });
 
     try {
-      const response = await fetch("/api/admin/upload-url", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          fileName: `${form.placement.toLowerCase()}-${field}-${Date.now()}-${uploadedFile.name}`,
-          contentType: uploadedFile.type,
-          contentLength: uploadedFile.size,
-        }),
+      const result = await uploadAdminFile({
+        file: uploadedFile,
+        fileName: `message-${field}-${Date.now()}-${uploadedFile.name}`,
+        onProgress: (progress) =>
+          setSlot({ state: "uploading", progress, error: "" }),
       });
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        throw new Error(payload.error ?? "Upload URL failed");
-      }
-
-      const payload = await response.json();
-      const uploadUrl = payload?.data?.uploadUrl;
-      const objectKey = payload?.data?.objectKey;
-
-      if (!uploadUrl || !objectKey) {
-        throw new Error("Upload URL failed");
-      }
-
-      const put = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "content-type": uploadedFile.type },
-        body: uploadedFile,
-      });
-
-      if (!put.ok) {
-        throw new Error("Upload to storage failed");
-      }
-
-      if (field === "media") {
-        setMediaKey(objectKey);
-      } else {
-        setCoverKey(objectKey);
-      }
-
-      setUploadState("done");
-      return objectKey as string;
+      setKey(result.objectKey);
+      setSlot({ state: "done", progress: 100, error: "" });
+      return result.objectKey;
     } catch (err) {
-      setUploadState("error");
-      setError(err instanceof Error ? err.message : "Upload error");
+      const nextError = err instanceof Error ? err.message : "Upload failed.";
+      setSlot({ state: "error", progress: 0, error: nextError });
+      setError(nextError);
       return null;
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleMediaFileChange(nextFile: File | null) {
+    setFile(nextFile);
+    setExternalMediaUrl("");
+    setMediaKey("");
+    setMediaUpload(initialUploadSlot());
+    if (nextFile) void uploadFile(nextFile, "media");
+  }
+
+  function handleCoverFileChange(nextFile: File | null) {
+    setCoverFile(nextFile);
+    setCoverImageUrl("");
+    setCoverKey("");
+    setCoverUpload(initialUploadSlot());
+    if (nextFile) void uploadFile(nextFile, "cover");
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const action = getSubmitAction(event);
+    const title = form.title.trim();
+
     setError("");
-    setSaving(true);
 
-    let nextMediaKey = mediaKey;
-    let nextCoverKey = coverKey;
-
-    if (file) {
-      nextMediaKey = (await uploadFile(file, "media")) ?? "";
-    }
-
-    if (coverFile) {
-      nextCoverKey = (await uploadFile(coverFile, "cover")) ?? "";
-    }
-
-    if (file && !nextMediaKey) {
-      setSaving(false);
+    if (!title) {
+      setError("Title is required.");
       return;
     }
 
+    if (file && !mediaKey) {
+      setError("Wait for the media upload to finish before saving.");
+      return;
+    }
+
+    if (coverFile && !coverKey) {
+      setError("Wait for the cover upload to finish before saving.");
+      return;
+    }
+
+    setSavingAction(action);
+
+    const summary = form.summary.trim() || title;
+    const description = form.description.trim() || summary;
+    const status =
+      action === "publish"
+        ? "PUBLISHED"
+        : action === "draft"
+          ? "DRAFT"
+          : form.status;
+
     const payload = {
       ...form,
+      title,
+      summary,
+      description,
+      status,
       durationSeconds: form.durationSeconds
         ? Number(form.durationSeconds)
         : null,
       eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : null,
-      mediaKey: nextMediaKey || null,
-      coverImageKey: nextCoverKey || (coverImageUrl || null),
+      mediaKey: mediaKey || null,
+      coverImageKey: coverKey || (coverImageUrl || null),
       externalMediaUrl: externalMediaUrl || null,
     };
 
-    const res = await fetch(`/api/admin/messages/${message.id}`, {
+    const response = await fetch(`/api/admin/messages/${message.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    setSaving(false);
+    setSavingAction(null);
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
       setError(data.error ?? "Failed to update message.");
       return;
     }
 
-    router.push("/admin/messages");
+    const saved = (await response.json()) as SavedMessage;
+
+    if (action === "publish") {
+      router.push(`/messages/${saved.slug}`);
+      return;
+    }
+
+    if (action === "preview") {
+      router.push(`/admin/messages/${message.id}/preview`);
+      return;
+    }
+
+    router.push(`/admin/messages/${message.id}/edit`);
+    router.refresh();
   }
 
   async function handleDelete() {
     if (!confirm("Delete this message permanently?")) return;
     setDeleting(true);
 
-    const res = await fetch(`/api/admin/messages/${message.id}`, {
+    const response = await fetch(`/api/admin/messages/${message.id}`, {
       method: "DELETE",
     });
 
     setDeleting(false);
 
-    if (!res.ok) {
+    if (!response.ok) {
       setError("Failed to delete message.");
       return;
     }
@@ -196,7 +256,12 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Edit Message</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Edit Message</h1>
+          <p className="text-brand-muted mt-1 text-sm">
+            Replace media, adjust title/details, then save, preview, or publish.
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -205,7 +270,7 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
             disabled={deleting}
           >
             <Trash2 size={13} />
-            {deleting ? "Deleting…" : "Delete"}
+            {deleting ? "Deleting..." : "Delete"}
           </button>
           <button
             type="button"
@@ -218,98 +283,83 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="site-panel p-5 space-y-4">
-          <h2 className="text-sm font-semibold">Basic Info</h2>
+        <section className="site-panel space-y-5 p-5">
+          <div>
+            <p className="eyebrow text-brand-primary">Fast upload</p>
+            <h2 className="mt-1 text-base font-semibold">Message setup</h2>
+          </div>
 
-          <div>
-            <label htmlFor="title" className="field-label">
-              Title *
-            </label>
-            <input
-              id="title"
-              name="title"
-              required
-              className="field-input"
-              value={form.title}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <label htmlFor="summary" className="field-label">
-              Summary *
-            </label>
-            <textarea
-              id="summary"
-              name="summary"
-              required
-              rows={2}
-              className="field-input"
-              value={form.summary}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <label htmlFor="description" className="field-label">
-              Full Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              required
-              rows={5}
-              className="field-input"
-              value={form.description}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
-        <div className="site-panel p-5 space-y-4">
-          <h2 className="text-sm font-semibold">Classification</h2>
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <AdminUploadField
+                label={`${getMessageTypeLabel(form.type)} media`}
+                mediaKind={form.type.toLowerCase() as "video" | "audio" | "image"}
+                accept={
+                  form.type === "VIDEO"
+                    ? "video/*"
+                    : form.type === "AUDIO"
+                      ? "audio/*"
+                      : "image/*"
+                }
+                file={file}
+                objectKey={mediaKey}
+                externalUrl={externalMediaUrl}
+                uploadState={mediaUpload.state}
+                progress={mediaUpload.progress}
+                showUrlInput={true}
+                urlPlaceholder="https://youtube.com/watch?v=... or https://facebook.com/.../videos/..."
+                successLabel={mediaKey ? "Current media linked" : "Media uploaded"}
+                errorMessage={mediaUpload.error}
+                onFileChange={handleMediaFileChange}
+                onUrlChange={(url) => {
+                  setExternalMediaUrl(url);
+                  if (url) {
+                    setFile(null);
+                    setMediaKey("");
+                    setMediaUpload(initialUploadSlot());
+                  }
+                }}
+                onRetry={() => {
+                  if (file) void uploadFile(file, "media");
+                }}
+                onValidationError={(validationError) => {
+                  setMediaUpload({
+                    state: "error",
+                    progress: 0,
+                    error: validationError,
+                  });
+                  setError(validationError);
+                }}
+              />
+            </div>
+
             <div>
               <label htmlFor="type" className="field-label">
-                Type *
+                Type
               </label>
               <select
                 id="type"
                 name="type"
                 className="field-input"
                 value={form.type}
-                onChange={handleChange}
+                onChange={(event) => {
+                  handleChange(event);
+                  setFile(null);
+                  setMediaKey("");
+                  setMediaUpload(initialUploadSlot());
+                }}
               >
-                {MESSAGE_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {MESSAGE_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
                   </option>
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="placement" className="field-label">
-                Placement *
-              </label>
-              <select
-                id="placement"
-                name="placement"
-                className="field-input"
-                value={form.placement}
-                onChange={handleChange}
-                disabled={form.type === "AUDIO"}
-              >
-                {MESSAGE_PLACEMENTS.map((placement) => (
-                  <option key={placement} value={placement}>
-                    {placement}
-                  </option>
-                ))}
-              </select>
-              <p className="text-brand-muted mt-1 text-xs">
-                Hero placement is available for video and image uploads only.
-              </p>
-            </div>
+
             <div>
               <label htmlFor="status" className="field-label">
-                Status *
+                Status
               </label>
               <select
                 id="status"
@@ -318,105 +368,162 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 value={form.status}
                 onChange={handleChange}
               >
-                {MESSAGE_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                {MESSAGE_STATUSES.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label}
                   </option>
                 ))}
               </select>
             </div>
-            <div>
-              <label htmlFor="speaker" className="field-label">
-                Speaker
+
+            <div className="sm:col-span-2">
+              <label htmlFor="title" className="field-label">
+                Title *
               </label>
               <input
-                id="speaker"
-                name="speaker"
+                id="title"
+                name="title"
+                required
                 className="field-input"
-                value={form.speaker}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="scriptureReference" className="field-label">
-                Scripture Reference
-              </label>
-              <input
-                id="scriptureReference"
-                name="scriptureReference"
-                className="field-input"
-                value={form.scriptureReference}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="eventDate" className="field-label">
-                Event Date
-              </label>
-              <input
-                id="eventDate"
-                name="eventDate"
-                type="date"
-                className="field-input"
-                value={form.eventDate}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="durationSeconds" className="field-label">
-                Duration (seconds)
-              </label>
-              <input
-                id="durationSeconds"
-                name="durationSeconds"
-                type="number"
-                min="0"
-                className="field-input"
-                value={form.durationSeconds}
+                value={form.title}
                 onChange={handleChange}
               />
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="site-panel space-y-4 p-5">
-          <h2 className="text-sm font-semibold">Media Files</h2>
+        <details className="site-panel group p-5">
+          <summary className="cursor-pointer list-none text-sm font-semibold text-brand-primary">
+            Advanced details
+            <span className="text-brand-muted ml-2 font-normal">
+              Summary, description, cover, speaker, scripture, date, duration
+            </span>
+          </summary>
 
-          {/* ─── Media source: file upload OR external URL ─── */}
-          <AdminUploadField
-            label={form.type === "IMAGE" ? "Image File" : `${form.type} File`}
-            mediaKind={form.type.toLowerCase() as "video" | "audio" | "image"}
-            accept={
-              form.type === "VIDEO" ? "video/*" : form.type === "AUDIO" ? "audio/*" : "image/*"
-            }
-            file={file}
-            objectKey={mediaKey}
-            externalUrl={externalMediaUrl}
-            uploadState={uploadState}
-            showUrlInput={true}
-            urlPlaceholder="https://youtube.com/watch?v=…  or  https://facebook.com/…/videos/…"
-            successLabel={mediaKey ? "Current media linked — click to replace" : "Media file uploaded"}
-            onFileChange={(f) => { setFile(f); if (f) setExternalMediaUrl(""); }}
-            onUrlChange={(url) => { setExternalMediaUrl(url); if (url) { setFile(null); setMediaKey(""); } }}
-          />
+          <div className="mt-5 space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="summary" className="field-label">
+                  Summary
+                </label>
+                <textarea
+                  id="summary"
+                  name="summary"
+                  rows={2}
+                  className="field-input"
+                  value={form.summary}
+                  onChange={handleChange}
+                />
+              </div>
 
-          <AdminUploadField
-            label="Cover Image"
-            mediaKind="cover"
-            accept="image/*"
-            file={coverFile}
-            objectKey={coverKey && !coverKey.startsWith("http") ? coverKey : ""}
-            externalUrl={coverImageUrl}
-            uploadState={coverKey && !coverKey.startsWith("http") ? "done" : "idle"}
-            showUrlInput={true}
-            urlPlaceholder="https://example.com/cover-image.jpg"
-            successLabel="Current cover linked — click to replace"
-            onFileChange={(f) => { setCoverFile(f); if (f) setCoverImageUrl(""); }}
-            onUrlChange={(url) => { setCoverImageUrl(url); if (url) { setCoverFile(null); setCoverKey(""); } }}
-          />
-        </div>
+              <div className="sm:col-span-2">
+                <label htmlFor="description" className="field-label">
+                  Full description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={5}
+                  className="field-input"
+                  value={form.description}
+                  onChange={handleChange}
+                />
+              </div>
 
-        {error && (
+              <div>
+                <label htmlFor="speaker" className="field-label">
+                  Speaker
+                </label>
+                <input
+                  id="speaker"
+                  name="speaker"
+                  className="field-input"
+                  value={form.speaker}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="scriptureReference" className="field-label">
+                  Scripture reference
+                </label>
+                <input
+                  id="scriptureReference"
+                  name="scriptureReference"
+                  className="field-input"
+                  value={form.scriptureReference}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="eventDate" className="field-label">
+                  Event date
+                </label>
+                <input
+                  id="eventDate"
+                  name="eventDate"
+                  type="date"
+                  className="field-input"
+                  value={form.eventDate}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="durationSeconds" className="field-label">
+                  Duration in seconds
+                </label>
+                <input
+                  id="durationSeconds"
+                  name="durationSeconds"
+                  type="number"
+                  min="0"
+                  className="field-input"
+                  value={form.durationSeconds}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <AdminUploadField
+              label="Cover image"
+              mediaKind="cover"
+              accept="image/*"
+              file={coverFile}
+              objectKey={coverKey && !coverKey.startsWith("http") ? coverKey : ""}
+              externalUrl={coverImageUrl}
+              uploadState={coverUpload.state}
+              progress={coverUpload.progress}
+              showUrlInput={true}
+              urlPlaceholder="https://example.com/cover-image.jpg"
+              successLabel={coverKey ? "Current cover linked" : "Cover uploaded"}
+              errorMessage={coverUpload.error}
+              onFileChange={handleCoverFileChange}
+              onUrlChange={(url) => {
+                setCoverImageUrl(url);
+                if (url) {
+                  setCoverFile(null);
+                  setCoverKey("");
+                  setCoverUpload(initialUploadSlot());
+                }
+              }}
+              onRetry={() => {
+                if (coverFile) void uploadFile(coverFile, "cover");
+              }}
+              onValidationError={(validationError) => {
+                setCoverUpload({
+                  state: "error",
+                  progress: 0,
+                  error: validationError,
+                });
+                setError(validationError);
+              }}
+            />
+          </div>
+        </details>
+
+        {error ? (
           <p
             className="rounded px-3 py-2 text-xs"
             style={{
@@ -424,12 +531,13 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
               color: "#b91c1c",
               border: "1px solid rgba(220,38,38,0.2)",
             }}
+            role="alert"
           >
             {error}
           </p>
-        )}
+        ) : null}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={() => router.back()}
@@ -439,11 +547,33 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
           </button>
           <button
             type="submit"
-            className="button-primary flex items-center gap-1.5"
-            disabled={saving || uploadState === "uploading"}
+            name="intent"
+            value="draft"
+            className="button-tertiary flex items-center gap-1.5"
+            disabled={Boolean(savingAction) || isUploading}
           >
             <Save size={14} />
-            {saving ? "Saving..." : "Save Changes"}
+            {savingAction === "draft" ? "Saving..." : "Save draft"}
+          </button>
+          <button
+            type="submit"
+            name="intent"
+            value="preview"
+            className="button-tertiary flex items-center gap-1.5"
+            disabled={Boolean(savingAction) || isUploading}
+          >
+            <Eye size={14} />
+            {savingAction === "preview" ? "Saving..." : "Save and preview"}
+          </button>
+          <button
+            type="submit"
+            name="intent"
+            value="publish"
+            className="button-primary flex items-center gap-1.5"
+            disabled={Boolean(savingAction) || isUploading}
+          >
+            <Send size={14} />
+            {savingAction === "publish" ? "Publishing..." : "Publish"}
           </button>
         </div>
       </form>
