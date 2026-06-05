@@ -8,7 +8,9 @@ export default function ContactPage() {
         <h1 className="section-title mt-2">Reach the ministry</h1>
         <p className="section-copy mt-2">
           Send a message to the SAVEMI team. All submissions are stored securely
-          for ministry follow-up.
+          for ministry follow-up. Share prayer requests, testimonies, Sabbath
+          questions, or website support needs, and include the best email for a
+          reply.
         </p>
       </div>
       <ContactForm />

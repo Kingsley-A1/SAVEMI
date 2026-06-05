@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, BookOpen, Download, ShoppingBag } from "lucide-react";
 import { getBooks } from "../../lib/books";
 import type { Book } from "../../lib/books";
 
@@ -41,6 +42,9 @@ function AvailabilityBadge({ availability, priceLabel }: { availability: Book["a
 }
 
 function BookCard({ book }: { book: Book }) {
+  const actionIcon =
+    book.availability === "free" ? <Download size={14} /> : <ShoppingBag size={14} />;
+
   return (
     <article className="site-panel flex flex-col overflow-hidden">
       <Link href={`/books/${book.slug}`} className="block group">
@@ -58,9 +62,7 @@ function BookCard({ book }: { book: Book }) {
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-xs font-semibold uppercase tracking-widest opacity-40" style={{ color: "var(--brand-accent)" }}>
-                {book.format ?? "Book"}
-              </span>
+              <BookOpen size={42} style={{ color: "rgba(241,231,201,0.5)" }} />
             </div>
           )}
 
@@ -71,15 +73,23 @@ function BookCard({ book }: { book: Book }) {
       </Link>
 
       <div className="flex flex-1 flex-col p-4">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          {book.format ? <span className="type-badge">{book.format}</span> : null}
+          {book.pageCount ? (
+            <span className="text-brand-muted text-xs">{book.pageCount} pages</span>
+          ) : null}
+        </div>
         <Link href={`/books/${book.slug}`} className="group">
-          <h2 className="text-sm font-semibold leading-snug group-hover:text-brand-primary transition-colors sm:text-base">
+          <h2 className="text-base font-semibold leading-snug group-hover:text-brand-primary transition-colors sm:text-lg">
             {book.title}
           </h2>
         </Link>
-        <p className="text-brand-muted mt-0.5 text-xs">{book.author}</p>
+        <p className="text-brand-primary mt-1 text-xs font-semibold">
+          {book.author}
+        </p>
 
         {book.tagline ? (
-          <p className="text-brand-muted mt-2 line-clamp-2 text-xs leading-5">
+          <p className="text-brand-muted mt-3 line-clamp-3 text-sm leading-6">
             {book.tagline}
           </p>
         ) : null}
@@ -91,12 +101,14 @@ function BookCard({ book }: { book: Book }) {
                 href={book.downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="button-primary w-full justify-center"
+                className="button-primary w-full justify-center gap-1.5"
               >
+                {actionIcon}
                 Download Free
               </a>
             ) : (
-              <Link href={`/books/${book.slug}`} className="button-primary w-full justify-center">
+              <Link href={`/books/${book.slug}`} className="button-primary w-full justify-center gap-1.5">
+                <ArrowRight size={14} />
                 View Book
               </Link>
             )
@@ -105,12 +117,14 @@ function BookCard({ book }: { book: Book }) {
               href={book.purchaseUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="button-tertiary w-full justify-center"
+              className="button-primary w-full justify-center gap-1.5"
             >
+              {actionIcon}
               {book.priceLabel ? `Buy — ${book.priceLabel}` : "Purchase"}
             </a>
           ) : (
-            <Link href={`/books/${book.slug}`} className="button-tertiary w-full justify-center">
+            <Link href={`/books/${book.slug}`} className="button-tertiary w-full justify-center gap-1.5">
+              <ArrowRight size={14} />
               View Details
             </Link>
           )}
@@ -120,8 +134,28 @@ function BookCard({ book }: { book: Book }) {
   );
 }
 
-export default async function BooksPage() {
-  const books = await getBooks();
+interface BooksPageProps {
+  searchParams: Promise<{ search?: string; availability?: string }>;
+}
+
+const availabilityOptions = [
+  { label: "All books", value: "" },
+  { label: "Free", value: "free" },
+  { label: "Paid", value: "paid" },
+] as const;
+
+export default async function BooksPage({ searchParams }: BooksPageProps) {
+  const params = await searchParams;
+  const search = params.search?.trim() ?? "";
+  const availability =
+    params.availability === "free" || params.availability === "paid"
+      ? params.availability
+      : undefined;
+  const books = await getBooks({
+    search: search || undefined,
+    availability,
+  });
+  const hasFilters = Boolean(search || availability);
 
   return (
     <section className="space-y-6">
@@ -135,11 +169,57 @@ export default async function BooksPage() {
         </p>
       </div>
 
+      <form className="site-panel grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto] sm:items-end">
+        <div>
+          <label htmlFor="book-search" className="field-label">
+            Search books
+          </label>
+          <input
+            id="book-search"
+            name="search"
+            className="field-input"
+            placeholder="Title, author, or topic"
+            defaultValue={search}
+          />
+        </div>
+        <div>
+          <label htmlFor="book-availability" className="field-label">
+            Availability
+          </label>
+          <select
+            id="book-availability"
+            name="availability"
+            className="field-input"
+            defaultValue={availability ?? ""}
+          >
+            {availabilityOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="button-primary">
+            Filter
+          </button>
+          {hasFilters ? (
+            <a href="/books" className="button-tertiary">
+              Clear
+            </a>
+          ) : null}
+        </div>
+      </form>
+
       {books.length === 0 ? (
         <div className="site-panel p-8 text-center">
-          <p className="text-brand-muted text-sm">No books published yet.</p>
+          <p className="text-brand-muted text-sm">
+            {hasFilters ? "No books match your filters." : "No books published yet."}
+          </p>
           <p className="text-brand-muted mt-1 text-xs">
-            Check back soon — resources are being added regularly.
+            {hasFilters
+              ? "Try a broader search or clear the filters."
+              : "Check back soon — resources are being added regularly."}
           </p>
         </div>
       ) : (

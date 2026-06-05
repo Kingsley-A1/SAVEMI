@@ -126,7 +126,8 @@ export default function ContactForm() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-brand-muted text-xs">
-          Submissions are stored securely for ministry follow-up.
+          The ministry team will use your email for follow-up when a reply is
+          needed.
         </p>
         <button
           type="submit"

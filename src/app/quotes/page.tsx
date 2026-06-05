@@ -44,14 +44,17 @@ function QuoteCard({ quote }: { quote: Quote }) {
                 className="absolute inset-0 flex flex-col justify-end p-4"
                 style={{
                   background:
-                    "linear-gradient(to top, rgba(6,55,39,0.88) 0%, rgba(6,55,39,0.35) 50%, transparent 100%)",
+                    "linear-gradient(to top, rgba(6,55,39,0.96) 0%, rgba(6,55,39,0.72) 48%, rgba(6,55,39,0.22) 100%)",
                 }}
               >
-                <p className="line-clamp-3 text-xs font-medium leading-5 text-white/90">
+                <p
+                  className="line-clamp-4 text-sm font-semibold leading-6 text-white"
+                  style={{ textShadow: "0 1px 2px rgba(0,0,0,0.45)" }}
+                >
                   &ldquo;{quote.text}&rdquo;
                 </p>
                 {quote.attribution ? (
-                  <p className="mt-1 text-xs text-white/60">
+                  <p className="mt-2 text-xs font-medium text-white/75">
                     — {quote.attribution}
                   </p>
                 ) : null}
@@ -92,8 +95,19 @@ function QuoteCard({ quote }: { quote: Quote }) {
   );
 }
 
-export default async function QuotesPage() {
-  const quotes = await getQuotes();
+interface QuotesPageProps {
+  searchParams: Promise<{ search?: string; featured?: string }>;
+}
+
+export default async function QuotesPage({ searchParams }: QuotesPageProps) {
+  const params = await searchParams;
+  const search = params.search?.trim() ?? "";
+  const featured = params.featured === "true" ? true : undefined;
+  const quotes = await getQuotes({
+    search: search || undefined,
+    featured,
+  });
+  const hasFilters = Boolean(search || featured);
 
   return (
     <section className="space-y-6">
@@ -107,11 +121,54 @@ export default async function QuotesPage() {
         </p>
       </div>
 
+      <form className="site-panel grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto] sm:items-end">
+        <div>
+          <label htmlFor="quote-search" className="field-label">
+            Search quotes
+          </label>
+          <input
+            id="quote-search"
+            name="search"
+            className="field-input"
+            placeholder="Text, scripture, or attribution"
+            defaultValue={search}
+          />
+        </div>
+        <div>
+          <label htmlFor="quote-featured" className="field-label">
+            View
+          </label>
+          <select
+            id="quote-featured"
+            name="featured"
+            className="field-input"
+            defaultValue={featured ? "true" : ""}
+          >
+            <option value="">All quotes</option>
+            <option value="true">Featured only</option>
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button type="submit" className="button-primary">
+            Filter
+          </button>
+          {hasFilters ? (
+            <a href="/quotes" className="button-tertiary">
+              Clear
+            </a>
+          ) : null}
+        </div>
+      </form>
+
       {quotes.length === 0 ? (
         <div className="site-panel p-8 text-center">
-          <p className="text-brand-muted text-sm">No quotes published yet.</p>
+          <p className="text-brand-muted text-sm">
+            {hasFilters ? "No quotes match your filters." : "No quotes published yet."}
+          </p>
           <p className="text-brand-muted mt-1 text-xs">
-            Check back soon — reflections are being added regularly.
+            {hasFilters
+              ? "Try a broader search or clear the filters."
+              : "Check back soon — reflections are being added regularly."}
           </p>
         </div>
       ) : (
