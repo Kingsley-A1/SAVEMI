@@ -162,7 +162,7 @@ Acceptance criteria:
 - [x] Home page should avoid unnecessary client-only data fetching for featured content. `src/app/page.tsx` is fully client-rendered and fetches hero/video/audio data through API calls. Prefer server queries for initial render, then client components only where interaction is needed.
 - [x] Navbar needs a true mobile layout. `src/components/Navbar.tsx:40` renders all links in one horizontal row, which can overflow on small screens as routes grow.
 - [x] Welcome animation needs reduced-motion support and a bypass path. It currently delays visibility of the home page until the animation completes.
-- [x] Use `next/image` consistently or justify exceptions. `MediaPlayer`, `FeaturedVideos`, and `VideoHero` use raw `img` in some places.
+- [x] Use `next/image` consistently or justify exceptions. `MediaPlayer` and `FeaturedVideos` use raw media elements where playback or thumbnails require them.
 - [x] Add page-level metadata for books, quotes, messages, and detail pages.
 - [x] Add `robots.txt`, sitemap, Open Graph images, canonical URLs, and social metadata.
 
@@ -294,7 +294,7 @@ Priority tests:
 - [ ] Upload validation rejects unsupported MIME and oversized files.
 - [ ] Admin APIs reject anonymous requests.
 - [ ] Public pages show only `PUBLISHED` content.
-- [ ] Publishing hero media demotes other published hero records.
+- [x] Home hero is fixed content; admin media publishing no longer creates hero records.
 - [ ] Books and quotes publish/unpublish correctly.
 
 Exit criteria: no production change ships without passing automated gates.

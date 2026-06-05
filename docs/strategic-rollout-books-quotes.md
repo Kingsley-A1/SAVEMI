@@ -59,7 +59,7 @@ This initiative moves SAVEMI from placeholder content to a real ministry content
 
 ### Data model
 
-- `Message`: retained for sermons, reflections, audio, and hero media.
+- `Message`: retained for sermons, reflections, audio, and image media.
 - `Book`: new model for book merchandising and download flows.
 - `Quote`: new model for visual quote content.
 - `BookAvailability`: enum with `FREE` and `PAID`.
@@ -113,7 +113,7 @@ This initiative moves SAVEMI from placeholder content to a real ministry content
 - Verify paid-book redirect behavior.
 - Verify quote image rendering on mobile and desktop.
 - Verify publish-state filtering between public and admin surfaces.
-- Regression test messages, hero media, contact flow, and auth-protected admin routes.
+- Regression test messages, media upload, contact flow, and auth-protected admin routes.
 
 ### Phase 6: Deployment and Operations
 

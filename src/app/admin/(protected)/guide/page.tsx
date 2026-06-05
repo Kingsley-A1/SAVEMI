@@ -128,7 +128,7 @@ const operatingRooms: readonly GuideCard[] = [
 ];
 
 const publicPages: readonly Row[] = [
-  { label: "Home", value: "Introduces SAVEMI, hero media, featured video/audio, and ministry calls to action." },
+  { label: "Home", value: "Introduces SAVEMI with the fixed Sabbath reflection hero, featured video/audio, and ministry calls to action." },
   { label: "About", value: "Explains Sabbath Vesper Ministry, its mission, location, and seventh-day Sabbath focus." },
   { label: "Contact", value: "Lets visitors send private messages to the ministry office." },
   { label: "Messages", value: "Lists published videos, audios, and image-based ministry messages." },
@@ -201,7 +201,7 @@ const knowledgeRows: readonly Row[] = [
   },
   {
     label: "Recognize",
-    value: "Public pages, admin pages, generated slugs, hero media, exports, audit log, platform health, R2, and database migrations.",
+    value: "Public pages, admin pages, generated slugs, exports, audit log, platform health, R2, and database migrations.",
   },
   {
     label: "Lookup only",
@@ -292,8 +292,8 @@ export default function AdminGuidePage() {
             <h3 className="mt-3 text-sm font-semibold">Messages</h3>
             <p className="text-brand-muted mt-1 text-sm leading-6">
               Use messages for sermons, Sabbath reflections, audio teachings,
-              image posts, and hero media. Keep hero placement for the main home
-              page media only.
+              and image posts. The home hero is fixed content and is not managed
+              from uploads.
             </p>
           </article>
           <article className="site-panel p-4">

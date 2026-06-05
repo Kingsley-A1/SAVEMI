@@ -211,7 +211,6 @@ export default async function AdminHealthPage() {
     videoMessages,
     audioMessages,
     imageMessages,
-    publishedHeroMessages,
     totalBooks,
     publishedBooks,
     draftBooks,
@@ -240,7 +239,6 @@ export default async function AdminHealthPage() {
     prisma.message.count({ where: { type: "VIDEO" } }),
     prisma.message.count({ where: { type: "AUDIO" } }),
     prisma.message.count({ where: { type: "IMAGE" } }),
-    prisma.message.count({ where: { status: "PUBLISHED", placement: "HERO" } }),
     prisma.book.count(),
     prisma.book.count({ where: { status: "PUBLISHED" } }),
     prisma.book.count({ where: { status: "DRAFT" } }),
@@ -346,11 +344,6 @@ export default async function AdminHealthPage() {
       value: publishedPaidBooksMissingLinks,
     },
     {
-      label: "Published hero records",
-      value: publishedHeroMessages,
-      expected: "1 recommended",
-    },
-    {
       label: "Audit migration available",
       value: auditAvailable ? 1 : 0,
       expected: "1 required",
@@ -426,7 +419,6 @@ export default async function AdminHealthPage() {
         <StatCard label="Contacts" value={contacts} detail="Visitor submissions" />
         <StatCard label="Admins" value={admins} detail="Registered operators" />
         <StatCard label="Audit Events" value={auditEventsCount} detail="Recorded admin actions" />
-        <StatCard label="Published Hero" value={publishedHeroMessages} detail="One is recommended" />
         <StatCard label="Storage" value={storageConfigured ? "Ready" : "Check"} detail="R2 media pipeline" />
       </div>
 

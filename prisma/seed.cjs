@@ -86,7 +86,7 @@ async function main() {
           "This SAVEMI reflection draws believers into the biblical meaning of the seventh-day Sabbath, inviting them to rest, reflect, and recover while considering God's larger plan for humanity.",
         type: MessageType.IMAGE,
         status: MessageStatus.PUBLISHED,
-        placement: "HERO",
+        placement: "STANDARD",
         speaker: "Pastor Odor Victor T.",
         scriptureReference: "Genesis 2:2-3",
         eventDate: new Date("2026-04-24T18:30:00.000Z"),

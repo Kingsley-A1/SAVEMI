@@ -49,15 +49,70 @@
     @apply rounded-lg;
   }
 
-  /* ── Hero banner ─────────────────────────────────────── */
-  .hero-surface {
-    background: linear-gradient(
-      135deg,
-      var(--brand-primary-deep) 0%,
-      var(--brand-primary) 55%,
-      var(--brand-primary-soft) 100%
-    );
-    @apply relative overflow-hidden rounded-lg;
+  /* ── Home hero ───────────────────────────────────────── */
+  .reflection-hero {
+    min-height: clamp(520px, calc(100vh - 9rem), 760px);
+    background:
+      linear-gradient(135deg, rgba(6, 55, 39, 0.98) 0%, rgba(10, 79, 60, 0.96) 58%, rgba(22, 78, 64, 0.94) 100%);
+    color: #fff8ea;
+    @apply relative grid content-center gap-8 overflow-hidden rounded-lg px-6 py-14 sm:px-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12;
+  }
+
+  .reflection-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(241, 231, 201, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(241, 231, 201, 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 82%);
+    pointer-events: none;
+  }
+
+  .reflection-hero__content,
+  .reflection-hero__scripture {
+    @apply relative z-10;
+  }
+
+  .reflection-hero__content {
+    @apply max-w-3xl;
+  }
+
+  .reflection-hero__eyebrow {
+    color: rgba(241, 231, 201, 0.72);
+  }
+
+  .reflection-hero__title {
+    color: #fff8ea;
+    letter-spacing: 0;
+    @apply mt-4 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl;
+  }
+
+  .reflection-hero__copy {
+    color: rgba(255, 248, 234, 0.76);
+    @apply mt-5 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8;
+  }
+
+  .reflection-hero__actions {
+    @apply mt-8 flex flex-wrap gap-3;
+  }
+
+  .reflection-hero__scripture {
+    border: 1px solid rgba(241, 231, 201, 0.24);
+    background: rgba(255, 253, 247, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    @apply self-end rounded-lg p-5;
+  }
+
+  .reflection-hero__verse {
+    color: #fff8ea;
+    @apply mt-4 text-lg font-semibold leading-8;
+  }
+
+  .reflection-hero__reference {
+    color: rgba(241, 231, 201, 0.7);
+    @apply mt-3 text-sm font-medium;
   }
 
   /* ── Buttons ─────────────────────────────────────────── */
@@ -112,36 +167,7 @@
     @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
   }
 
-  /* ── Video Hero ──────────────────────────────────────── */
-  .video-hero {
-    @apply relative flex min-h-[92vh] w-full items-center justify-center overflow-hidden;
-  }
-
-  .video-hero__video {
-    @apply absolute inset-0 h-full w-full object-cover;
-  }
-
-  .video-hero__fallback {
-    @apply absolute inset-0;
-    background: linear-gradient(
-      160deg,
-      var(--brand-primary-deep) 0%,
-      var(--brand-primary) 50%,
-      var(--brand-primary-soft) 100%
-    );
-  }
-
-  .video-hero__overlay {
-    @apply absolute inset-0;
-    background: linear-gradient(
-      to bottom,
-      rgba(6, 55, 39, 0.68) 0%,
-      rgba(6, 55, 39, 0.5) 50%,
-      rgba(6, 55, 39, 0.72) 100%
-    );
-  }
-
-  /* Hero CTA buttons (on dark video) */
+  /* Hero CTA buttons (on dark surfaces) */
   .hero-btn-primary {
     background: #22c55e;
     color: #ffffff;

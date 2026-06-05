@@ -21,7 +21,7 @@ const PAGE_TITLES: Record<string, { title: string; eyebrow: string }> = {
   },
   "/admin/messages": {
     title: "Messages",
-    eyebrow: "Manage sermons, media, and hero content",
+    eyebrow: "Manage sermons, reflections, and media",
   },
   "/admin/books": {
     title: "Books",

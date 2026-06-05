@@ -34,7 +34,6 @@ export async function GET(req: NextRequest) {
     const raw = await prisma.message.findMany({
       where: {
         status: "PUBLISHED",
-        placement: "STANDARD",
         ...(typeFilter && { type: typeFilter }),
         ...(speaker && { speaker: { contains: speaker, mode: "insensitive" } }),
         ...(category && { category: { slug: category } }),

@@ -1,8 +1,7 @@
 import { Moon, Sunrise, Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { getMessages, getHeroMessage } from "../lib/messages";
+import { getMessages } from "../lib/messages";
 import HomeAnimationWrapper from "../components/HomeAnimationWrapper";
-import VideoHero from "../components/VideoHero";
 import FeaturedVideos from "../components/FeaturedVideos";
 import FeaturedAudios from "../components/FeaturedAudios";
 
@@ -34,55 +33,48 @@ const pillars = [
 ];
 
 export default async function HomePage() {
-  const [featuredVideos, featuredAudios, heroMedia] = await Promise.all([
+  const [featuredVideos, featuredAudios] = await Promise.all([
     getMessages({ type: "video", limit: 8 }),
     getMessages({ type: "audio", limit: 6 }),
-    getHeroMessage(),
   ]);
 
   return (
     <HomeAnimationWrapper>
-      {/* 1. Video hero */}
-      <VideoHero initialHeroMedia={heroMedia} />
-
-      {/* 2. Brand statement */}
-      <section className="site-container">
-        <div className="hero-surface px-6 py-10 sm:px-10 sm:py-12">
-          <div className="max-w-2xl">
-            <p
-              className="eyebrow"
-              style={{ color: "rgba(241,231,201,0.65)" }}
-            >
-              About the Ministry
-            </p>
-            <h2
-              className="mt-3 text-2xl font-semibold leading-snug sm:text-3xl"
-              style={{ color: "#fff8ea" }}
-            >
-              Seventh-day Sabbath reflection rooted in Scripture
-            </h2>
-            <p
-              className="mt-3 max-w-lg text-sm leading-6 sm:text-base sm:leading-7"
-              style={{ color: "rgba(241,231,201,0.72)" }}
-            >
-              Sabbath Vesper Ministry (SAVEMI), based in Calabar, Nigeria,
-              studies the Seventh-day Sabbath from biblical perspectives and
-              calls believers into meditation, spiritual reflection, and a
-              deeper understanding of God&apos;s grand plan.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Link href="/about" className="button-secondary">
-                Our story
-              </Link>
-              <Link href="/messages" className="button-secondary">
-                All messages
-              </Link>
-            </div>
+      {/* 1. Fixed ministry hero */}
+      <section className="reflection-hero" aria-labelledby="home-hero-title">
+        <div className="reflection-hero__content">
+          <p className="eyebrow reflection-hero__eyebrow">
+            Sabbath Vesper Ministry
+          </p>
+          <h1 id="home-hero-title" className="reflection-hero__title">
+            Seventh-day Sabbath reflection rooted in Scripture
+          </h1>
+          <p className="reflection-hero__copy">
+            Sabbath Vesper Ministry (SAVEMI), based in Calabar, Nigeria,
+            studies the Seventh-day Sabbath from biblical perspectives and
+            calls believers into meditation, spiritual reflection, and a deeper
+            understanding of God&apos;s grand plan.
+          </p>
+          <div className="reflection-hero__actions">
+            <Link href="/messages" className="hero-btn-primary">
+              All messages
+            </Link>
+            <Link href="/about" className="hero-btn-secondary">
+              Our story
+            </Link>
           </div>
+        </div>
+
+        <div className="reflection-hero__scripture" aria-label="Scripture foundation">
+          <p className="eyebrow reflection-hero__eyebrow">Remember</p>
+          <p className="reflection-hero__verse">
+            &quot;Remember the sabbath day, to keep it holy&quot;
+          </p>
+          <p className="reflection-hero__reference">Exodus 20:8</p>
         </div>
       </section>
 
-      {/* 3. Scripture pillars */}
+      {/* 2. Scripture pillars */}
       <section className="site-container">
         <div className="mb-6 text-center">
           <p className="eyebrow text-brand-primary">Our Foundation</p>
