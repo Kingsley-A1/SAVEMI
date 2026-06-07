@@ -109,7 +109,7 @@ export default function FeaturedAudios({
           <h2 className="section-title mt-1">Audio Messages</h2>
         </div>
         <Link
-          href="/messages?type=audio"
+          href="/audio"
           className="button-tertiary flex items-center gap-1.5"
         >
           See more

@@ -23,7 +23,7 @@ export interface Message {
 }
 
 export interface GetMessagesOptions {
-  limit?: number;
+  limit?: number | null;
   search?: string;
   category?: string;
   speaker?: string;
@@ -167,6 +167,7 @@ export async function getMessages(
   }
 
   try {
+    const take = options.limit === null ? undefined : options.limit ?? 24;
     const records = await prisma.message.findMany({
       where: buildWhereClause(options),
       orderBy: [
@@ -174,7 +175,7 @@ export async function getMessages(
         { eventDate: "desc" },
         { createdAt: "desc" },
       ],
-      take: options.limit ?? 24,
+      ...(take !== undefined ? { take } : {}),
       select: messageSelect,
     });
 
