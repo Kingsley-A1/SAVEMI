@@ -122,7 +122,6 @@ export default function AdminUploadField({
     setSource(nextSource);
 
     if (nextSource === "file" && onUrlChange) onUrlChange("");
-    if (nextSource === "url") onFileChange(null);
   }
 
   function handleFileSelect(nextFile: File | null) {
@@ -308,10 +307,7 @@ export default function AdminUploadField({
               value={externalUrl}
               onChange={(e) => {
                 onUrlChange(e.target.value);
-                if (e.target.value) {
-                  onFileChange(null);
-                  setSource("url");
-                }
+                setSource("url");
               }}
             />
           </div>
