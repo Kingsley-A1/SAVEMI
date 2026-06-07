@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MediaPlayer from "../../../../../../components/MediaPlayer";
+import MessageDownloadActions from "../../../../../../components/MessageDownloadActions";
 import { isEmbeddableUrl } from "../../../../../../lib/embed";
 import { isDatabaseConfigured, prisma } from "../../../../../../lib/db";
 import { resolveAssetUrl } from "../../../../../../lib/r2";
@@ -54,14 +55,16 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
       mediaKey: true,
       coverImageKey: true,
       externalMediaUrl: true,
+      audioDownloadKey: true,
       category: { select: { name: true } },
     },
   });
 
   if (!message) notFound();
 
-  const mediaSrc =
-    message.externalMediaUrl || (await resolveAssetUrl(message.mediaKey));
+  const mediaDownloadUrl = await resolveAssetUrl(message.mediaKey);
+  const audioDownloadUrl = await resolveAssetUrl(message.audioDownloadKey);
+  const mediaSrc = message.externalMediaUrl || mediaDownloadUrl;
   const isEmbed = message.externalMediaUrl
     ? isEmbeddableUrl(message.externalMediaUrl)
     : false;
@@ -156,6 +159,14 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
             Open public page
           </Link>
         ) : null}
+
+        <MessageDownloadActions
+          type={message.type.toLowerCase() as "video" | "audio" | "image"}
+          title={message.title}
+          mediaDownloadUrl={!isEmbed ? mediaDownloadUrl : null}
+          audioDownloadUrl={audioDownloadUrl}
+          originalUrl={isEmbed ? message.externalMediaUrl : null}
+        />
 
         {isEmbed && message.externalMediaUrl ? (
           <a

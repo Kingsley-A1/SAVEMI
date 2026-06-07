@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getMessageById } from "../../../lib/messages";
 import MediaPlayer from "../../../components/MediaPlayer";
+import MessageDownloadActions from "../../../components/MessageDownloadActions";
 import { isEmbeddableUrl } from "../../../lib/embed";
 
 export const dynamic = "force-dynamic";
@@ -107,16 +108,13 @@ export default async function MessageDetail({
             {message.description}
           </p>
 
-          {/* Show download only for direct files, not for embeds */}
-          {message.downloadUrl && !isEmbed ? (
-            <a
-              href={message.downloadUrl}
-              download
-              className="button-tertiary mt-4 inline-flex"
-            >
-              Download
-            </a>
-          ) : null}
+          <MessageDownloadActions
+            type={message.type}
+            title={message.title}
+            mediaDownloadUrl={!isEmbed ? message.downloadUrl : null}
+            audioDownloadUrl={message.audioDownloadUrl}
+            originalUrl={isEmbed ? message.externalMediaUrl : null}
+          />
 
           {/* For embeds, link to the original platform */}
           {isEmbed && message.externalMediaUrl ? (
