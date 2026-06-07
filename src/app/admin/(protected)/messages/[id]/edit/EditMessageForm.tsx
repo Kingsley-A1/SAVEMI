@@ -43,6 +43,7 @@ interface MessageData {
   mediaKey: string | null;
   coverImageKey: string | null;
   externalMediaUrl: string | null;
+  audioDownloadKey: string | null;
 }
 
 interface SavedMessage {
@@ -89,10 +90,15 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
   const [deleting, setDeleting] = useState(false);
   const [mediaUpload, setMediaUpload] = useState<UploadSlot>(initialUploadSlot);
   const [coverUpload, setCoverUpload] = useState<UploadSlot>(initialUploadSlot);
+  const [audioUpload, setAudioUpload] = useState<UploadSlot>(initialUploadSlot);
   const [file, setFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [audioDownloadFile, setAudioDownloadFile] = useState<File | null>(null);
   const [mediaKey, setMediaKey] = useState(message.mediaKey ?? "");
   const [coverKey, setCoverKey] = useState(message.coverImageKey ?? "");
+  const [audioDownloadKey, setAudioDownloadKey] = useState(
+    message.audioDownloadKey?.startsWith("http") ? "" : message.audioDownloadKey ?? "",
+  );
   const [externalMediaUrl, setExternalMediaUrl] = useState(
     message.externalMediaUrl ?? "",
   );
@@ -100,10 +106,17 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     (message.coverImageKey?.startsWith("http") ? message.coverImageKey : "") ??
       "",
   );
+  const [audioDownloadUrl, setAudioDownloadUrl] = useState(
+    (message.audioDownloadKey?.startsWith("http")
+      ? message.audioDownloadKey
+      : "") ?? "",
+  );
   const [error, setError] = useState("");
 
   const isUploading =
-    mediaUpload.state === "uploading" || coverUpload.state === "uploading";
+    mediaUpload.state === "uploading" ||
+    coverUpload.state === "uploading" ||
+    audioUpload.state === "uploading";
 
   function handleChange(
     event: React.ChangeEvent<
@@ -114,9 +127,19 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  async function uploadFile(uploadedFile: File, field: "media" | "cover") {
-    const setSlot = field === "media" ? setMediaUpload : setCoverUpload;
-    const setKey = field === "media" ? setMediaKey : setCoverKey;
+  async function uploadFile(uploadedFile: File, field: "media" | "cover" | "audio") {
+    const setSlot =
+      field === "media"
+        ? setMediaUpload
+        : field === "cover"
+          ? setCoverUpload
+          : setAudioUpload;
+    const setKey =
+      field === "media"
+        ? setMediaKey
+        : field === "cover"
+          ? setCoverKey
+          : setAudioDownloadKey;
 
     setError("");
     setSlot({ state: "uploading", progress: 0, error: "" });
@@ -156,6 +179,14 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
     if (nextFile) void uploadFile(nextFile, "cover");
   }
 
+  function handleAudioDownloadFileChange(nextFile: File | null) {
+    setAudioDownloadFile(nextFile);
+    setAudioDownloadUrl("");
+    setAudioDownloadKey("");
+    setAudioUpload(initialUploadSlot());
+    if (nextFile) void uploadFile(nextFile, "audio");
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -176,6 +207,16 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
 
     if (coverFile && !coverKey) {
       setError("Wait for the cover upload to finish before saving.");
+      return;
+    }
+
+    if (form.type === "VIDEO" && audioDownloadFile && !audioDownloadKey) {
+      setError("Wait for the audio download upload to finish before saving.");
+      return;
+    }
+
+    if (form.type === "VIDEO" && audioUpload.state === "uploading") {
+      setError("Wait for the audio download upload to finish before saving.");
       return;
     }
 
@@ -203,6 +244,10 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
       mediaKey: mediaKey || null,
       coverImageKey: coverKey || (coverImageUrl || null),
       externalMediaUrl: externalMediaUrl || null,
+      audioDownloadKey:
+        form.type === "VIDEO"
+          ? audioDownloadKey || (audioDownloadUrl || null)
+          : null,
     };
 
     const response = await fetch(`/api/admin/messages/${message.id}`, {
@@ -347,6 +392,10 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                   setFile(null);
                   setMediaKey("");
                   setMediaUpload(initialUploadSlot());
+                  setAudioDownloadFile(null);
+                  setAudioDownloadKey("");
+                  setAudioDownloadUrl("");
+                  setAudioUpload(initialUploadSlot());
                 }}
               >
                 {MESSAGE_TYPES.map((type) => (
@@ -485,6 +534,46 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 />
               </div>
             </div>
+
+            {form.type === "VIDEO" ? (
+              <AdminUploadField
+                label="Audio download"
+                mediaKind="audio"
+                accept="audio/*"
+                file={audioDownloadFile}
+                objectKey={audioDownloadKey}
+                externalUrl={audioDownloadUrl}
+                uploadState={audioUpload.state}
+                progress={audioUpload.progress}
+                showUrlInput={true}
+                urlPlaceholder="https://example.com/message-audio.mp3"
+                successLabel={
+                  audioDownloadKey ? "Current audio download linked" : "Audio download ready"
+                }
+                helperText="Optional MP3, M4A, or WAV for public audio download"
+                errorMessage={audioUpload.error}
+                onFileChange={handleAudioDownloadFileChange}
+                onUrlChange={(url) => {
+                  setAudioDownloadUrl(url);
+                  if (url) {
+                    setAudioDownloadFile(null);
+                    setAudioDownloadKey("");
+                    setAudioUpload(initialUploadSlot());
+                  }
+                }}
+                onRetry={() => {
+                  if (audioDownloadFile) void uploadFile(audioDownloadFile, "audio");
+                }}
+                onValidationError={(validationError) => {
+                  setAudioUpload({
+                    state: "error",
+                    progress: 0,
+                    error: validationError,
+                  });
+                  setError(validationError);
+                }}
+              />
+            ) : null}
 
             <AdminUploadField
               label="Cover image"

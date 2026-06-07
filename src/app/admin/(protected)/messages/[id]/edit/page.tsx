@@ -37,6 +37,7 @@ export default async function EditMessagePage({ params }: Props) {
         mediaKey: true,
         coverImageKey: true,
         externalMediaUrl: true,
+        audioDownloadKey: true,
       },
     });
   } catch {

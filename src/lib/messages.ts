@@ -19,6 +19,7 @@ export interface Message {
   coverImageUrl: string | null;
   downloadUrl: string | null;
   externalMediaUrl: string | null;
+  audioDownloadUrl: string | null;
 }
 
 export interface GetMessagesOptions {
@@ -44,6 +45,7 @@ const messageSelect = {
   coverImageKey: true,
   mediaKey: true,
   externalMediaUrl: true,
+  audioDownloadKey: true,
   category: {
     select: {
       name: true,
@@ -66,6 +68,7 @@ type MessageRecord = {
   coverImageKey: string | null;
   mediaKey: string | null;
   externalMediaUrl: string | null;
+  audioDownloadKey: string | null;
   category: { name: string } | null;
 };
 
@@ -152,6 +155,7 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
     coverImageUrl: await resolveAssetUrl(message.coverImageKey),
     downloadUrl: await resolveAssetUrl(message.mediaKey),
     externalMediaUrl: message.externalMediaUrl,
+    audioDownloadUrl: await resolveAssetUrl(message.audioDownloadKey),
   };
 }
 

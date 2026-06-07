@@ -80,6 +80,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     mediaKey,
     coverImageKey,
     externalMediaUrl,
+    audioDownloadKey,
   } = body as Record<string, string | null | number | undefined>;
 
   if (placement === "HERO") {
@@ -106,6 +107,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ? await createUniqueMessageSlug(String(title), id)
         : undefined;
     const nextTitle = title !== undefined ? String(title) : existing.title;
+    const nextType = type ? String(type) : existing.type;
     const nextSummary =
       summary !== undefined
         ? summary
@@ -153,6 +155,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         }),
         ...(externalMediaUrl !== undefined && {
           externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
+        }),
+        ...((audioDownloadKey !== undefined || type !== undefined) && {
+          audioDownloadKey:
+            nextType === "VIDEO" && audioDownloadKey
+              ? String(audioDownloadKey)
+              : null,
         }),
         ...(willPublish && { publishedAt: new Date() }),
       },

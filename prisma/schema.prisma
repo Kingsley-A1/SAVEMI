@@ -23,6 +23,7 @@ model Message {
   coverImageKey      String?
   mediaKey           String?
   externalMediaUrl   String?   // YouTube, Facebook, or direct media URL
+  audioDownloadKey   String?   // Optional audio download for video messages
   durationSeconds    BigInt?
   publishedAt        DateTime?
   categoryId         String?

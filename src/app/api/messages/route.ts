@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
         coverImageKey: true,
         mediaKey: true,
         externalMediaUrl: true,
+        audioDownloadKey: true,
         eventDate: true,
         publishedAt: true,
         createdAt: true,
@@ -79,6 +80,7 @@ export async function GET(req: NextRequest) {
         coverImageUrl: await resolveAssetUrl(m.coverImageKey),
         downloadUrl: await resolveAssetUrl(m.mediaKey),
         externalMediaUrl: m.externalMediaUrl,
+        audioDownloadUrl: await resolveAssetUrl(m.audioDownloadKey),
         date: new Intl.DateTimeFormat("en-US", {
           month: "long", day: "numeric", year: "numeric",
         }).format(m.eventDate ?? m.publishedAt ?? m.createdAt),

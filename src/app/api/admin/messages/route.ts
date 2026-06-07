@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
     mediaKey,
     coverImageKey,
     externalMediaUrl,
+    audioDownloadKey,
   } = body as Record<string, string | null | number | undefined>;
 
   if (!title || !type) {
@@ -130,6 +131,10 @@ export async function POST(req: NextRequest) {
         mediaKey: mediaKey ? String(mediaKey) : null,
         coverImageKey: coverImageKey ? String(coverImageKey) : null,
         externalMediaUrl: externalMediaUrl ? String(externalMediaUrl) : null,
+        audioDownloadKey:
+          type === "VIDEO" && audioDownloadKey
+            ? String(audioDownloadKey)
+            : null,
         publishedAt: status === "PUBLISHED" ? new Date() : null,
       },
     });
