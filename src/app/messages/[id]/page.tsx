@@ -8,6 +8,18 @@ import { isEmbeddableUrl } from "../../../lib/embed";
 
 export const dynamic = "force-dynamic";
 
+function getLibraryLink(type: "video" | "audio" | "image") {
+  if (type === "audio") {
+    return { href: "/audio", label: "audio messages" };
+  }
+
+  if (type === "image") {
+    return { href: "/images", label: "image messages" };
+  }
+
+  return { href: "/videos", label: "video messages" };
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -49,6 +61,7 @@ export default async function MessageDetail({
   const isEmbed = message.externalMediaUrl
     ? isEmbeddableUrl(message.externalMediaUrl)
     : false;
+  const libraryLink = getLibraryLink(message.type);
 
   return (
     <article className="mx-auto max-w-3xl space-y-4">
@@ -131,10 +144,10 @@ export default async function MessageDetail({
       ) : null}
 
       <Link
-        href="/messages"
+        href={libraryLink.href}
         className="text-brand-muted hover:text-brand-primary inline-block text-sm transition-colors"
       >
-        ← Back to messages
+        ← Back to {libraryLink.label}
       </Link>
     </article>
   );

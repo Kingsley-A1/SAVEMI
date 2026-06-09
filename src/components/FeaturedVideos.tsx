@@ -118,7 +118,7 @@ export default function FeaturedVideos({
           <h2 className="section-title mt-1">Video Messages</h2>
         </div>
         <Link
-          href="/messages?type=video"
+          href="/videos"
           className="button-tertiary flex items-center gap-1.5"
         >
           See more

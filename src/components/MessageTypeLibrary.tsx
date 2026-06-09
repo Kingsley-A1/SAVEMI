@@ -1,17 +1,19 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Download,
   Film,
   Headphones,
-  Library,
+  Image as ImageIcon,
   Search,
 } from "lucide-react";
 import type { Message, MessageType } from "../lib/messages";
 
 interface MessageTypeLibraryConfig {
   type: MessageType;
+  path: string;
   typeLabel: string;
   eyebrow: string;
   title: string;
@@ -23,10 +25,10 @@ interface MessageTypeLibraryConfig {
   actionLabel: string;
   downloadLabel: string;
   icon: LucideIcon;
-  allHref: string;
-  allLabel: string;
-  companionHref: string;
-  companionLabel: string;
+  companionLinks: Array<{
+    href: string;
+    label: string;
+  }>;
 }
 
 interface MessageTypeLibraryProps {
@@ -38,6 +40,7 @@ interface MessageTypeLibraryProps {
 export const messageLibraryConfigs = {
   audio: {
     type: "audio",
+    path: "/audio",
     typeLabel: "Audio",
     eyebrow: "Listen",
     title: "Audio Messages",
@@ -51,13 +54,14 @@ export const messageLibraryConfigs = {
     actionLabel: "Listen",
     downloadLabel: "Download audio",
     icon: Headphones,
-    allHref: "/messages",
-    allLabel: "All messages",
-    companionHref: "/messages?type=video",
-    companionLabel: "Video messages",
+    companionLinks: [
+      { href: "/videos", label: "Video messages" },
+      { href: "/images", label: "Image messages" },
+    ],
   },
   video: {
     type: "video",
+    path: "/videos",
     typeLabel: "Video",
     eyebrow: "Watch",
     title: "Video Messages",
@@ -71,12 +75,33 @@ export const messageLibraryConfigs = {
     actionLabel: "Watch",
     downloadLabel: "Download video",
     icon: Film,
-    allHref: "/messages",
-    allLabel: "All messages",
-    companionHref: "/audio",
-    companionLabel: "Audio messages",
+    companionLinks: [
+      { href: "/audio", label: "Audio messages" },
+      { href: "/images", label: "Image messages" },
+    ],
   },
-} satisfies Record<"audio" | "video", MessageTypeLibraryConfig>;
+  image: {
+    type: "image",
+    path: "/images",
+    typeLabel: "Image",
+    eyebrow: "Reflect",
+    title: "Image Messages",
+    description:
+      "Scripture-rooted visual messages, quotes, and Sabbath reflections for quick review and sharing.",
+    searchLabel: "Search images",
+    searchPlaceholder: "Title, summary, scripture, or speaker",
+    emptyTitle: "No image messages found",
+    emptyDescription:
+      "Try a broader search, or return to another media library.",
+    actionLabel: "View",
+    downloadLabel: "Download image",
+    icon: ImageIcon,
+    companionLinks: [
+      { href: "/audio", label: "Audio messages" },
+      { href: "/videos", label: "Video messages" },
+    ],
+  },
+} satisfies Record<"audio" | "video" | "image", MessageTypeLibraryConfig>;
 
 function getMediaStatus(message: Message, config: MessageTypeLibraryConfig) {
   if (message.downloadUrl || message.externalMediaUrl) {
@@ -95,80 +120,113 @@ function MessageTypeCard({
 }) {
   const Icon = config.icon;
   const detailHref = `/messages/${message.slug}`;
+  const previewUrl =
+    config.type === "image"
+      ? message.coverImageUrl ?? message.downloadUrl
+      : config.type === "video"
+        ? message.coverImageUrl
+        : null;
 
   return (
-    <article className="site-panel flex h-full flex-col p-4 sm:p-5">
-      <div className="flex items-start gap-3">
-        <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded"
-          style={{ background: "rgba(10,79,60,0.08)" }}
-        >
-          <Icon size={21} style={{ color: "var(--brand-primary)" }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="type-badge inline-flex items-center gap-1.5">
+    <article className="site-panel flex h-full flex-col overflow-hidden">
+      {previewUrl ? (
+        <Link href={detailHref} className="group block">
+          <div
+            className="relative aspect-video overflow-hidden"
+            style={{ background: "var(--brand-primary-deep)" }}
+          >
+            <Image
+              src={previewUrl}
+              alt=""
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="type-badge absolute left-3 top-3 inline-flex items-center gap-1.5">
               <Icon size={12} aria-hidden="true" />
               {config.typeLabel}
             </span>
-            <span className="text-brand-muted text-xs">{message.date}</span>
           </div>
+        </Link>
+      ) : null}
 
-          <Link href={detailHref} className="group">
-            <h2 className="mt-3 text-base font-semibold leading-snug transition-colors group-hover:text-brand-primary">
-              {message.title}
-            </h2>
-          </Link>
-        </div>
-      </div>
-
-      <div className="mt-3 space-y-2">
-        {message.speaker || message.scriptureReference ? (
-          <dl className="text-brand-muted flex flex-col gap-1 text-xs">
-            {message.speaker ? (
-              <div>
-                <dt className="inline font-medium">Speaker: </dt>
-                <dd className="inline">{message.speaker}</dd>
-              </div>
-            ) : null}
-            {message.scriptureReference ? (
-              <div>
-                <dt className="inline font-medium">Scripture: </dt>
-                <dd className="inline">{message.scriptureReference}</dd>
-              </div>
-            ) : null}
-          </dl>
-        ) : null}
-
-        <p className="text-brand-muted line-clamp-3 text-sm leading-6">
-          {message.summary}
-        </p>
-      </div>
-
-      <div className="mt-auto flex flex-col gap-3 pt-5">
-        <p className="text-brand-muted text-xs">
-          {getMediaStatus(message, config)}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={detailHref}
-            className="button-primary gap-1.5"
-            aria-label={`${config.actionLabel} to ${message.title}`}
-          >
-            <Icon size={14} aria-hidden="true" />
-            {config.actionLabel}
-          </Link>
-          {message.downloadUrl ? (
-            <a
-              href={message.downloadUrl}
-              download
-              className="button-tertiary gap-1.5"
-              aria-label={`${config.downloadLabel} for ${message.title}`}
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          {!previewUrl ? (
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded"
+              style={{ background: "rgba(10,79,60,0.08)" }}
             >
-              <Download size={14} aria-hidden="true" />
-              Download
-            </a>
+              <Icon size={21} style={{ color: "var(--brand-primary)" }} />
+            </div>
           ) : null}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {!previewUrl ? (
+                <span className="type-badge inline-flex items-center gap-1.5">
+                  <Icon size={12} aria-hidden="true" />
+                  {config.typeLabel}
+                </span>
+              ) : null}
+              <span className="text-brand-muted text-xs">{message.date}</span>
+            </div>
+
+            <Link href={detailHref} className="group">
+              <h2 className="mt-3 text-base font-semibold leading-snug transition-colors group-hover:text-brand-primary">
+                {message.title}
+              </h2>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {message.speaker || message.scriptureReference ? (
+            <dl className="text-brand-muted flex flex-col gap-1 text-xs">
+              {message.speaker ? (
+                <div>
+                  <dt className="inline font-medium">Speaker: </dt>
+                  <dd className="inline">{message.speaker}</dd>
+                </div>
+              ) : null}
+              {message.scriptureReference ? (
+                <div>
+                  <dt className="inline font-medium">Scripture: </dt>
+                  <dd className="inline">{message.scriptureReference}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
+
+          <p className="text-brand-muted line-clamp-3 text-sm leading-6">
+            {message.summary}
+          </p>
+        </div>
+
+        <div className="mt-auto flex flex-col gap-3 pt-5">
+          <p className="text-brand-muted text-xs">
+            {getMediaStatus(message, config)}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={detailHref}
+              className="button-primary gap-1.5"
+              aria-label={`${config.actionLabel} to ${message.title}`}
+            >
+              <Icon size={14} aria-hidden="true" />
+              {config.actionLabel}
+            </Link>
+            {message.downloadUrl ? (
+              <a
+                href={message.downloadUrl}
+                download
+                className="button-tertiary gap-1.5"
+                aria-label={`${config.downloadLabel} for ${message.title}`}
+              >
+                <Download size={14} aria-hidden="true" />
+                Download
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
     </article>
@@ -199,17 +257,16 @@ export default function MessageTypeLibrary({
             <h1 className="section-title mt-2">{config.title}</h1>
             <p className="section-copy mt-2">{config.description}</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link href={config.allHref} className="button-tertiary gap-1.5">
-                <Library size={14} aria-hidden="true" />
-                {config.allLabel}
-              </Link>
-              <Link
-                href={config.companionHref}
-                className="button-tertiary gap-1.5"
-              >
-                <ArrowRight size={14} aria-hidden="true" />
-                {config.companionLabel}
-              </Link>
+              {config.companionLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="button-tertiary gap-1.5"
+                >
+                  <ArrowRight size={14} aria-hidden="true" />
+                  {link.label}
+                </Link>
+              ))}
             </div>
           </div>
 
@@ -232,7 +289,7 @@ export default function MessageTypeLibrary({
 
       <form
         className="site-panel grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-        action={`/${config.type}`}
+        action={config.path}
       >
         <div>
           <label htmlFor={`${config.type}-search`} className="field-label">
@@ -260,7 +317,7 @@ export default function MessageTypeLibrary({
             Search
           </button>
           {hasSearch ? (
-            <Link href={`/${config.type}`} className="button-tertiary">
+            <Link href={config.path} className="button-tertiary">
               Clear
             </Link>
           ) : null}

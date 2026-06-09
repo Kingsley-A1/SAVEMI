@@ -56,8 +56,8 @@ export default async function HomePage() {
             understanding of God&apos;s grand plan.
           </p>
           <div className="reflection-hero__actions">
-            <Link href="/messages" className="hero-btn-primary">
-              All messages
+            <Link href="/videos" className="hero-btn-primary">
+              Watch messages
             </Link>
             <Link href="/about" className="hero-btn-secondary">
               Our story
