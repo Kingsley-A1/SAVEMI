@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/messages",
+        destination: "/videos",
+        permanent: true,
+      },
+    ];
+  },
+
   images: {
     // Allow next/image to serve images from Cloudflare R2 public buckets.
     // Add any additional hostnames here if the bucket domain changes.
