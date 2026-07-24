@@ -1,3 +1,5 @@
+import SocialLinks from "./SocialLinks";
+
 export default function Footer() {
   return (
     <footer
@@ -7,18 +9,19 @@ export default function Footer() {
       }}
     >
       <div className="site-container py-5">
-        <div className="flex flex-col gap-1.5 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-brand-primary font-semibold">SAVEMI Ministry</p>
             <p className="text-brand-muted mt-0.5">
-              Sabbath Vesper Ministry - Remember · Delight · Restore
+              Sabbath Vesper Ministry — Repose · Renewal · Restoration
             </p>
           </div>
-          <p className="text-brand-muted">
-            &copy; {new Date().getFullYear()} SAVEMI Ministry. All rights
-            reserved.
-          </p>
+          <SocialLinks variant="icons" />
         </div>
+        <p className="text-brand-muted mt-4 text-xs">
+          &copy; {new Date().getFullYear()} SAVEMI Ministry. All rights
+          reserved.
+        </p>
       </div>
     </footer>
   );

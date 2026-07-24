@@ -11,6 +11,10 @@ export default function AdminLoginPage() {
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/admin";
   const justRegistered = params.get("registered") === "1";
+  const checkEmail = params.get("checkEmail") === "1";
+  const justVerified = params.get("verified") === "1";
+  const verifyExpired = params.get("verifyExpired") === "1";
+  const verifyError = params.get("verifyError") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -141,6 +145,62 @@ export default function AdminLoginPage() {
             }}
           >
             Admin account created. Sign in with the same shared access code.
+          </p>
+        ) : null}
+
+        {checkEmail ? (
+          <p
+            className="mb-4 rounded px-3 py-2 text-xs"
+            style={{
+              background: "rgba(10,79,60,0.06)",
+              color: "#0a4f3c",
+              border: "1px solid rgba(10,79,60,0.18)",
+            }}
+          >
+            Account created. We&apos;ve sent a confirmation link to your email —
+            open it to verify your address. You can sign in now with the shared
+            access code.
+          </p>
+        ) : null}
+
+        {justVerified ? (
+          <p
+            className="mb-4 rounded px-3 py-2 text-xs"
+            style={{
+              background: "rgba(22,163,74,0.08)",
+              color: "#15803d",
+              border: "1px solid rgba(22,163,74,0.18)",
+            }}
+          >
+            Email confirmed. Welcome to SAVEMI — sign in to continue.
+          </p>
+        ) : null}
+
+        {verifyExpired ? (
+          <p
+            className="mb-4 rounded px-3 py-2 text-xs"
+            style={{
+              background: "rgba(217,119,6,0.08)",
+              color: "#92400e",
+              border: "1px solid rgba(217,119,6,0.2)",
+            }}
+          >
+            That confirmation link has expired. You can still sign in, or
+            register again to receive a fresh link.
+          </p>
+        ) : null}
+
+        {verifyError ? (
+          <p
+            className="mb-4 rounded px-3 py-2 text-xs"
+            style={{
+              background: "rgba(220,38,38,0.07)",
+              color: "#b91c1c",
+              border: "1px solid rgba(220,38,38,0.2)",
+            }}
+          >
+            We couldn&apos;t confirm that link. It may already be used. Try
+            signing in below.
           </p>
         ) : null}
 

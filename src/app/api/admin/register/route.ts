@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  formatAdminNameFromEmail,
   getAdminAccessCodeConfigError,
   hashAdminAccessCode,
   isValidAdminAccessCode,
@@ -14,7 +13,15 @@ import {
 } from "../../../../lib/rate-limit";
 import { audit } from "../../../../lib/audit";
 import { auth } from "../../../../../auth";
-import { isSuperAdminEmail } from "../../../../lib/admin-permissions";
+import { isAllowedAdminEmail } from "../../../../lib/admin-permissions";
+import { isEmailConfigured } from "../../../../lib/email";
+import {
+  buildVerifyUrl,
+  createVerifyToken,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "../../../../lib/admin-verification";
+import { getSiteUrl } from "../../../../lib/site-url";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -35,29 +42,6 @@ export async function POST(request: Request) {
 
   const session = await auth().catch(() => null);
 
-  try {
-    const adminCount = await prisma.adminUser.count();
-
-    if (adminCount > 0 && !session?.user?.email) {
-      return NextResponse.json(
-        { error: "Admin session required to register another admin." },
-        { status: 401 },
-      );
-    }
-
-    if (adminCount > 0 && !isSuperAdminEmail(session?.user?.email)) {
-      return NextResponse.json(
-        { error: "Super admin access is required to register another admin." },
-        { status: 403 },
-      );
-    }
-  } catch {
-    return NextResponse.json(
-      { error: "Unable to verify admin registration state." },
-      { status: 500 },
-    );
-  }
-
   let body: Record<string, unknown>;
 
   try {
@@ -70,6 +54,7 @@ export async function POST(request: Request) {
     typeof body.email === "string" ? normalizeAdminEmail(body.email) : "";
   const password =
     typeof body.password === "string" ? body.password.trim() : "";
+  const name = typeof body.name === "string" ? body.name.trim() : "";
 
   if (!email || !password) {
     return NextResponse.json(
@@ -82,6 +67,32 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Enter a valid email address." },
       { status: 422 },
+    );
+  }
+
+  if (!name || name.length < 2) {
+    return NextResponse.json(
+      { error: "Enter your full name (at least 2 characters)." },
+      { status: 422 },
+    );
+  }
+
+  if (name.length > 80) {
+    return NextResponse.json(
+      { error: "Name is too long (80 characters max)." },
+      { status: 422 },
+    );
+  }
+
+  // Anyone whose email is on the allow-list may self-register with the shared
+  // access code. This replaces the old "first admin only" bootstrap gate.
+  if (!isAllowedAdminEmail(email)) {
+    return NextResponse.json(
+      {
+        error:
+          "This email is not on the approved admin list. Ask a ministry lead to add it to ADMIN_ALLOWED_EMAILS.",
+      },
+      { status: 403 },
     );
   }
 
@@ -103,19 +114,45 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hashAdminAccessCode();
+    const emailEnabled = isEmailConfigured();
+    const siteUrl = getSiteUrl(request);
+
+    // When email works, hold verification until the admin clicks the link.
+    // When it doesn't, there's no way to deliver a link — auto-verify instead.
+    const verification = emailEnabled ? createVerifyToken() : null;
+
     const admin = await prisma.adminUser.create({
       data: {
         email,
         passwordHash,
-        name: formatAdminNameFromEmail(email),
+        name,
+        emailVerified: emailEnabled ? null : new Date(),
+        verifyToken: verification?.token ?? null,
+        verifyTokenExpiry: verification?.expiry ?? null,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        emailVerified: true,
         createdAt: true,
       },
     });
+
+    if (emailEnabled && verification) {
+      await sendVerificationEmail({
+        to: admin.email,
+        name: admin.name,
+        verifyUrl: buildVerifyUrl(siteUrl, verification.token),
+      });
+    } else {
+      // No verification step — send the welcome email right away.
+      await sendWelcomeEmail({
+        to: admin.email,
+        name: admin.name,
+        loginUrl: `${siteUrl}/admin/login`,
+      });
+    }
 
     await audit({
       session: session ?? { user: { id: admin.id, email: admin.email } },
@@ -126,7 +163,16 @@ export async function POST(request: Request) {
       detail: { email: admin.email, name: admin.name },
     });
 
-    return NextResponse.json({ data: admin }, { status: 201 });
+    return NextResponse.json(
+      {
+        data: admin,
+        emailSent: emailEnabled,
+        message: emailEnabled
+          ? "Account created. Check your inbox to confirm your email."
+          : "Account created.",
+      },
+      { status: 201 },
+    );
   } catch {
     return NextResponse.json(
       { error: "Unable to register admin." },

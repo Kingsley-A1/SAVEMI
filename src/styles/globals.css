@@ -95,7 +95,15 @@
   }
 
   .reflection-hero__actions {
-    @apply mt-8 flex flex-wrap gap-3;
+    /* Keep both CTAs on one row; centre them on mobile, left-align on larger.
+       Children flex to share the row on small screens so nothing overflows —
+       no fixed widths, so it stays responsive at any viewport. */
+    @apply mt-8 flex flex-nowrap items-center justify-center gap-2.5 sm:justify-start sm:gap-3;
+  }
+
+  .reflection-hero__actions > * {
+    /* Share the row equally on mobile, size to content from sm up. */
+    @apply min-w-0 flex-1 whitespace-nowrap text-center sm:flex-none;
   }
 
   .reflection-hero__scripture {
@@ -171,13 +179,13 @@
   .hero-btn-primary {
     background: #22c55e;
     color: #ffffff;
-    @apply inline-flex items-center justify-center rounded px-6 py-2.5 text-sm font-semibold tracking-wide transition-opacity duration-150 hover:opacity-90 active:opacity-75;
+    @apply inline-flex items-center justify-center rounded px-4 py-2.5 text-xs font-semibold tracking-wide transition-opacity duration-150 hover:opacity-90 active:opacity-75 sm:px-6 sm:text-sm;
   }
 
   .hero-btn-secondary {
     border: 1.5px solid rgba(74, 222, 128, 0.55);
     color: #86efac;
-    @apply inline-flex items-center justify-center rounded px-6 py-2.5 text-sm font-semibold tracking-wide backdrop-blur-sm transition-colors duration-150 hover:bg-white/10;
+    @apply inline-flex items-center justify-center rounded px-4 py-2.5 text-xs font-semibold tracking-wide backdrop-blur-sm transition-colors duration-150 hover:bg-white/10 sm:px-6 sm:text-sm;
   }
 
   /* ── Form ────────────────────────────────────────────── */

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -17,6 +18,7 @@ export default function AdminRegisterForm({
   const params = useSearchParams();
   const callbackUrl = params.get("callbackUrl") || "/admin";
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,11 +33,12 @@ export default function AdminRegisterForm({
     const response = await fetch("/api/admin/register", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ name, email, password }),
     });
 
     const payload = (await response.json().catch(() => null)) as {
       error?: string;
+      emailSent?: boolean;
     } | null;
 
     if (!response.ok) {
@@ -44,10 +47,19 @@ export default function AdminRegisterForm({
       return;
     }
 
+    // An already-signed-in admin adding a teammate: return to the admin area.
     if (!autoSignInAfterRegister) {
       setLoading(false);
       router.replace(callbackUrl);
       router.refresh();
+      return;
+    }
+
+    // Self-registration with email verification: guide them to their inbox
+    // instead of silently signing in.
+    if (payload?.emailSent) {
+      setLoading(false);
+      router.replace("/admin/login?checkEmail=1");
       return;
     }
 
@@ -71,15 +83,42 @@ export default function AdminRegisterForm({
     <div className="flex min-h-screen items-center justify-center px-4 py-8 sm:px-6">
       <div className="site-panel w-full max-w-sm p-6 sm:p-8">
         <div className="mb-6 text-center">
-          <p className="eyebrow text-brand-primary">SAVEMI</p>
-          <h1 className="mt-1 text-xl font-semibold">Register Admin</h1>
+          <div className="flex items-center justify-center gap-2.5">
+            <Image
+              src="/images/logo.jpg"
+              alt="SAVEMI logo"
+              width={36}
+              height={36}
+              className="rounded-full object-cover"
+              priority
+            />
+            <p className="eyebrow text-brand-primary">SAVEMI</p>
+          </div>
+          <h1 className="mt-3 text-xl font-semibold">Register Admin</h1>
           <p className="text-brand-muted mt-1 text-xs leading-5">
-            Use an email address and the shared 6-character ministry access
-            code.
+            Register with an approved ministry email and the shared 6-character
+            access code. Choose the name you&apos;d like displayed.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="name" className="field-label">
+              Full name
+            </label>
+            <input
+              id="name"
+              type="text"
+              autoComplete="name"
+              required
+              className="field-input"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              disabled={loading}
+              placeholder="e.g. Grace Effiong"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="field-label">
               Email

@@ -1,7 +1,11 @@
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
+  UploadPartCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -61,6 +65,105 @@ export async function createUploadUrl({
   });
 
   return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+}
+
+// ---------------------------------------------------------------------------
+// Multipart uploads — used for large (300MB+) media so a dropped connection
+// only loses one part instead of the whole file. Each part is uploaded from
+// the browser with its own presigned URL and retried independently.
+// ---------------------------------------------------------------------------
+
+export interface MultipartInit {
+  uploadId: string;
+  key: string;
+}
+
+export async function createMultipartUpload({
+  key,
+  contentType,
+}: {
+  key: string;
+  contentType: string;
+}): Promise<MultipartInit> {
+  const client = getClient();
+  const normalizedKey = normalizeObjectKey(key);
+  const result = await client.send(
+    new CreateMultipartUploadCommand({
+      Bucket: process.env.CF_BUCKET!,
+      Key: normalizedKey,
+      ContentType: contentType,
+    }),
+  );
+
+  if (!result.UploadId) {
+    throw new Error("Failed to initiate multipart upload.");
+  }
+
+  return { uploadId: result.UploadId, key: normalizedKey };
+}
+
+export async function createPartUploadUrl({
+  key,
+  uploadId,
+  partNumber,
+  expiresInSeconds = 3600,
+}: {
+  key: string;
+  uploadId: string;
+  partNumber: number;
+  expiresInSeconds?: number;
+}): Promise<string> {
+  const client = getClient();
+  const command = new UploadPartCommand({
+    Bucket: process.env.CF_BUCKET!,
+    Key: normalizeObjectKey(key),
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+
+  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
+}
+
+export async function completeMultipartUpload({
+  key,
+  uploadId,
+  parts,
+}: {
+  key: string;
+  uploadId: string;
+  parts: Array<{ partNumber: number; eTag: string }>;
+}): Promise<void> {
+  const client = getClient();
+  await client.send(
+    new CompleteMultipartUploadCommand({
+      Bucket: process.env.CF_BUCKET!,
+      Key: normalizeObjectKey(key),
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: parts
+          .slice()
+          .sort((a, b) => a.partNumber - b.partNumber)
+          .map((part) => ({ ETag: part.eTag, PartNumber: part.partNumber })),
+      },
+    }),
+  );
+}
+
+export async function abortMultipartUpload({
+  key,
+  uploadId,
+}: {
+  key: string;
+  uploadId: string;
+}): Promise<void> {
+  const client = getClient();
+  await client.send(
+    new AbortMultipartUploadCommand({
+      Bucket: process.env.CF_BUCKET!,
+      Key: normalizeObjectKey(key),
+      UploadId: uploadId,
+    }),
+  );
 }
 
 export async function createDownloadUrl({

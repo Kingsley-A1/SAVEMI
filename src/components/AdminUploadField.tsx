@@ -48,14 +48,18 @@ const KIND_ICONS: Record<MediaKind, ReactNode> = {
 };
 
 const DEFAULT_MAX_BYTES: Record<MediaKind, number> = {
-  video: 500 * 1024 * 1024,
-  audio: 100 * 1024 * 1024,
-  image: 15 * 1024 * 1024,
-  cover: 15 * 1024 * 1024,
-  document: 15 * 1024 * 1024,
+  video: 5 * 1024 * 1024 * 1024,
+  audio: 2 * 1024 * 1024 * 1024,
+  image: 512 * 1024 * 1024,
+  cover: 25 * 1024 * 1024,
+  document: 50 * 1024 * 1024,
 };
 
 function formatBytes(bytes: number) {
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1) {
+    return `${Number.isInteger(gb) ? gb : gb.toFixed(1)}GB`;
+  }
   const mb = bytes / (1024 * 1024);
   return `${Math.round(mb)}MB`;
 }
@@ -106,7 +110,22 @@ export default function AdminUploadField({
   onValidationError,
 }: AdminUploadFieldProps) {
   const [source, setSource] = useState<UploadSource>(externalUrl ? "url" : "file");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const resolvedMaxSize = maxSizeBytes ?? DEFAULT_MAX_BYTES[mediaKind];
+  const isImageKind = mediaKind === "image" || mediaKind === "cover";
+
+  // Show a thumbnail preview so the admin can see exactly what they picked.
+  useEffect(() => {
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [file]);
+
+  const resolvedPreview =
+    previewUrl ?? (isImageKind && externalUrl ? externalUrl : null);
   const isDone = objectKey || uploadState === "done";
   const isUploading = uploadState === "uploading";
   const isError = uploadState === "error";
@@ -263,6 +282,36 @@ export default function AdminUploadField({
             </>
           )}
         </label>
+      ) : null}
+
+      {/* Cover / image thumbnail preview */}
+      {resolvedPreview ? (
+        <div
+          className="flex items-center gap-3 rounded-lg border p-2"
+          style={{ borderColor: "var(--brand-border)", background: "#fff" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={resolvedPreview}
+            alt="Selected cover preview"
+            className="h-16 w-16 shrink-0 rounded object-cover"
+            style={{ border: "1px solid var(--brand-border)" }}
+          />
+          <div className="min-w-0">
+            <p
+              className="text-xs font-semibold"
+              style={{ color: "var(--brand-primary)" }}
+            >
+              Preview
+            </p>
+            <p
+              className="truncate text-xs"
+              style={{ color: "var(--brand-text-soft)" }}
+            >
+              {file?.name ?? externalUrl}
+            </p>
+          </div>
+        </div>
       ) : null}
 
       {isError && onRetry && file ? (

@@ -98,13 +98,16 @@ model Quote {
 }
 
 model AdminUser {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  auditLogs    AuditLog[]
+  id                String     @id @default(cuid())
+  email             String     @unique
+  passwordHash      String
+  name              String
+  emailVerified     DateTime?
+  verifyToken       String?    @unique
+  verifyTokenExpiry DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  auditLogs         AuditLog[]
 }
 
 model AuditLog {

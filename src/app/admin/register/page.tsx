@@ -1,32 +1,15 @@
-import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
-import { isDatabaseConfigured, prisma } from "../../../lib/db";
 import AdminRegisterForm from "./RegisterAdminForm";
 
 export const dynamic = "force-dynamic";
 
-async function canBootstrapAdmin(): Promise<boolean> {
-  if (!isDatabaseConfigured()) {
-    return true;
-  }
-
-  try {
-    const adminCount = await prisma.adminUser.count();
-    return adminCount === 0;
-  } catch {
-    return false;
-  }
-}
-
 export default async function AdminRegisterPage() {
-  const session = await auth();
+  // Any email on the approved admin list (ADMIN_ALLOWED_EMAILS) may register
+  // with the shared access code. The API route enforces the allow-list, so the
+  // page itself no longer blocks unauthenticated visitors — that old gate was
+  // what redirected genuine new admins back to the login screen.
+  const session = await auth().catch(() => null);
   const isAuthenticated = Boolean(session?.user?.email);
 
-  if (!isAuthenticated && !(await canBootstrapAdmin())) {
-    redirect("/admin/login");
-  }
-
-  return (
-    <AdminRegisterForm autoSignInAfterRegister={!isAuthenticated} />
-  );
+  return <AdminRegisterForm autoSignInAfterRegister={!isAuthenticated} />;
 }

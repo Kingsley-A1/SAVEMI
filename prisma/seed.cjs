@@ -289,10 +289,16 @@ async function seedAdmin() {
   }
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const now = new Date();
   await prisma.adminUser.upsert({
     where: { email: adminEmail },
-    update: { passwordHash, name: adminName },
-    create: { email: adminEmail, passwordHash, name: adminName },
+    update: { passwordHash, name: adminName, emailVerified: now },
+    create: {
+      email: adminEmail,
+      passwordHash,
+      name: adminName,
+      emailVerified: now,
+    },
   });
   console.log("Admin user synced:", adminEmail);
 }

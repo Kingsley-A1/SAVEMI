@@ -24,11 +24,16 @@ export interface ValidatedUploadRequest {
   mediaKind: MediaKind;
 }
 
+const GB = 1024 * 1024 * 1024;
+const MB = 1024 * 1024;
+
+// Large ceilings so 300MB+ media is never rejected. Resilient multipart
+// uploads (see admin-upload-client) handle the actual transfer.
 const MEDIA_RULES: MediaRule[] = [
   {
     kind: "video",
     mimeTypes: ["video/mp4", "video/webm", "video/quicktime"],
-    maxBytes: 500 * 1024 * 1024,
+    maxBytes: 5 * GB,
     compressionPlan: {
       stage: "pre-publish",
       summary: "Transcode to an H.264/AAC delivery file before final publish.",
@@ -38,7 +43,7 @@ const MEDIA_RULES: MediaRule[] = [
   {
     kind: "audio",
     mimeTypes: ["audio/mpeg", "audio/mp4", "audio/wav", "audio/x-wav"],
-    maxBytes: 100 * 1024 * 1024,
+    maxBytes: 2 * GB,
     compressionPlan: {
       stage: "pre-publish",
       summary:
@@ -49,7 +54,7 @@ const MEDIA_RULES: MediaRule[] = [
   {
     kind: "image",
     mimeTypes: ["image/jpeg", "image/png", "image/webp"],
-    maxBytes: 15 * 1024 * 1024,
+    maxBytes: 512 * MB,
     compressionPlan: {
       stage: "pre-publish",
       summary:

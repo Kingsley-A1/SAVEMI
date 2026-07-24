@@ -4,31 +4,33 @@ import { getMessages } from "../lib/messages";
 import HomeAnimationWrapper from "../components/HomeAnimationWrapper";
 import FeaturedVideos from "../components/FeaturedVideos";
 import FeaturedAudios from "../components/FeaturedAudios";
+import SocialLinks from "../components/SocialLinks";
+import { FacebookIcon } from "../components/SocialIcons";
 
 export const dynamic = "force-dynamic";
 
-/* ── Scripture-backed pillars ───────────────────────────────── */
+/* ── Scripture-backed pillars: Repose · Renewal · Restoration ── */
 const pillars = [
   {
-    label: "Remembrance",
+    label: "Repose",
     icon: Moon,
-    heading: '"Remember the sabbath day, to keep it holy"',
-    verse: "Exodus 20:8",
-    body: "A Seventh-day Sabbath witness shaped by Scripture, worship, and holy time with God.",
+    heading: '"He maketh me to lie down in green pastures"',
+    verse: "Psalm 23:2",
+    body: "The Seventh-day Sabbath is holy rest — an invitation to be still beside quiet waters and repose in the presence of God.",
   },
   {
-    label: "Delight",
+    label: "Renewal",
     icon: Sunrise,
-    heading: '"Call the sabbath a delight"',
-    verse: "Isaiah 58:13",
-    body: "Reflection at Eventide helps believers enter the Sabbath with reverence, gratitude, and joy.",
+    heading: '"They that wait upon the LORD shall renew their strength"',
+    verse: "Isaiah 40:31",
+    body: "Reflection at Eventide renews the weary spirit, lifting hearts to mount up with wings as eagles for the days ahead.",
   },
   {
     label: "Restoration",
     icon: Heart,
-    heading: '"The sabbath was made for man"',
-    verse: "Mark 2:27",
-    body: "Sabbath rest points weary hearts back to Christ, the Lord of the Sabbath and giver of life.",
+    heading: '"He restoreth my soul"',
+    verse: "Psalm 23:3",
+    body: "Sabbath rest restores the soul, leading weary hearts back to Christ, the Lord of the Sabbath and giver of life.",
   },
 ];
 
@@ -114,9 +116,17 @@ export default async function HomePage() {
 
       {/* 5. Facebook feed */}
       <section className="site-container">
-        <div className="mb-5">
-          <p className="eyebrow text-brand-primary">Primary Platform</p>
-          <h2 className="section-title mt-1">Follow SAVEMI on Facebook</h2>
+        <div className="mb-5 flex items-center gap-3">
+          <span
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            style={{ background: "rgba(24,119,242,0.1)" }}
+          >
+            <FacebookIcon size={24} title="Facebook" />
+          </span>
+          <div>
+            <p className="eyebrow text-brand-primary">Primary Platform</p>
+            <h2 className="section-title mt-1">Follow SAVEMI on Facebook</h2>
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <article className="site-panel p-5">
@@ -193,6 +203,9 @@ export default async function HomePage() {
           <Link href="/contact" className="hero-btn-primary mt-6 inline-flex">
             Send a message
           </Link>
+          <div className="mt-6 flex justify-center">
+            <SocialLinks variant="icons" />
+          </div>
         </div>
       </section>
     </HomeAnimationWrapper>
