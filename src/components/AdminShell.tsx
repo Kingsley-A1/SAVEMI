@@ -51,6 +51,14 @@ const PAGE_TITLES: Record<string, { title: string; eyebrow: string }> = {
     title: "Owner Guide",
     eyebrow: "Zero to Hero operating handbook",
   },
+  "/admin/settings": {
+    title: "Site Settings",
+    eyebrow: "Contact details and social handles",
+  },
+  "/admin/compose": {
+    title: "Compose Email",
+    eyebrow: "Send a ministry email from the SAVEMI template",
+  },
 };
 
 function classNames(...classes: Array<string | false | null | undefined>) {

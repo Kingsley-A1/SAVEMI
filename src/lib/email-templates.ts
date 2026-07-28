@@ -8,6 +8,8 @@
  * styles (email clients ignore <style> blocks and external CSS).
  */
 
+import { getSiteUrl } from "./site-url";
+
 export interface Scripture {
   verse: string;
   reference: string;
@@ -30,7 +32,16 @@ const BRAND = {
   cream: "#fbf8ef",
   ink: "#1f2a26",
   soft: "#5a7268",
+  rule: "#e4ded0",
 };
+
+/** Absolute logo URL — email clients cannot resolve relative paths. */
+function getLogoUrl(): string {
+  const configured = process.env.EMAIL_LOGO_URL?.trim();
+  if (configured && /^https?:\/\//.test(configured)) return configured;
+
+  return `${getSiteUrl()}/images/logo.jpg`;
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -62,11 +73,14 @@ function renderLayout({
   scripture,
   cta,
 }: LayoutOptions): string {
+  // Buttons are square-cornered to match the rest of the layout.
   const ctaHtml = cta
-    ? `<tr><td style="padding:8px 0 4px;">
-         <a href="${escapeHtml(cta.url)}" style="display:inline-block;background:${BRAND.primary};color:${BRAND.accent};text-decoration:none;font-weight:600;font-size:14px;letter-spacing:0.02em;padding:12px 26px;border-radius:6px;">${escapeHtml(cta.label)}</a>
-       </td></tr>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;"><tbody><tr><td style="background:${BRAND.primary};">
+         <a href="${escapeHtml(cta.url)}" style="display:inline-block;color:${BRAND.accent};text-decoration:none;font-weight:600;font-size:14px;letter-spacing:0.02em;padding:13px 28px;">${escapeHtml(cta.label)}</a>
+       </td></tr></tbody></table>`
     : "";
+
+  const logoUrl = getLogoUrl();
 
   return `<!doctype html>
 <html lang="en">
@@ -78,32 +92,44 @@ function renderLayout({
 </head>
 <body style="margin:0;padding:0;background:${BRAND.cream};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.cream};padding:24px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.cream};">
     <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid rgba(10,79,60,0.12);border-radius:12px;overflow:hidden;">
-          <!-- Header -->
+      <td align="center" style="padding:0;">
+        <!-- Single square container: no rounded corners, no nested cards.
+             The message uses the full width the client gives it. -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#ffffff;border-radius:0;">
+          <!-- Masthead: logo + SAVEMI, stated once -->
           <tr>
-            <td style="background:linear-gradient(135deg,${BRAND.deep} 0%,${BRAND.primary} 100%);padding:28px 32px;">
-              <p style="margin:0;color:rgba(241,231,201,0.7);font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">Sabbath Vesper Ministry</p>
-              <p style="margin:6px 0 0;color:#fff8ea;font-size:22px;font-weight:700;letter-spacing:0.02em;">SAVEMI</p>
-              <p style="margin:4px 0 0;color:rgba(241,231,201,0.72);font-size:12px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;">Repose &middot; Renewal &middot; Restoration</p>
-            </td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:32px 32px 8px;">
-              <h1 style="margin:0 0 18px;color:${BRAND.primary};font-size:20px;font-weight:700;line-height:1.35;">${escapeHtml(heading)}</h1>
-              ${bodyHtml}
-              <table role="presentation" cellpadding="0" cellspacing="0"><tr><td>${ctaHtml ? `<table role="presentation" cellpadding="0" cellspacing="0"><tbody>${ctaHtml}</tbody></table>` : ""}</td></tr></table>
-            </td>
-          </tr>
-          <!-- Scripture -->
-          <tr>
-            <td style="padding:12px 32px 28px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(10,79,60,0.05);border-left:3px solid ${BRAND.primary};border-radius:6px;">
+            <td style="background:${BRAND.deep};background-image:linear-gradient(135deg,${BRAND.deep} 0%,${BRAND.primary} 100%);padding:26px 28px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="padding:16px 20px;">
+                  <td style="vertical-align:middle;padding-right:14px;">
+                    <!-- Empty alt on purpose: the wordmark beside it already
+                         says SAVEMI, so a blocked image must not repeat it. -->
+                    <img src="${escapeHtml(logoUrl)}" width="48" height="48" alt="" style="display:block;width:48px;height:48px;border:0;outline:none;text-decoration:none;object-fit:contain;background:#ffffff;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <p style="margin:0;color:#fff8ea;font-size:23px;font-weight:700;letter-spacing:0.04em;line-height:1.1;">SAVEMI</p>
+                    <p style="margin:5px 0 0;color:rgba(241,231,201,0.75);font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;line-height:1.2;">Repose &middot; Renewal &middot; Restoration</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Message -->
+          <tr>
+            <td style="padding:30px 28px 6px;">
+              <h1 style="margin:0 0 16px;color:${BRAND.primary};font-size:21px;font-weight:700;line-height:1.32;">${escapeHtml(heading)}</h1>
+              ${bodyHtml}
+              ${ctaHtml}
+            </td>
+          </tr>
+          <!-- Scripture: a quiet rule on the page, not a box within a box -->
+          <tr>
+            <td style="padding:10px 28px 26px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="border-left:3px solid ${BRAND.primary};padding:2px 0 2px 16px;">
                     <p style="margin:0;color:${BRAND.ink};font-size:15px;font-style:italic;line-height:1.6;">&ldquo;${escapeHtml(scripture.verse)}&rdquo;</p>
                     <p style="margin:8px 0 0;color:${BRAND.primary};font-size:13px;font-weight:600;">&mdash; ${escapeHtml(scripture.reference)}</p>
                   </td>
@@ -113,9 +139,9 @@ function renderLayout({
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="padding:20px 32px 28px;border-top:1px solid rgba(10,79,60,0.1);">
-              <p style="margin:0;color:${BRAND.soft};font-size:12px;line-height:1.6;">
-                Sabbath Vesper Ministry (SAVEMI) &middot; Calabar, Nigeria<br />
+            <td style="padding:18px 28px 26px;border-top:1px solid ${BRAND.rule};">
+              <p style="margin:0;color:${BRAND.soft};font-size:12px;line-height:1.65;">
+                Sabbath Vesper Ministry &middot; Calabar, Nigeria<br />
                 Grace and peace be with you.
               </p>
             </td>
@@ -133,24 +159,33 @@ export interface RenderedEmail {
   html: string;
 }
 
+/**
+ * Greet with the first name only. Recipients get their name once, in the
+ * heading — never repeated again in the body or the masthead.
+ */
+function greetingName(fullName: string): string {
+  const first = fullName.trim().split(/\s+/)[0];
+  return first || "friend";
+}
+
 /** Admin email verification on registration. */
 export function renderVerificationEmail(params: {
   name: string;
   verifyUrl: string;
 }): RenderedEmail {
-  const heading = `Welcome aboard, ${params.name} — let's confirm your email`;
+  const heading = `Welcome aboard, ${greetingName(params.name)}`;
   const bodyHtml = paragraphsToHtml(
-    `You have been added to the SAVEMI admin team. We're glad to serve alongside you.
+    `You have been added to the ministry's admin team. We are glad to serve alongside you.
 
-Please confirm this is your email address by clicking the button below. This keeps the ministry's admin office secure and your account ready for good work.
+Please confirm this is your email address using the button below. It keeps the admin office secure and readies your account for good work.
 
 If you did not request this, you can safely ignore this message.`,
   );
 
   return {
-    subject: "Confirm your SAVEMI admin email",
+    subject: "Confirm your admin email",
     html: renderLayout({
-      preheader: "Confirm your email to activate your SAVEMI admin account.",
+      preheader: "Confirm your email to activate your admin account.",
       heading,
       bodyHtml,
       cta: { label: "Confirm my email", url: params.verifyUrl },
@@ -168,19 +203,19 @@ export function renderWelcomeEmail(params: {
   name: string;
   loginUrl: string;
 }): RenderedEmail {
-  const heading = `Welcome to the SAVEMI admin office, ${params.name}`;
+  const heading = `Your admin account is ready, ${greetingName(params.name)}`;
   const bodyHtml = paragraphsToHtml(
-    `Your admin account is ready. Thank you for lending your time and gifts to the ministry's work of Repose, Renewal, and Restoration.
+    `Thank you for lending your time and gifts to the work of Repose, Renewal, and Restoration.
 
 From the admin office you can publish messages, curate books and quotes, respond to those who reach out, and share encouragement. May every task be done as unto the Lord.
 
-Sign in whenever you're ready — we're expecting good things.`,
+Sign in whenever you are ready — we are expecting good things.`,
   );
 
   return {
-    subject: "Your SAVEMI admin account is ready",
+    subject: "Your admin account is ready",
     html: renderLayout({
-      preheader: "Your SAVEMI admin account is ready. Welcome!",
+      preheader: "Your admin account is ready. Welcome!",
       heading,
       bodyHtml,
       cta: { label: "Go to the admin office", url: params.loginUrl },

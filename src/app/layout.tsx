@@ -4,6 +4,7 @@ import "../styles/globals.css";
 import AppShell from "../components/AppShell";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { getSiteSettings, toSocialLinks } from "../lib/site-settings";
 
 const SITE_URL = "https://savemi.org";
 const SITE_NAME = "SAVEMI — Sabbath Vesper Ministry";
@@ -74,13 +75,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  // Owner-managed contact details and handles, resolved once per request and
+  // shared by the navigation drawer and the footer.
+  const settings = await getSiteSettings();
+  const socialLinks = toSocialLinks(settings);
+
   return (
     <html lang="en">
       <body className="min-h-screen antialiased">
-        <AppShell header={<Navbar />} footer={<Footer />}>
+        <AppShell
+          header={<Navbar socialLinks={socialLinks} />}
+          footer={<Footer settings={settings} socialLinks={socialLinks} />}
+        >
           {children}
         </AppShell>
       </body>

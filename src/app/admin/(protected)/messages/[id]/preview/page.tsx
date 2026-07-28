@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import MediaPlayer from "../../../../../../components/MediaPlayer";
 import MessageDownloadActions from "../../../../../../components/MessageDownloadActions";
+import MediaTypeBadge from "../../../../../../components/MediaTypeBadge";
 import { isEmbeddableUrl } from "../../../../../../lib/embed";
 import { isDatabaseConfigured, prisma } from "../../../../../../lib/db";
 import { resolveAssetUrl } from "../../../../../../lib/r2";
@@ -63,7 +64,6 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
   if (!message) notFound();
 
   const mediaDownloadUrl = await resolveAssetUrl(message.mediaKey);
-  const audioDownloadUrl = await resolveAssetUrl(message.audioDownloadKey);
   const mediaSrc = message.externalMediaUrl || mediaDownloadUrl;
   const isEmbed = message.externalMediaUrl
     ? isEmbeddableUrl(message.externalMediaUrl)
@@ -74,7 +74,7 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
       <div className="site-panel p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="type-badge">{message.type.toLowerCase()}</span>
+            <MediaTypeBadge type={message.type} />
             <span
               className="inline-block rounded px-2 py-0.5 text-xs font-semibold"
               style={{
@@ -163,8 +163,16 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
         <MessageDownloadActions
           type={message.type.toLowerCase() as "video" | "audio" | "image"}
           title={message.title}
-          mediaDownloadUrl={!isEmbed ? mediaDownloadUrl : null}
-          audioDownloadUrl={audioDownloadUrl}
+          mediaDownloadHref={
+            !isEmbed && message.mediaKey
+              ? `/api/download/messages/${message.slug}`
+              : null
+          }
+          audioDownloadHref={
+            message.audioDownloadKey
+              ? `/api/download/messages/${message.slug}?variant=audio`
+              : null
+          }
           originalUrl={isEmbed ? message.externalMediaUrl : null}
         />
 

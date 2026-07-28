@@ -97,11 +97,14 @@ function BookCard({ book }: { book: Book }) {
         <div className="mt-auto pt-4">
           {book.availability === "free" ? (
             book.downloadUrl ? (
+              // Hosted files stream from this site under the book title;
+              // external links open where they live.
               <a
                 href={book.downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={book.hostedDownload ? undefined : "_blank"}
+                rel={book.hostedDownload ? undefined : "noopener noreferrer"}
                 className="button-primary w-full justify-center gap-1.5"
+                aria-label={`Download ${book.title}`}
               >
                 {actionIcon}
                 Download Free

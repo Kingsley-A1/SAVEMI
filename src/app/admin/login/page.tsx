@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogIn, Eye, EyeOff } from "lucide-react";
+import { Spinner } from "../../../components/ui/Loading";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -254,8 +255,13 @@ export default function AdminLoginPage() {
             type="submit"
             className="button-primary w-full"
             disabled={loading}
+            aria-busy={loading || undefined}
           >
-            <LogIn size={15} className="mr-1.5" />
+            {loading ? (
+              <Spinner size="sm" tone="inverse" className="mr-1.5" />
+            ) : (
+              <LogIn size={15} className="mr-1.5" />
+            )}
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>

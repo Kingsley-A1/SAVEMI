@@ -17,9 +17,16 @@ export interface Message {
   scriptureReference: string | null;
   category: string | null;
   coverImageUrl: string | null;
+  /** Direct storage URL — used for in-page playback only. */
   downloadUrl: string | null;
   externalMediaUrl: string | null;
   audioDownloadUrl: string | null;
+  /**
+   * Same-origin download endpoints. Visitors always get these: one click
+   * saves the file under the message title, and the storage URL never shows.
+   */
+  downloadHref: string | null;
+  audioDownloadHref: string | null;
 }
 
 export interface GetMessagesOptions {
@@ -156,6 +163,12 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
     downloadUrl: await resolveAssetUrl(message.mediaKey),
     externalMediaUrl: message.externalMediaUrl,
     audioDownloadUrl: await resolveAssetUrl(message.audioDownloadKey),
+    downloadHref: message.mediaKey
+      ? `/api/download/messages/${message.slug}`
+      : null,
+    audioDownloadHref: message.audioDownloadKey
+      ? `/api/download/messages/${message.slug}?variant=audio`
+      : null,
   };
 }
 

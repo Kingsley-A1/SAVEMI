@@ -1,4 +1,5 @@
-import { Moon, Sunrise, Heart, ArrowRight } from "lucide-react";
+import { Moon, Sunrise, Heart, ArrowRight, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { getMessages } from "../lib/messages";
 import HomeAnimationWrapper from "../components/HomeAnimationWrapper";
@@ -42,21 +43,37 @@ export default async function HomePage() {
 
   return (
     <HomeAnimationWrapper>
-      {/* 1. Fixed ministry hero */}
-      <section className="reflection-hero" aria-labelledby="home-hero-title">
-        <div className="reflection-hero__content">
+      {/* 1. Ministry hero — still water, green pastures, room to breathe */}
+      <section
+        className="reflection-hero full-bleed"
+        aria-labelledby="home-hero-title"
+      >
+        <div className="reflection-hero__media">
+          <Image
+            src="/images/hero-nature.jpg"
+            alt=""
+            fill
+            priority
+            quality={90}
+            sizes="100vw"
+            className="reflection-hero__photo"
+          />
+        </div>
+        <div className="reflection-hero__scrim" aria-hidden="true" />
+
+        <div className="reflection-hero__inner">
           <p className="eyebrow reflection-hero__eyebrow">
             Sabbath Vesper Ministry
           </p>
           <h1 id="home-hero-title" className="reflection-hero__title">
-            Seventh-day Sabbath reflection rooted in Scripture
+            Be still, and know that He is God
           </h1>
           <p className="reflection-hero__copy">
-            Sabbath Vesper Ministry (SAVEMI), based in Calabar, Nigeria,
-            studies the Seventh-day Sabbath from biblical perspectives and
-            calls believers into meditation, spiritual reflection, and a deeper
-            understanding of God&apos;s grand plan.
+            SAVEMI, based in Calabar, Nigeria, studies the Seventh-day Sabbath
+            from biblical perspectives — calling weary hearts into meditation,
+            reflection, and holy rest.
           </p>
+
           <div className="reflection-hero__actions">
             <Link href="/videos" className="hero-btn-primary">
               Watch messages
@@ -65,14 +82,23 @@ export default async function HomePage() {
               Our story
             </Link>
           </div>
-        </div>
 
-        <div className="reflection-hero__scripture" aria-label="Scripture foundation">
-          <p className="eyebrow reflection-hero__eyebrow">Remember</p>
-          <p className="reflection-hero__verse">
-            &quot;Remember the sabbath day, to keep it holy&quot;
+          <blockquote
+            className="reflection-hero__scripture"
+            aria-label="Scripture foundation"
+          >
+            <p className="reflection-hero__verse">
+              &ldquo;Remember the sabbath day, to keep it holy.&rdquo;
+            </p>
+            <cite className="reflection-hero__reference not-italic">
+              Exodus 20:8
+            </cite>
+          </blockquote>
+
+          <p className="reflection-hero__cue" aria-hidden="true">
+            <ChevronDown size={14} />
+            Scroll
           </p>
-          <p className="reflection-hero__reference">Exodus 20:8</p>
         </div>
       </section>
 

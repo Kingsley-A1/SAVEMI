@@ -30,6 +30,8 @@ export default async function EditBookPage({ params }: Props) {
         description: true,
         author: true,
         coverImageKey: true,
+        downloadKey: true,
+        downloadFileName: true,
         downloadUrl: true,
         purchaseUrl: true,
         priceLabel: true,

@@ -223,6 +223,8 @@ The admin office is private.
 | New Quote | `/admin/quotes/new` | Creates a quote |
 | Edit Quote | `/admin/quotes/[id]/edit` | Updates an existing quote |
 | Contacts | `/admin/contacts` | Reads contact form submissions |
+| Compose Email | `/admin/compose` | Writes and sends a ministry email in the SAVEMI template, with a live preview |
+| Site Settings | `/admin/settings` | Sets the ministry contact details and social handles used across the public site |
 | Admin Users | `/admin/admin-users` | Lets the configured super admin create, update, and remove admin accounts |
 | Platform Health | `/admin/health` | Shows database-backed health checks, content counts, admin activity, and launch warnings |
 | Guide | `/admin/guide` | Shows the in-app owner operating guide |
@@ -689,17 +691,18 @@ Use standard placement for normal content. Use hero placement only for the main 
 6. Add the author name.
 7. Write a complete description.
 8. Select Free or Paid availability.
-9. For free books, add the download or resource URL.
-10. For paid books, add the purchase URL and price label.
-11. Add format and page count if known.
-12. Upload a cover image if available.
-13. Mark Featured only when the resource should be highlighted.
-14. Save as Draft.
-15. Review all details.
-16. Change status to Published.
-17. Open the public books page and confirm the book appears correctly.
+9. For free books, upload the book file from your device. PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, and TXT are accepted, up to 512MB.
+10. The download link field is optional. Use it only when there is no file to upload; an uploaded file always takes precedence over the link.
+11. For paid books, add the purchase URL and price label.
+12. Add format and page count if known.
+13. Upload a cover image if available.
+14. Mark Featured only when the resource should be highlighted.
+15. Save as Draft.
+16. Review all details.
+17. Change status to Published.
+18. Open the public books page and download the book once to confirm it saves in one click under the book title.
 
-Do not publish a book with an empty or broken download/purchase link.
+Do not publish a free book with neither an uploaded file nor a working link, and do not publish a paid book with a broken purchase link.
 
 ## How To Publish A Quote
 
@@ -887,7 +890,13 @@ If Platform Health shows an audit or schema migration warning, do not approve fi
 
 If media does not upload, try a smaller file or a supported file format. If the issue continues, ask the engineer to check R2 configuration.
 
-If a book link is broken, change the book back to Draft until the correct link is ready.
+If a book link is broken, change the book back to Draft until the correct link is ready. If the book file itself will not upload, check that the format is one of PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT and that the file is under 512MB, then use Retry upload before starting over.
+
+If a download saves under the wrong name, correct the title on the record, save, and download again. The saved name comes from the title.
+
+If a ministry email does not arrive, check the recipient address and the spam folder first. The compose screen states plainly when delivery is not configured; if it is configured and mail still does not arrive, ask the engineer to confirm the sending domain is verified. When the logo is missing from a delivered email, confirm the public site address is reachable — some inbox apps also block images until the reader allows them.
+
+If a change made in Site Settings is not showing, reload the public page. If it still shows the old value, confirm the field saved without an error and that the database is reachable.
 
 If a quote or Bible reference is wrong, archive or edit it immediately. Scripture mistakes should not remain live.
 
@@ -1048,6 +1057,76 @@ Cloudflare R2 bucket settings.
 Auth.js session configuration.
 Formal WCAG accessibility audit procedures.
 ```
+
+## Ministry Email
+
+The platform sends email through Resend. Three kinds of message leave the ministry.
+
+| Email | When It Goes Out | What It Carries |
+| --- | --- | --- |
+| Admin confirmation | An approved email registers an admin account | A single link that confirms the address |
+| Admin welcome | The account is ready to use | A link into the admin office |
+| Composed message | An admin writes one in Compose Email | The admin's own subject, message, and Scripture |
+
+Every email is laid out the same way: the SAVEMI logo and name in the masthead, the message, a Scripture, then the ministry footer. The container is square-cornered and runs edge to edge, so nothing floats inside a second box, and the ministry name is stated once rather than repeated.
+
+### How To Send A Ministry Email
+
+1. Sign in at `/admin/login`.
+2. Open `/admin/compose`.
+3. Enter the recipients, separated by commas. Recipients never see each other's addresses.
+4. Write the subject and the message. Separate paragraphs with a blank line.
+5. Add a Scripture and reference, or leave both blank to close with the blessing of Numbers 6:24-25.
+6. Read the preview beside the form. It is the delivered email.
+7. Send.
+
+When email delivery is not configured, the compose screen says so plainly and admin accounts are activated without a confirmation step. Nothing is silently lost.
+
+## Site Settings
+
+Site Settings at `/admin/settings` holds the ministry's public contact details and social handles.
+
+| Field | Where It Appears |
+| --- | --- |
+| Contact email | Site footer and the email handle in the social row |
+| Contact phone | Site footer |
+| WhatsApp | Social row. A bare number becomes a wa.me link automatically |
+| Ministry address | Site footer |
+| Facebook, YouTube, Instagram, Telegram | Social row in the footer and the navigation drawer |
+
+Leave a field blank and it simply does not render — no placeholder, no dead link. Saving writes to the database and the public site picks the change up on the next page load. No deployment is needed.
+
+## Uploads And Downloads
+
+Files are chosen straight from the operator's computer or phone: message media, cover images, quote images, and book files. Large files upload in parts, so a dropped connection re-sends only the piece that failed rather than starting over. When an upload fails, use Retry upload.
+
+Downloads are handled by the site itself:
+
+```text
+A visitor clicks Download once and the file saves immediately.
+The visitor is never taken to a storage address.
+The saved file is named after the title entered when uploading.
+A message titled "Walking in the Light" saves as walking-in-the-light.mp4.
+A video message's companion audio track saves as walking-in-the-light-audio.mp3.
+```
+
+While signed in, an admin can download a draft from its preview screen to check it. Visitors can only download published items.
+
+## How The Site Feels To Use
+
+Every action reports itself, so nothing on the platform looks dead while it works.
+
+| Situation | What The Visitor Or Operator Sees |
+| --- | --- |
+| A button is working | A spinner replaces the icon, the label changes, and the button locks so it cannot be submitted twice |
+| A page is loading | A skeleton in the shape of the content that is arriving |
+| A page is being navigated to | A slim progress bar across the top of the window |
+| A list is being filtered | A small "Filtering…" indicator beside the filters |
+| A file is uploading | A percentage and a progress bar, with a retry option if it fails |
+
+The media type tag on each card — Image, Audio, or Video — sits on solid dark green so it stays readable over any cover photograph. On phones it collapses to its icon alone, with the word kept in the accessible name for screen readers.
+
+The Menu button opens a grouped navigation drawer at every screen size, listing Ministry, Library, and the guarded door to the Ministry Office. The drawer keeps focus inside itself while open, closes on Escape, marks the current page, and returns focus to the button on close. Visitors who ask their device for reduced motion get the same interface without the shimmer and drift animations.
 
 ## Handover Standard
 

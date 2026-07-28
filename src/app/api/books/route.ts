@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
         tagline: true,
         author: true,
         coverImageKey: true,
+        downloadKey: true,
         downloadUrl: true,
         purchaseUrl: true,
         priceLabel: true,
@@ -76,7 +77,11 @@ export async function GET(req: NextRequest) {
         tagline: b.tagline,
         author: b.author,
         coverImageUrl: await resolveAssetUrl(b.coverImageKey),
-        downloadUrl: b.downloadUrl,
+        // An uploaded file downloads through this site under the book title.
+        downloadUrl: b.downloadKey
+          ? `/api/download/books/${b.slug}`
+          : b.downloadUrl,
+        hostedDownload: Boolean(b.downloadKey),
         purchaseUrl: b.purchaseUrl,
         priceLabel: b.priceLabel,
         format: b.format,

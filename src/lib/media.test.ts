@@ -36,14 +36,14 @@ describe("validateUploadRequest", () => {
     if (!result.success) expect(result.error).toMatch(/unsupported/i);
   });
 
-  it("rejects oversized image (> 15 MB)", () => {
+  it("rejects oversized image (> 512 MB)", () => {
     const result = validateUploadRequest({
       fileName: "big.jpg",
       contentType: "image/jpeg",
-      contentLength: 20 * 1024 * 1024,
+      contentLength: 600 * 1024 * 1024,
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toMatch(/15MB/i);
+    if (!result.success) expect(result.error).toMatch(/512MB/i);
   });
 
   it("accepts valid image upload within size limit", () => {
@@ -78,14 +78,33 @@ describe("validateUploadRequest", () => {
     if (result.success) expect(result.data.mediaKind).toBe("audio");
   });
 
-  it("rejects oversized video (> 500 MB)", () => {
+  it("rejects oversized video (> 5 GB)", () => {
     const result = validateUploadRequest({
       fileName: "huge.mp4",
       contentType: "video/mp4",
-      contentLength: 600 * 1024 * 1024,
+      contentLength: 6 * 1024 * 1024 * 1024,
     });
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error).toMatch(/500MB/i);
+    if (!result.success) expect(result.error).toMatch(/\d+MB/i);
+  });
+
+  it("accepts a book file uploaded from a device", () => {
+    const result = validateUploadRequest({
+      fileName: "Sabbath Rest.pdf",
+      contentType: "application/pdf",
+      contentLength: 8 * 1024 * 1024,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.mediaKind).toBe("document");
+  });
+
+  it("falls back to the file extension when the browser reports no type", () => {
+    const result = validateUploadRequest({
+      fileName: "reflections.epub",
+      contentType: "",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.mediaKind).toBe("document");
   });
 
   it("sanitizes fileName in successful response", () => {

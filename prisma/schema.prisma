@@ -63,6 +63,11 @@ model Book {
   description  String
   author       String
   coverImageKey String?
+  /// R2 object key for a book file uploaded from an admin device (PDF, EPUB…).
+  downloadKey  String?
+  /// Original file name of the uploaded book, used for the download filename.
+  downloadFileName String?
+  /// Optional external download link — used when no file was uploaded.
   downloadUrl  String?
   purchaseUrl  String?
   priceLabel   String?
@@ -147,4 +152,13 @@ enum MessagePlacement {
 enum BookAvailability {
   FREE
   PAID
+}
+
+/// Owner-editable site configuration (contact details, social handles).
+/// Stored as one row per key so new settings need no migration.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 }

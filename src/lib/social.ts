@@ -1,12 +1,13 @@
 /**
- * Env-driven social handles for SAVEMI.
+ * Environment-configured social handles for SAVEMI.
  *
- * Handles are configured by the admin through NEXT_PUBLIC_* environment
- * variables (set in Vercel / .env). Anything not configured simply doesn't
- * render — "what is missing is set by the admin".
+ * This is the fallback layer. The handles the ministry actually manages live
+ * in Admin → Site Settings and are read through `lib/site-settings`; these
+ * NEXT_PUBLIC_* values fill in for any setting that has not been saved.
  *
  * Because these are NEXT_PUBLIC_*, they are inlined at build time and are safe
- * to read in both server and client components.
+ * to read in both server and client components — which is why this synchronous
+ * version exists alongside the database-backed one.
  */
 
 import type { SocialPlatform } from "../components/SocialIcons";
@@ -97,7 +98,12 @@ export function getSocialLinks(): SocialLink[] {
   return links;
 }
 
-/** True when at least one social handle is configured. */
+/** True when at least one social handle is configured in the environment. */
 export function hasSocialLinks(): boolean {
   return getSocialLinks().length > 0;
+}
+
+/** Environment-configured contact email, used as the settings fallback. */
+export function getContactEmail(): string {
+  return clean(process.env.NEXT_PUBLIC_CONTACT_EMAIL);
 }

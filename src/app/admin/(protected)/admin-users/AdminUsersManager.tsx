@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { Save, Trash2, UserPlus } from "lucide-react";
+import { LoadingButton } from "../../../../components/ui/Loading";
 
 export interface AdminUserRow {
   id: string;
@@ -202,14 +203,14 @@ export default function AdminUsersManager({
           </label>
         </div>
 
-        <button
+        <LoadingButton
           type="submit"
-          className="button-primary inline-flex items-center gap-1.5"
-          disabled={creating}
+          loading={creating}
+          loadingLabel="Creating…"
+          icon={<UserPlus size={14} />}
         >
-          <UserPlus size={14} />
-          {creating ? "Creating..." : "Create Admin"}
-        </button>
+          Create Admin
+        </LoadingButton>
       </form>
 
       <div className="site-panel overflow-hidden">
@@ -250,14 +251,16 @@ export default function AdminUsersManager({
                   />
                 )}
                 <div className="flex gap-2">
-                  <button
+                  <LoadingButton
                     type="submit"
-                    className="button-tertiary inline-flex items-center gap-1.5"
-                    disabled={busyId === admin.id}
+                    className="button-tertiary"
+                    spinnerTone="primary"
+                    loading={busyId === admin.id}
+                    loadingLabel="Saving…"
+                    icon={<Save size={13} />}
                   >
-                    <Save size={13} />
                     Save
-                  </button>
+                  </LoadingButton>
                   <button
                     type="button"
                     className="button-tertiary inline-flex items-center gap-1.5"

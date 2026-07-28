@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, ArrowRight } from "lucide-react";
+import MediaTypeBadge from "./MediaTypeBadge";
+import { CardGridSkeleton } from "./ui/Loading";
 
 interface MediaItem {
   id: string;
@@ -40,7 +42,7 @@ function VideoCard({ item }: { item: MediaItem }) {
             />
           </div>
         )}
-        <span className="type-badge absolute left-2 top-2">Video</span>
+        <MediaTypeBadge type="video" className="absolute left-2 top-2" />
       </div>
 
       <div className="p-4">
@@ -127,9 +129,12 @@ export default function FeaturedVideos({
       </div>
 
       {isLoading && displayItems.length === 0 ? (
-        <div className="site-panel p-5 text-sm text-brand-muted">
-          Loading published video messages...
-        </div>
+        <CardGridSkeleton
+          count={4}
+          variant="media"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          label="Loading featured video messages"
+        />
       ) : displayItems.length === 0 ? (
         <div className="site-panel p-5 text-sm text-brand-muted">
           No published video messages are available yet.

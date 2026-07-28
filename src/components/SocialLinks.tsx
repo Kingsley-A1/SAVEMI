@@ -1,7 +1,13 @@
-import { getSocialLinks } from "../lib/social";
+import { getSocialLinks, type SocialLink } from "../lib/social";
 import { SOCIAL_ICONS } from "./SocialIcons";
 
 interface SocialLinksProps {
+  /**
+   * Handles to render. Server components pass the owner-managed list from
+   * Admin → Settings; when omitted the environment-configured handles are
+   * used, so this component works in client trees too.
+   */
+  links?: SocialLink[];
   /** "icons" = compact icon buttons; "cards" = icon + label + handle rows. */
   variant?: "icons" | "cards";
   /** Render icons in the current text colour instead of brand colours. */
@@ -10,11 +16,12 @@ interface SocialLinksProps {
 }
 
 export default function SocialLinks({
+  links: providedLinks,
   variant = "icons",
   mono = false,
   className,
 }: SocialLinksProps) {
-  const links = getSocialLinks();
+  const links = providedLinks ?? getSocialLinks();
 
   if (links.length === 0) return null;
 

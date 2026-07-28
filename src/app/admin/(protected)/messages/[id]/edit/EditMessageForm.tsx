@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Save, Send, Trash2, X } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
+import { LoadingButton } from "../../../../../../components/ui/Loading";
 import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
 
 const MESSAGE_TYPES = [
@@ -634,36 +635,43 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
           >
             Cancel
           </button>
-          <button
+          <LoadingButton
             type="submit"
             name="intent"
             value="draft"
-            className="button-tertiary flex items-center gap-1.5"
+            className="button-tertiary"
+            spinnerTone="primary"
+            loading={savingAction === "draft"}
+            loadingLabel="Saving…"
+            icon={<Save size={14} />}
             disabled={Boolean(savingAction) || isUploading}
           >
-            <Save size={14} />
-            {savingAction === "draft" ? "Saving..." : "Save draft"}
-          </button>
-          <button
+            Save draft
+          </LoadingButton>
+          <LoadingButton
             type="submit"
             name="intent"
             value="preview"
-            className="button-tertiary flex items-center gap-1.5"
+            className="button-tertiary"
+            spinnerTone="primary"
+            loading={savingAction === "preview"}
+            loadingLabel="Saving…"
+            icon={<Eye size={14} />}
             disabled={Boolean(savingAction) || isUploading}
           >
-            <Eye size={14} />
-            {savingAction === "preview" ? "Saving..." : "Save and preview"}
-          </button>
-          <button
+            Save and preview
+          </LoadingButton>
+          <LoadingButton
             type="submit"
             name="intent"
             value="publish"
-            className="button-primary flex items-center gap-1.5"
+            loading={savingAction === "publish"}
+            loadingLabel="Publishing…"
+            icon={<Send size={14} />}
             disabled={Boolean(savingAction) || isUploading}
           >
-            <Send size={14} />
-            {savingAction === "publish" ? "Publishing..." : "Publish"}
-          </button>
+            Publish
+          </LoadingButton>
         </div>
       </form>
     </div>

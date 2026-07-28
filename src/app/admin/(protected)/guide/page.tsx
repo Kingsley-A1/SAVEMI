@@ -11,7 +11,9 @@ import {
   FileText,
   HeartHandshake,
   Library,
+  Mail,
   MessageSquare,
+  Settings,
   ShieldCheck,
   UploadCloud,
   Users,
@@ -122,8 +124,18 @@ const operatingRooms: readonly GuideCard[] = [
   },
   {
     title: "Media Cabinet",
-    body: "Cloudflare R2 stores large files such as videos, audio, covers, quote images, and downloadable assets.",
+    body: "Cloudflare R2 stores large files such as videos, audio, covers, quote images, book files, and downloadable assets.",
     icon: UploadCloud,
+  },
+  {
+    title: "Mail Room",
+    body: "Resend delivers ministry email. Every message leaves in the SAVEMI template: logo masthead, your words, a Scripture, and the ministry footer.",
+    icon: Mail,
+  },
+  {
+    title: "Settings Desk",
+    body: "Site Settings holds the ministry contact details and social handles. Saving there updates the public site straight away.",
+    icon: Settings,
   },
 ];
 
@@ -134,6 +146,7 @@ const publicPages: readonly Row[] = [
   { label: "Messages", value: "Lists published videos, audios, and image-based ministry messages." },
   { label: "Books", value: "Lists approved books, downloads, and ministry resources." },
   { label: "Quotes", value: "Shows published reflections, Bible-linked statements, and quote images." },
+  { label: "Navigation drawer", value: "The Menu button opens a grouped drawer on every screen size: Ministry, Library, and the guarded door to the Ministry Office." },
 ];
 
 const adminPages: readonly Row[] = [
@@ -142,10 +155,109 @@ const adminPages: readonly Row[] = [
   { label: "Books", value: "Manages free and paid ministry resources, covers, descriptions, and links." },
   { label: "Quotes", value: "Manages short reflections, attribution, scripture references, and quote images." },
   { label: "Contacts", value: "Reads visitor contact submissions. Treat these messages as private correspondence." },
+  { label: "Compose Email", value: "Writes and sends a ministry email through the SAVEMI template, with a live preview of exactly what lands in the inbox." },
+  { label: "Site Settings", value: "Sets the ministry contact email, phone, WhatsApp, address, and social handles shown across the public site." },
   { label: "Admin Users", value: "Lets the configured super admin create, update, and remove admin accounts." },
   { label: "Platform Health", value: "Shows database health, migration warnings, audit status, content counts, and admin activity." },
   { label: "Audit Log", value: "Shows recent admin write actions for accountability and investigation." },
   { label: "Guide", value: "This page. It is the in-app version of the owner operating handbook." },
+  { label: "View Public Site", value: "The last item in the sidebar. It opens the public website so you can check your work the way a visitor sees it." },
+];
+
+const emailRows: readonly Row[] = [
+  {
+    label: "What goes out",
+    value: "Three emails leave the ministry: a confirmation link when an admin registers, a welcome note once that account is ready, and any message you write yourself in Compose Email.",
+  },
+  {
+    label: "How they look",
+    value: "Every email carries the SAVEMI logo and name in the masthead, your message, a Scripture, and the ministry footer. One square container edge to edge — nothing floats inside a second box.",
+  },
+  {
+    label: "Composing",
+    value: "Write the subject, the message, and an optional Scripture. The preview beside the form is the delivered email, so what you see is what the recipient receives.",
+  },
+  {
+    label: "Recipients",
+    value: "Separate multiple addresses with commas. Recipients never see each other's addresses.",
+  },
+  {
+    label: "Scripture",
+    value: "Leave the Scripture fields blank and the email closes with the blessing of Numbers 6:24-25.",
+  },
+  {
+    label: "When email is not configured",
+    value: "Without the delivery keys, Compose Email says so plainly and admin accounts are activated without a confirmation step. Nothing is silently lost.",
+  },
+];
+
+const settingsRows: readonly Row[] = [
+  {
+    label: "What it controls",
+    value: "Contact email, phone, WhatsApp, ministry address, and the Facebook, YouTube, Instagram, and Telegram handles.",
+  },
+  {
+    label: "Where it shows",
+    value: "The site footer, the contact details on the public site, and the social icons in the navigation drawer.",
+  },
+  {
+    label: "Blank means hidden",
+    value: "Leave a field empty and it simply does not render. Nothing shows a placeholder or a dead link to visitors.",
+  },
+  {
+    label: "Takes effect immediately",
+    value: "Saving writes to the database and the public site picks it up on the next page load. No deployment is needed.",
+  },
+];
+
+const mediaRows: readonly Row[] = [
+  {
+    label: "Uploading from your device",
+    value: "Messages, covers, quote images, and book files are all chosen straight from your computer or phone. Large files upload in parts, so a dropped connection re-sends only the piece that failed.",
+  },
+  {
+    label: "Book files",
+    value: "Upload the book itself — PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT. The external download link is optional and only used when no file was uploaded; an uploaded file always takes precedence.",
+  },
+  {
+    label: "One-click downloads",
+    value: "A visitor clicking Download saves the file immediately. They are never taken to a storage address, and never have to click a second time.",
+  },
+  {
+    label: "Download file names",
+    value: "The saved file is named after the title you entered when uploading, not the storage ID. A message titled Walking in the Light saves as walking-in-the-light.mp4.",
+  },
+  {
+    label: "Drafts",
+    value: "While signed in you can download a draft from its preview screen to check it. Visitors can only download published items.",
+  },
+];
+
+const experienceRows: readonly Row[] = [
+  {
+    label: "Nothing looks dead",
+    value: "Every action reports itself: buttons show a spinner and lock while they work, pages show skeletons in the shape of the content arriving, and a slim bar crosses the top of the window during navigation.",
+  },
+  {
+    label: "Media type tags",
+    value: "The Image, Audio, and Video tag on each card sits on solid dark green for contrast over any cover photograph. On phones it shows as an icon alone, with the word kept in the accessible name.",
+  },
+  {
+    label: "Navigation drawer",
+    value: "The Menu button opens a grouped drawer at every screen size. It traps focus while open, closes on Escape, marks the current page, and returns focus to the button on close.",
+  },
+  {
+    label: "Reduced motion",
+    value: "Visitors who ask their device for reduced motion get the same interface without the shimmer and drift animations.",
+  },
+];
+
+const emailChecks = [
+  "Read the preview beside the form — it is the delivered email.",
+  "Check every recipient address before sending.",
+  "Confirm the Scripture reference is correct.",
+  "Keep the subject short and honest about what is inside.",
+  "Send a test to yourself first when the message goes to many people.",
 ];
 
 const publishingChecks = [
@@ -168,6 +280,10 @@ const launchChecks = [
   "Audit Log records admin write actions.",
   "R2 uploads work from the production and local development origins.",
   "Draft and archived content do not appear publicly.",
+  "Site Settings holds the correct contact details and social handles.",
+  "A test email has been sent and the logo appears in the masthead.",
+  "Downloading a message and a book each saves in one click, under the right name.",
+  "The navigation drawer opens, closes on Escape, and works from the keyboard.",
   "Production migrations have completed successfully.",
 ];
 
@@ -192,16 +308,36 @@ const breakFixRows: readonly Row[] = [
     label: "Health warning",
     value: "Do not approve launch while Platform Health reports audit or schema warnings. Ask engineering to confirm migrations and rerun checks.",
   },
+  {
+    label: "Email not delivered",
+    value: "Compose Email will say plainly when delivery is not configured. If it is configured and mail still does not arrive, check the recipient address, the spam folder, and ask engineering to confirm the sending domain is verified.",
+  },
+  {
+    label: "Logo missing from an email",
+    value: "The logo is loaded over the internet from the public site. Confirm the site address is reachable, then note that some inbox apps block images until the reader allows them.",
+  },
+  {
+    label: "Download saves the wrong name",
+    value: "The saved name comes from the title on the record. Correct the title, save, and download again.",
+  },
+  {
+    label: "Book file will not upload",
+    value: "Check the format is one of PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT, and that the file is under 512MB. Use Retry upload before starting over — it re-sends only what failed.",
+  },
+  {
+    label: "Settings change not showing",
+    value: "Reload the public page. If it still shows the old value, confirm the field saved without an error and that the database is reachable.",
+  },
 ];
 
 const knowledgeRows: readonly Row[] = [
   {
     label: "Know by heart",
-    value: "Draft is private. Published is public. Archived is hidden but preserved. Admin access is powerful and must stay limited.",
+    value: "Draft is private. Published is public. Archived is hidden but preserved. Admin access is powerful and must stay limited. An uploaded book file always beats an external link. Blank settings simply do not render.",
   },
   {
     label: "Recognize",
-    value: "Public pages, admin pages, generated slugs, exports, audit log, platform health, R2, and database migrations.",
+    value: "Public pages, admin pages, generated slugs, exports, audit log, platform health, site settings, ministry email, R2 storage, and database migrations.",
   },
   {
     label: "Lookup only",
@@ -245,6 +381,10 @@ export default function AdminGuidePage() {
           ["System", "#system"],
           ["Pages", "#pages"],
           ["Publishing", "#publishing"],
+          ["Email", "#email"],
+          ["Settings", "#settings"],
+          ["Files", "#media"],
+          ["Experience", "#experience"],
           ["Access", "#access"],
           ["Launch", "#launch"],
           ["Break Fix", "#break-fix"],
@@ -300,8 +440,10 @@ export default function AdminGuidePage() {
             <BookOpen size={18} style={{ color: "var(--brand-primary)" }} />
             <h3 className="mt-3 text-sm font-semibold">Books</h3>
             <p className="text-brand-muted mt-1 text-sm leading-6">
-              Use books for ministry resources. Free resources need a reliable
-              download or resource URL. Paid resources need a tested purchase URL.
+              Use books for ministry resources. Upload the file itself from your
+              device so visitors download it in one click, named after the book.
+              The external link is optional. Paid resources need a tested
+              purchase URL.
             </p>
           </article>
           <article className="site-panel p-4">
@@ -313,6 +455,29 @@ export default function AdminGuidePage() {
             </p>
           </article>
         </div>
+      </Section>
+
+      <Section id="email" eyebrow="Correspondence" title="Ministry Email">
+        <DetailRows rows={emailRows} />
+        <div className="site-panel p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <Mail size={18} style={{ color: "var(--brand-primary)" }} />
+            <h3 className="text-sm font-semibold">Before You Send</h3>
+          </div>
+          <Checklist items={emailChecks} />
+        </div>
+      </Section>
+
+      <Section id="settings" eyebrow="Configuration" title="Contact Details And Social Handles">
+        <DetailRows rows={settingsRows} />
+      </Section>
+
+      <Section id="media" eyebrow="Files" title="Uploads And Downloads">
+        <DetailRows rows={mediaRows} />
+      </Section>
+
+      <Section id="experience" eyebrow="Craft" title="How The Site Feels To Use">
+        <DetailRows rows={experienceRows} />
       </Section>
 
       <Section id="access" eyebrow="Security" title="Admin Access Rules">

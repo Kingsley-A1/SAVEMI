@@ -52,7 +52,7 @@ const DEFAULT_MAX_BYTES: Record<MediaKind, number> = {
   audio: 2 * 1024 * 1024 * 1024,
   image: 512 * 1024 * 1024,
   cover: 25 * 1024 * 1024,
-  document: 50 * 1024 * 1024,
+  document: 512 * 1024 * 1024,
 };
 
 function formatBytes(bytes: number) {
@@ -68,6 +68,16 @@ function formatAccept(accept: string) {
   if (accept === "video/*") return "Video files";
   if (accept === "audio/*") return "Audio files";
   if (accept === "image/*") return "Images";
+
+  // Document pickers list explicit extensions — show them plainly.
+  const extensions = accept
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.startsWith("."))
+    .map((item) => item.slice(1).toUpperCase());
+
+  if (extensions.length > 0) return extensions.join(", ");
+
   return accept.replace(/\*/g, "files");
 }
 
@@ -87,6 +97,14 @@ function fileMatchesAccept(file: File, accept: string) {
 
       return file.type === rule;
     });
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  const mb = bytes / (1024 * 1024);
+  if (mb < 1) return `${Math.round(bytes / 1024)} KB`;
+  if (mb < 1024) return `${mb.toFixed(mb < 10 ? 1 : 0)} MB`;
+  return `${(mb / 1024).toFixed(1)} GB`;
 }
 
 export default function AdminUploadField({
@@ -309,6 +327,32 @@ export default function AdminUploadField({
               style={{ color: "var(--brand-text-soft)" }}
             >
               {file?.name ?? externalUrl}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Non-image files can't be previewed, so name and size stand in. */}
+      {!isImageKind && file ? (
+        <div
+          className="flex items-center gap-3 rounded-lg border p-2.5"
+          style={{ borderColor: "var(--brand-border)", background: "#fff" }}
+        >
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded"
+            style={{ background: "rgba(10,79,60,0.08)", color: "var(--brand-primary)" }}
+          >
+            <FileText size={17} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p
+              className="truncate text-xs font-semibold"
+              style={{ color: "var(--brand-primary)" }}
+            >
+              {file.name}
+            </p>
+            <p className="text-xs" style={{ color: "var(--brand-text-soft)" }}>
+              {formatFileSize(file.size)}
             </p>
           </div>
         </div>

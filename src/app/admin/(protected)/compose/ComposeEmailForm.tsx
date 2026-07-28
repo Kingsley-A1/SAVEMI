@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Loader2, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Send, CheckCircle2 } from "lucide-react";
+import { LoadingButton } from "../../../../components/ui/Loading";
 
 interface ComposeEmailFormProps {
   emailReady: boolean;
@@ -179,43 +181,50 @@ export default function ComposeEmailForm({ emailReady }: ComposeEmailFormProps) 
           </p>
         ) : null}
 
-        <button
+        <LoadingButton
           type="submit"
           className="button-primary w-full"
-          disabled={sending || !emailReady}
+          loading={sending}
+          loadingLabel="Sending…"
+          icon={<Send size={15} />}
+          disabled={!emailReady}
         >
-          {sending ? (
-            <Loader2 size={15} className="mr-1.5 animate-spin" />
-          ) : (
-            <Send size={15} className="mr-1.5" />
-          )}
-          {sending ? "Sending…" : "Send email"}
-        </button>
+          Send email
+        </LoadingButton>
       </form>
 
-      {/* Live preview */}
+      {/* Live preview — mirrors the delivered template exactly: logo masthead,
+          square corners, one container, no box inside a box. */}
       <div className="space-y-2">
         <p className="field-label">Preview</p>
         <div
-          className="overflow-hidden rounded-xl border"
+          className="overflow-hidden border"
           style={{ borderColor: "rgba(10,79,60,0.15)", background: "#fff" }}
         >
           <div
-            className="px-6 py-6"
+            className="flex items-center gap-3.5 px-7 py-6"
             style={{
-              background:
-                "linear-gradient(135deg,#083b2d 0%,#0a4f3c 100%)",
+              background: "linear-gradient(135deg,#083b2d 0%,#0a4f3c 100%)",
             }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[rgba(241,231,201,0.7)]">
-              Sabbath Vesper Ministry
-            </p>
-            <p className="mt-1.5 text-lg font-bold text-[#fff8ea]">SAVEMI</p>
-            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgba(241,231,201,0.72)]">
-              Repose · Renewal · Restoration
-            </p>
+            <Image
+              src="/images/logo.jpg"
+              alt=""
+              width={48}
+              height={48}
+              className="h-12 w-12 shrink-0 bg-white object-contain"
+            />
+            <div className="min-w-0">
+              <p className="text-lg font-bold leading-tight tracking-[0.04em] text-[#fff8ea]">
+                SAVEMI
+              </p>
+              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgba(241,231,201,0.75)]">
+                Repose · Renewal · Restoration
+              </p>
+            </div>
           </div>
-          <div className="px-6 py-5">
+
+          <div className="px-7 py-6">
             <h2 className="text-base font-bold text-brand-primary">
               {subject || "Your subject line"}
             </h2>
@@ -229,22 +238,30 @@ export default function ComposeEmailForm({ emailReady }: ComposeEmailFormProps) 
                 ))}
             </div>
             <div
-              className="mt-4 rounded border-l-[3px] px-4 py-3"
-              style={{
-                borderColor: "#0a4f3c",
-                background: "rgba(10,79,60,0.05)",
-              }}
+              className="mt-5 border-l-[3px] py-0.5 pl-4"
+              style={{ borderColor: "#0a4f3c" }}
             >
-              <p className="text-sm italic text-[#1f2a26]">
+              <p className="text-sm italic leading-relaxed text-[#1f2a26]">
                 &ldquo;
                 {scriptureVerse ||
                   "The LORD bless thee, and keep thee: the LORD make his face shine upon thee, and be gracious unto thee."}
                 &rdquo;
               </p>
-              <p className="mt-1.5 text-xs font-semibold text-brand-primary">
+              <p className="mt-2 text-xs font-semibold text-brand-primary">
                 — {scriptureReference || "Numbers 6:24-25"}
               </p>
             </div>
+          </div>
+
+          <div
+            className="border-t px-7 py-5"
+            style={{ borderColor: "#e4ded0" }}
+          >
+            <p className="text-xs leading-relaxed text-[#5a7268]">
+              Sabbath Vesper Ministry · Calabar, Nigeria
+              <br />
+              Grace and peace be with you.
+            </p>
           </div>
         </div>
       </div>

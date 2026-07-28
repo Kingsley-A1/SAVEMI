@@ -1,22 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { Download, ExternalLink, Film, Music } from "lucide-react";
+import { Spinner } from "./ui/Loading";
 
 interface MessageDownloadActionsProps {
   type: "video" | "audio" | "image";
   title: string;
-  mediaDownloadUrl: string | null;
-  audioDownloadUrl?: string | null;
+  /** Same-origin endpoint that streams the media as a named attachment. */
+  mediaDownloadHref: string | null;
+  /** Same-origin endpoint for the companion audio track, when one exists. */
+  audioDownloadHref?: string | null;
+  /** External platform link, shown when the media lives off-site. */
   originalUrl?: string | null;
-}
-
-function buildDownloadName(title: string, label: string) {
-  const slug =
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 80) || "savemi-message";
-
-  return `${slug}-${label}`;
 }
 
 function downloadLabel(type: MessageDownloadActionsProps["type"]) {
@@ -25,27 +21,67 @@ function downloadLabel(type: MessageDownloadActionsProps["type"]) {
   return "Download";
 }
 
+/**
+ * Download links point at the site's own endpoint, which responds with
+ * `Content-Disposition: attachment` — so a single click saves the file under
+ * the title the admin gave it, and the visitor is never taken to a storage URL.
+ */
+function DownloadLink({
+  href,
+  className,
+  children,
+  ariaLabel,
+}: {
+  href: string;
+  className: string;
+  children: React.ReactNode;
+  ariaLabel?: string;
+}) {
+  const [preparing, setPreparing] = useState(false);
+
+  return (
+    <a
+      href={href}
+      aria-label={ariaLabel}
+      aria-busy={preparing || undefined}
+      className={className}
+      onClick={() => {
+        // The navigation is replaced by a download, so the page never
+        // changes — clear the indicator once the transfer has begun.
+        setPreparing(true);
+        window.setTimeout(() => setPreparing(false), 4000);
+      }}
+    >
+      {preparing ? <Spinner size="xs" /> : null}
+      {children}
+    </a>
+  );
+}
+
 export default function MessageDownloadActions({
   type,
   title,
-  mediaDownloadUrl,
-  audioDownloadUrl,
+  mediaDownloadHref,
+  audioDownloadHref,
   originalUrl,
 }: MessageDownloadActionsProps) {
   if (type !== "video") {
-    if (!mediaDownloadUrl) return null;
+    if (!mediaDownloadHref) return null;
 
     return (
-      <a
-        href={mediaDownloadUrl}
-        download={buildDownloadName(title, type)}
+      <DownloadLink
+        href={mediaDownloadHref}
+        ariaLabel={`${downloadLabel(type)} for ${title}`}
         className="button-tertiary mt-4 inline-flex items-center gap-1.5"
       >
         <Download size={14} aria-hidden="true" />
         {downloadLabel(type)}
-      </a>
+      </DownloadLink>
     );
   }
+
+  const rowClass =
+    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgba(10,79,60,0.06)] focus:bg-[rgba(10,79,60,0.06)] focus:outline-none";
 
   return (
     <details className="group mt-4 w-full max-w-xs">
@@ -58,43 +94,43 @@ export default function MessageDownloadActions({
         className="mt-2 overflow-hidden rounded-lg border bg-white p-1.5 shadow-sm"
         style={{ borderColor: "var(--brand-border)" }}
       >
-        {audioDownloadUrl ? (
-          <a
-            href={audioDownloadUrl}
-            download={buildDownloadName(title, "audio")}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgba(10,79,60,0.06)] focus:bg-[rgba(10,79,60,0.06)] focus:outline-none"
+        {audioDownloadHref ? (
+          <DownloadLink
+            href={audioDownloadHref}
+            ariaLabel={`Download the audio of ${title}`}
+            className={rowClass}
           >
             <Music size={15} aria-hidden="true" />
             Download audio
-          </a>
+          </DownloadLink>
         ) : (
-          <p className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-brand-muted">
+          <p className="text-brand-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm">
             <Music size={15} aria-hidden="true" />
             Audio download not added
           </p>
         )}
 
-        {mediaDownloadUrl ? (
-          <a
-            href={mediaDownloadUrl}
-            download={buildDownloadName(title, "video")}
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgba(10,79,60,0.06)] focus:bg-[rgba(10,79,60,0.06)] focus:outline-none"
+        {mediaDownloadHref ? (
+          <DownloadLink
+            href={mediaDownloadHref}
+            ariaLabel={`Download the video of ${title}`}
+            className={rowClass}
           >
             <Film size={15} aria-hidden="true" />
             Download video
-          </a>
+          </DownloadLink>
         ) : originalUrl ? (
           <a
             href={originalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgba(10,79,60,0.06)] focus:bg-[rgba(10,79,60,0.06)] focus:outline-none"
+            className={rowClass}
           >
             <ExternalLink size={15} aria-hidden="true" />
             Open video source
           </a>
         ) : (
-          <p className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-brand-muted">
+          <p className="text-brand-muted flex items-center gap-2 rounded-md px-3 py-2 text-sm">
             <Film size={15} aria-hidden="true" />
             Video download not added
           </p>

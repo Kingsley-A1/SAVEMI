@@ -34,9 +34,15 @@ export type AuditAction =
   | "admin.register"
   | "admin.create"
   | "admin.update"
-  | "admin.delete";
+  | "admin.delete"
+  | "settings.update";
 
-export type AuditEntityType = "Message" | "Book" | "Quote" | "AdminUser";
+export type AuditEntityType =
+  | "Message"
+  | "Book"
+  | "Quote"
+  | "AdminUser"
+  | "SiteSetting";
 
 export interface AuditParams {
   /** The NextAuth session object from `await auth()`. */

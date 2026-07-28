@@ -1,7 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import RouteProgress from "./ui/RouteProgress";
 
 interface AppShellProps {
   children: ReactNode;
@@ -12,17 +13,45 @@ interface AppShellProps {
 export default function AppShell({ children, header, footer }: AppShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith("/admin");
+  // The home hero is photographic and full-bleed, so it meets the header
+  // directly instead of floating inside the page's top padding.
+  const isHome = pathname === "/";
 
   if (isAdminRoute) {
-    return <main className="min-h-screen">{children}</main>;
+    return (
+      <>
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+        <main className="min-h-screen">{children}</main>
+      </>
+    );
   }
 
   return (
     <div className="flex min-h-screen flex-col">
+      <Suspense fallback={null}>
+        <RouteProgress />
+      </Suspense>
+
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       {header}
-      <main className="flex-1">
-        <div className="site-container py-6 sm:py-8">{children}</div>
+
+      <main id="main-content" className="flex-1" tabIndex={-1}>
+        <div
+          className={
+            isHome
+              ? "site-container pb-8 pt-0"
+              : "site-container py-6 sm:py-8"
+          }
+        >
+          {children}
+        </div>
       </main>
+
       {footer}
     </div>
   );

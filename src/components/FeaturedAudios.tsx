@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Headphones, ArrowRight } from "lucide-react";
+import { CardGridSkeleton } from "./ui/Loading";
 
 interface AudioItem {
   id: string;
@@ -118,9 +119,12 @@ export default function FeaturedAudios({
       </div>
 
       {isLoading && displayItems.length === 0 ? (
-        <div className="site-panel p-5 text-sm text-brand-muted">
-          Loading published audio messages...
-        </div>
+        <CardGridSkeleton
+          count={3}
+          variant="text"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          label="Loading featured audio messages"
+        />
       ) : displayItems.length === 0 ? (
         <div className="site-panel p-5 text-sm text-brand-muted">
           No published audio messages are available yet.

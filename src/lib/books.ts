@@ -13,7 +13,14 @@ export interface Book {
   description: string;
   author: string;
   coverImageUrl: string | null;
+  /**
+   * Where the "Download" button points. An uploaded file streams through the
+   * site's own download endpoint under the book title; otherwise this is the
+   * external link the admin supplied.
+   */
   downloadUrl: string | null;
+  /** True when the file is served by SAVEMI rather than a third-party link. */
+  hostedDownload: boolean;
   purchaseUrl: string | null;
   priceLabel: string | null;
   format: string | null;
@@ -39,6 +46,8 @@ const bookSelect = {
   description: true,
   author: true,
   coverImageKey: true,
+  downloadKey: true,
+  downloadFileName: true,
   downloadUrl: true,
   purchaseUrl: true,
   priceLabel: true,
@@ -58,6 +67,8 @@ type BookRecord = {
   description: string;
   author: string;
   coverImageKey: string | null;
+  downloadKey: string | null;
+  downloadFileName: string | null;
   downloadUrl: string | null;
   purchaseUrl: string | null;
   priceLabel: string | null;
@@ -78,7 +89,12 @@ async function mapBook(record: BookRecord): Promise<Book> {
     description: record.description,
     author: record.author,
     coverImageUrl: await resolveAssetUrl(record.coverImageKey),
-    downloadUrl: record.downloadUrl,
+    // An uploaded file always wins: it downloads in one click, under the
+    // book's own title, without leaving the site.
+    downloadUrl: record.downloadKey
+      ? `/api/download/books/${record.slug}`
+      : record.downloadUrl,
+    hostedDownload: Boolean(record.downloadKey),
     purchaseUrl: record.purchaseUrl,
     priceLabel: record.priceLabel,
     format: record.format,

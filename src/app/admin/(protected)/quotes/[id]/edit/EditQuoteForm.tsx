@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, X, Trash2 } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
+import { LoadingButton } from "../../../../../../components/ui/Loading";
 import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
 
 const STATUSES = [
@@ -278,11 +279,15 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || uploadState.state === "uploading"}
-            className="button-primary flex items-center gap-1.5">
-            <Save size={14} />
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
+          <LoadingButton
+            type="submit"
+            loading={saving}
+            loadingLabel="Saving…"
+            icon={<Save size={14} />}
+            disabled={uploadState.state === "uploading"}
+          >
+            Save Changes
+          </LoadingButton>
           <button type="button" onClick={() => router.back()}
             className="button-tertiary flex items-center gap-1.5">
             <X size={14} />

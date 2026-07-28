@@ -3,6 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTransition, useCallback } from "react";
 import { Search, X } from "lucide-react";
+import { InlineLoader } from "./ui/Loading";
 
 export interface FilterOption {
   label: string;
@@ -122,11 +123,7 @@ export default function AdminFilterBar({
       ))}
 
       {/* Loading indicator */}
-      {isPending && (
-        <span className="text-xs" style={{ color: "var(--fg-muted)" }}>
-          Filtering…
-        </span>
-      )}
+      {isPending && <InlineLoader label="Filtering…" />}
 
       {/* Clear all */}
       {hasFilters && (

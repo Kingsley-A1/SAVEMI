@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getMessageById } from "../../../lib/messages";
 import MediaPlayer from "../../../components/MediaPlayer";
 import MessageDownloadActions from "../../../components/MessageDownloadActions";
+import MediaTypeBadge from "../../../components/MediaTypeBadge";
 import { isEmbeddableUrl } from "../../../lib/embed";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export default async function MessageDetail({
     <article className="mx-auto max-w-3xl space-y-4">
       <div className="site-panel p-4 sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="type-badge">{message.type}</span>
+          <MediaTypeBadge type={message.type} />
           <span className="text-brand-muted text-xs">{message.date}</span>
           {message.category ? (
             <span className="text-brand-muted text-xs">{message.category}</span>
@@ -124,8 +125,8 @@ export default async function MessageDetail({
           <MessageDownloadActions
             type={message.type}
             title={message.title}
-            mediaDownloadUrl={!isEmbed ? message.downloadUrl : null}
-            audioDownloadUrl={message.audioDownloadUrl}
+            mediaDownloadHref={!isEmbed ? message.downloadHref : null}
+            audioDownloadHref={message.audioDownloadHref}
             originalUrl={isEmbed ? message.externalMediaUrl : null}
           />
 

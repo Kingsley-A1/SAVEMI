@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Send } from "lucide-react";
+import { LoadingButton } from "./ui/Loading";
 
 interface FormState {
   status: "idle" | "submitting" | "success" | "error";
@@ -129,13 +131,15 @@ export default function ContactForm() {
           The ministry team will use your email for follow-up when a reply is
           needed.
         </p>
-        <button
+        <LoadingButton
           type="submit"
-          className="button-primary sm:shrink-0 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
+          className="button-primary sm:shrink-0"
+          loading={isPending}
+          loadingLabel="Sending…"
+          icon={<Send size={14} />}
         >
-          {isPending ? "Sending…" : "Send Message"}
-        </button>
+          Send Message
+        </LoadingButton>
       </div>
 
       {state.message ? (

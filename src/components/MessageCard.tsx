@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Headphones, Image as ImageIcon, Play, ArrowRight } from "lucide-react";
+import MediaTypeBadge from "./MediaTypeBadge";
 
 interface MessageCardProps {
   id: string;
@@ -29,8 +30,6 @@ export default function MessageCard({
       : normalizedType === "image"
         ? ImageIcon
         : Play;
-  const typeLabel =
-    normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1);
 
   return (
     <article className="site-panel flex h-full flex-col overflow-hidden">
@@ -53,10 +52,7 @@ export default function MessageCard({
             </div>
           )}
 
-          <span className="type-badge absolute left-3 top-3 inline-flex items-center gap-1.5">
-            <Icon size={12} />
-            {typeLabel}
-          </span>
+          <MediaTypeBadge type={type} className="absolute left-3 top-3" />
         </div>
       </Link>
 

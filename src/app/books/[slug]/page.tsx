@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Download } from "lucide-react";
 import { getBookBySlug } from "../../../lib/books";
 
 export const dynamic = "force-dynamic";
@@ -128,12 +129,16 @@ export default async function BookDetailPage({ params }: Props) {
             <div className="flex flex-wrap gap-3 pt-2">
               {isFree ? (
                 book.downloadUrl ? (
+                  // A hosted file downloads in one click under the book's own
+                  // title; an external link opens where it lives.
                   <a
                     href={book.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="button-primary"
+                    target={book.hostedDownload ? undefined : "_blank"}
+                    rel={book.hostedDownload ? undefined : "noopener noreferrer"}
+                    className="button-primary gap-1.5"
+                    aria-label={`Download ${book.title}`}
                   >
+                    <Download size={14} aria-hidden="true" />
                     Download Free
                   </a>
                 ) : (

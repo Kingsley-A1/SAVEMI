@@ -1,4 +1,4 @@
-export type MediaKind = "video" | "audio" | "image";
+export type MediaKind = "video" | "audio" | "image" | "document";
 
 interface MediaRule {
   kind: MediaKind;
@@ -7,7 +7,7 @@ interface MediaRule {
   compressionPlan: {
     stage: "pre-publish";
     summary: string;
-    recommendedTool: "FFmpeg" | "sharp";
+    recommendedTool: "FFmpeg" | "sharp" | "none";
   };
 }
 
@@ -62,7 +62,50 @@ const MEDIA_RULES: MediaRule[] = [
       recommendedTool: "sharp",
     },
   },
+  {
+    // Book files uploaded straight from an admin device.
+    kind: "document",
+    mimeTypes: [
+      "application/pdf",
+      "application/epub+zip",
+      "application/x-mobipocket-ebook",
+      "application/vnd.amazon.ebook",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/rtf",
+      "text/plain",
+      "application/zip",
+    ],
+    maxBytes: 512 * MB,
+    compressionPlan: {
+      stage: "pre-publish",
+      summary:
+        "Documents are delivered as uploaded — check the file opens before publishing.",
+      recommendedTool: "none",
+    },
+  },
 ];
+
+/**
+ * Extension fallbacks for formats browsers report inconsistently (EPUB and
+ * MOBI often arrive as an empty or generic content type).
+ */
+const EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  epub: "application/epub+zip",
+  mobi: "application/x-mobipocket-ebook",
+  azw3: "application/vnd.amazon.ebook",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  rtf: "application/rtf",
+  txt: "text/plain",
+};
+
+/** Best-effort content type for a file name, used when the browser sends none. */
+export function contentTypeForFileName(fileName: string): string | null {
+  const extension = /\.([a-z0-9]+)$/i.exec(fileName)?.[1]?.toLowerCase();
+  return extension ? (EXTENSION_CONTENT_TYPES[extension] ?? null) : null;
+}
 
 function sanitizeFileName(value: string): string {
   return value
@@ -87,7 +130,6 @@ export function validateUploadRequest(
 
   const candidate = payload as Partial<UploadRequestPayload>;
   const fileName = candidate.fileName?.trim();
-  const contentType = candidate.contentType?.trim().toLowerCase();
   const contentLength =
     typeof candidate.contentLength === "number"
       ? candidate.contentLength
@@ -97,11 +139,20 @@ export function validateUploadRequest(
     return { success: false, error: "fileName is required." };
   }
 
-  if (!contentType) {
+  // Sign with exactly what the browser will send, or the upload signature
+  // will not match.
+  const contentType = candidate.contentType?.trim().toLowerCase() ?? "";
+
+  // Browsers report "" or a generic type for some e-book formats, so fall
+  // back to the file extension when deciding whether the upload is allowed.
+  const extensionType = contentTypeForFileName(fileName);
+  const rule =
+    (contentType ? findRule(contentType) : undefined) ??
+    (extensionType ? findRule(extensionType) : undefined);
+
+  if (!contentType && !extensionType) {
     return { success: false, error: "contentType is required." };
   }
-
-  const rule = findRule(contentType);
 
   if (!rule) {
     return { success: false, error: "Unsupported media type." };

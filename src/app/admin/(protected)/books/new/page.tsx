@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { Save, X } from "lucide-react";
 import AdminUploadField from "../../../../../components/AdminUploadField";
 import { uploadAdminFile } from "../../../../../lib/admin-upload-client";
+import {
+  BOOK_FILE_ACCEPT,
+  BOOK_FILE_HELPER_TEXT,
+} from "../../../../../lib/book-uploads";
+import { LoadingButton } from "../../../../../components/ui/Loading";
 
 const AVAILABILITIES = [
   { value: "FREE", label: "Free" },
@@ -51,6 +56,14 @@ export default function NewBookPage() {
   const [coverKey, setCoverKey] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [uploadState, setUploadState] = useState<UploadSlot>(initialUploadSlot);
+
+  // The book file itself, uploaded straight from the admin's device.
+  const [bookFile, setBookFile] = useState<File | null>(null);
+  const [bookKey, setBookKey] = useState("");
+  const [bookFileName, setBookFileName] = useState("");
+  const [bookUploadState, setBookUploadState] =
+    useState<UploadSlot>(initialUploadSlot);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -85,6 +98,28 @@ export default function NewBookPage() {
     }
   }
 
+  async function uploadBookFile(file: File) {
+    setBookUploadState({ state: "uploading", progress: 0, error: "" });
+    try {
+      const result = await uploadAdminFile({
+        file,
+        fileName: `book-${Date.now()}-${file.name}`,
+        onProgress: (progress) =>
+          setBookUploadState({ state: "uploading", progress, error: "" }),
+      });
+
+      setBookKey(result.objectKey);
+      setBookFileName(file.name);
+      setBookUploadState({ state: "done", progress: 100, error: "" });
+    } catch (err) {
+      setBookUploadState({
+        state: "error",
+        progress: 0,
+        error: err instanceof Error ? err.message : "Upload failed.",
+      });
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -97,6 +132,8 @@ export default function NewBookPage() {
         body: JSON.stringify({
           ...form,
           coverImageKey: coverKey || (coverImageUrl || undefined),
+          downloadKey: bookKey || undefined,
+          downloadFileName: bookFileName || undefined,
           pageCount: form.pageCount ? Number(form.pageCount) : undefined,
           downloadUrl: form.downloadUrl || undefined,
           purchaseUrl: form.purchaseUrl || undefined,
@@ -289,8 +326,39 @@ export default function NewBookPage() {
               />
             </label>
 
+            <div className="sm:col-span-2">
+              <AdminUploadField
+                label="Book file (upload from your device)"
+                mediaKind="document"
+                accept={BOOK_FILE_ACCEPT}
+                file={bookFile}
+                objectKey={bookKey}
+                uploadState={bookUploadState.state}
+                progress={bookUploadState.progress}
+                successLabel="Book file uploaded"
+                helperText={BOOK_FILE_HELPER_TEXT}
+                errorMessage={bookUploadState.error}
+                onFileChange={(f) => {
+                  setBookFile(f);
+                  setBookKey("");
+                  setBookFileName("");
+                  setBookUploadState(initialUploadSlot());
+                  if (f) uploadBookFile(f);
+                }}
+                onRetry={() => {
+                  if (bookFile) void uploadBookFile(bookFile);
+                }}
+                onValidationError={(message) => {
+                  setBookUploadState({ state: "error", progress: 0, error: message });
+                  setError(message);
+                }}
+              />
+            </div>
+
             <label className="block sm:col-span-2">
-              <span className="field-label">Download URL (for free books)</span>
+              <span className="field-label">
+                Download URL (optional — only if no file was uploaded)
+              </span>
               <input
                 name="downloadUrl"
                 type="url"
@@ -300,6 +368,9 @@ export default function NewBookPage() {
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
                 style={{ borderColor: "var(--brand-border)" }}
               />
+              <span className="text-brand-muted mt-1 block text-xs leading-5">
+                An uploaded file always takes precedence over this link.
+              </span>
             </label>
 
             <label className="block sm:col-span-2">
@@ -352,14 +423,18 @@ export default function NewBookPage() {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button
+          <LoadingButton
             type="submit"
-            disabled={saving || uploadState.state === "uploading"}
-            className="button-primary flex items-center gap-1.5"
+            loading={saving}
+            loadingLabel="Saving…"
+            icon={<Save size={14} />}
+            disabled={
+              uploadState.state === "uploading" ||
+              bookUploadState.state === "uploading"
+            }
           >
-            <Save size={14} />
-            {saving ? "Saving…" : "Save Book"}
-          </button>
+            Save Book
+          </LoadingButton>
           <button
             type="button"
             onClick={() => router.back()}

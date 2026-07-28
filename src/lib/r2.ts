@@ -61,7 +61,9 @@ export async function createUploadUrl({
   const command = new PutObjectCommand({
     Bucket: process.env.CF_BUCKET!,
     Key: normalizeObjectKey(key),
-    ContentType: contentType,
+    // Omitted when the browser reported no type, so the signature matches
+    // the request the browser will actually send.
+    ContentType: contentType || undefined,
   });
 
   return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
@@ -91,7 +93,7 @@ export async function createMultipartUpload({
     new CreateMultipartUploadCommand({
       Bucket: process.env.CF_BUCKET!,
       Key: normalizedKey,
-      ContentType: contentType,
+      ContentType: contentType || undefined,
     }),
   );
 

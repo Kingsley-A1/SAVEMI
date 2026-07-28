@@ -4,7 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, X, Trash2 } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
+import { LoadingButton } from "../../../../../../components/ui/Loading";
 import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
+import {
+  BOOK_FILE_ACCEPT,
+  BOOK_FILE_HELPER_TEXT,
+} from "../../../../../../lib/book-uploads";
 
 const AVAILABILITIES = [
   { value: "FREE", label: "Free" },
@@ -36,6 +41,8 @@ interface BookData {
   description: string;
   author: string;
   coverImageKey: string | null;
+  downloadKey: string | null;
+  downloadFileName: string | null;
   downloadUrl: string | null;
   purchaseUrl: string | null;
   priceLabel: string | null;
@@ -70,6 +77,14 @@ export default function EditBookForm({ book }: { book: BookData }) {
   );
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<UploadSlot>(initialUploadSlot);
+
+  // The book file itself, uploaded from the admin's device.
+  const [bookFile, setBookFile] = useState<File | null>(null);
+  const [bookKey, setBookKey] = useState(book.downloadKey ?? "");
+  const [bookFileName, setBookFileName] = useState(book.downloadFileName ?? "");
+  const [bookUploadState, setBookUploadState] =
+    useState<UploadSlot>(initialUploadSlot);
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -105,6 +120,28 @@ export default function EditBookForm({ book }: { book: BookData }) {
     }
   }
 
+  async function uploadBookFile(file: File) {
+    setBookUploadState({ state: "uploading", progress: 0, error: "" });
+    try {
+      const result = await uploadAdminFile({
+        file,
+        fileName: `book-${Date.now()}-${file.name}`,
+        onProgress: (progress) =>
+          setBookUploadState({ state: "uploading", progress, error: "" }),
+      });
+
+      setBookKey(result.objectKey);
+      setBookFileName(file.name);
+      setBookUploadState({ state: "done", progress: 100, error: "" });
+    } catch (err) {
+      setBookUploadState({
+        state: "error",
+        progress: 0,
+        error: err instanceof Error ? err.message : "Upload failed.",
+      });
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -117,6 +154,8 @@ export default function EditBookForm({ book }: { book: BookData }) {
         body: JSON.stringify({
           ...form,
           coverImageKey: coverKey || (coverImageUrl || null),
+          downloadKey: bookKey || null,
+          downloadFileName: bookFileName || null,
           pageCount: form.pageCount ? Number(form.pageCount) : null,
           downloadUrl: form.downloadUrl || null,
           purchaseUrl: form.purchaseUrl || null,
@@ -164,16 +203,17 @@ export default function EditBookForm({ book }: { book: BookData }) {
           <h1 className="text-2xl font-semibold">Edit Book</h1>
           <p className="text-brand-muted mt-1 text-sm truncate max-w-xs">{book.title}</p>
         </div>
-        <button
+        <LoadingButton
           type="button"
           onClick={handleDelete}
-          disabled={deleting}
-          className="button-tertiary flex items-center gap-1.5 text-red-600 border-red-200"
-          style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+          loading={deleting}
+          loadingLabel="Deleting…"
+          spinnerTone="muted"
+          icon={<Trash2 size={14} />}
+          className="button-tertiary"
         >
-          <Trash2 size={14} />
-          {deleting ? "Deleting…" : "Delete"}
-        </button>
+          Delete
+        </LoadingButton>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -300,11 +340,64 @@ export default function EditBookForm({ book }: { book: BookData }) {
                 style={{ borderColor: "var(--brand-border)" }} />
             </label>
 
+            <div className="sm:col-span-2">
+              <AdminUploadField
+                label="Book file (upload from your device)"
+                mediaKind="document"
+                accept={BOOK_FILE_ACCEPT}
+                file={bookFile}
+                objectKey={bookKey}
+                uploadState={bookUploadState.state}
+                progress={bookUploadState.progress}
+                successLabel={
+                  bookFileName
+                    ? `Book file ready: ${bookFileName}`
+                    : "Book file uploaded"
+                }
+                helperText={BOOK_FILE_HELPER_TEXT}
+                errorMessage={bookUploadState.error}
+                onFileChange={(file) => {
+                  setBookFile(file);
+                  setBookKey("");
+                  setBookFileName("");
+                  setBookUploadState(initialUploadSlot());
+                  if (file) void uploadBookFile(file);
+                }}
+                onRetry={() => {
+                  if (bookFile) void uploadBookFile(bookFile);
+                }}
+                onValidationError={(message) => {
+                  setBookUploadState({ state: "error", progress: 0, error: message });
+                  setError(message);
+                }}
+              />
+              {bookKey ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookFile(null);
+                    setBookKey("");
+                    setBookFileName("");
+                    setBookUploadState(initialUploadSlot());
+                  }}
+                  className="button-tertiary mt-2 gap-1.5"
+                >
+                  <X size={13} />
+                  Remove book file
+                </button>
+              ) : null}
+            </div>
+
             <label className="block sm:col-span-2">
-              <span className="field-label">Download URL (for free books)</span>
+              <span className="field-label">
+                Download URL (optional — only if no file was uploaded)
+              </span>
               <input name="downloadUrl" type="url" value={form.downloadUrl} onChange={handleChange} placeholder="https://…"
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
                 style={{ borderColor: "var(--brand-border)" }} />
+              <span className="text-brand-muted mt-1 block text-xs leading-5">
+                An uploaded file always takes precedence over this link.
+              </span>
             </label>
 
             <label className="block sm:col-span-2">
@@ -339,11 +432,18 @@ export default function EditBookForm({ book }: { book: BookData }) {
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || uploadState.state === "uploading"}
-            className="button-primary flex items-center gap-1.5">
-            <Save size={14} />
-            {saving ? "Saving…" : "Save Changes"}
-          </button>
+          <LoadingButton
+            type="submit"
+            loading={saving}
+            loadingLabel="Saving…"
+            icon={<Save size={14} />}
+            disabled={
+              uploadState.state === "uploading" ||
+              bookUploadState.state === "uploading"
+            }
+          >
+            Save Changes
+          </LoadingButton>
           <button type="button" onClick={() => router.back()} className="button-tertiary flex items-center gap-1.5">
             <X size={14} />
             Cancel

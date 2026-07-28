@@ -17,10 +17,14 @@
 @layer base {
   html {
     background: #f3efe4;
+    /* `clip` (not `hidden`) so the full-bleed hero can never push a sideways
+       scrollbar, while sticky positioning keeps working. */
+    overflow-x: clip;
   }
 
   body {
     min-height: 100vh;
+    overflow-x: clip;
     background: linear-gradient(180deg, #f6f2e8 0%, #faf8f2 60%, #f5f1e8 100%);
     color: var(--brand-text);
   }
@@ -49,56 +53,84 @@
     @apply rounded-lg;
   }
 
-  /* ── Home hero ───────────────────────────────────────── */
+  /* ── Full-bleed helper ───────────────────────────────── */
+  /* Lets a section escape `.site-container` so it meets the viewport edges
+     instead of sitting as a box inside another box. */
+  .full-bleed {
+    width: 100vw;
+    max-width: 100vw;
+    margin-inline: calc(50% - 50vw);
+  }
+
+  /* ── Home hero — serene, photographic, edge to edge ───── */
   .reflection-hero {
-    min-height: clamp(520px, calc(100vh - 9rem), 760px);
-    background:
-      linear-gradient(135deg, rgba(6, 55, 39, 0.98) 0%, rgba(10, 79, 60, 0.96) 58%, rgba(22, 78, 64, 0.94) 100%);
+    /* Tall enough to breathe, never taller than the screen it opens on. */
+    min-height: clamp(560px, calc(100svh - 3.5rem), 880px);
     color: #fff8ea;
-    @apply relative grid content-center gap-8 overflow-hidden rounded-lg px-6 py-14 sm:px-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-12;
+    isolation: isolate;
+    /* No width utility here — `.full-bleed` owns the width, and a `w-full`
+       declared later in this layer would quietly win over its 100vw. */
+    @apply relative flex flex-col justify-end overflow-hidden;
   }
 
-  .reflection-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(241, 231, 201, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(241, 231, 201, 0.08) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 82%);
-    pointer-events: none;
+  .reflection-hero__media {
+    @apply absolute inset-0 -z-10;
   }
 
-  .reflection-hero__content,
-  .reflection-hero__scripture {
-    @apply relative z-10;
+  .reflection-hero__photo {
+    object-fit: cover;
+    object-position: center 42%;
+    @apply h-full w-full;
   }
 
-  .reflection-hero__content {
-    @apply max-w-3xl;
+  /* Two soft washes: one grounds the copy, one keeps the greens deep and
+     calm. No hard edges, no panels — the photograph carries the mood. */
+  .reflection-hero__scrim {
+    @apply pointer-events-none absolute inset-0 -z-10;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(4, 32, 23, 0.62) 0%,
+        rgba(4, 32, 23, 0.18) 30%,
+        rgba(3, 26, 19, 0.72) 74%,
+        rgba(2, 20, 15, 0.94) 100%
+      ),
+      radial-gradient(
+        120% 90% at 50% 0%,
+        rgba(6, 55, 39, 0.24) 0%,
+        rgba(6, 55, 39, 0) 62%
+      );
+  }
+
+  .reflection-hero__inner {
+    @apply relative z-10 mx-auto w-full max-w-5xl px-6 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-36 lg:px-10;
   }
 
   .reflection-hero__eyebrow {
-    color: rgba(241, 231, 201, 0.72);
+    color: rgba(233, 250, 240, 0.82);
+    text-shadow: 0 1px 12px rgba(2, 20, 15, 0.55);
   }
 
   .reflection-hero__title {
-    color: #fff8ea;
-    letter-spacing: 0;
-    @apply mt-4 max-w-3xl text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 30px rgba(2, 20, 15, 0.5);
+    text-wrap: balance;
+    @apply mt-4 max-w-3xl text-[2.1rem] font-semibold leading-[1.08] sm:text-5xl lg:text-[3.75rem];
   }
 
   .reflection-hero__copy {
-    color: rgba(255, 248, 234, 0.76);
-    @apply mt-5 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8;
+    color: rgba(255, 255, 255, 0.84);
+    text-shadow: 0 1px 18px rgba(2, 20, 15, 0.55);
+    text-wrap: pretty;
+    @apply mt-5 max-w-xl text-[0.95rem] leading-7 sm:text-lg sm:leading-8;
   }
 
   .reflection-hero__actions {
     /* Keep both CTAs on one row; centre them on mobile, left-align on larger.
        Children flex to share the row on small screens so nothing overflows —
        no fixed widths, so it stays responsive at any viewport. */
-    @apply mt-8 flex flex-nowrap items-center justify-center gap-2.5 sm:justify-start sm:gap-3;
+    @apply mt-8 flex flex-nowrap items-center gap-2.5 sm:gap-3;
   }
 
   .reflection-hero__actions > * {
@@ -106,21 +138,29 @@
     @apply min-w-0 flex-1 whitespace-nowrap text-center sm:flex-none;
   }
 
+  /* Scripture reads as a quiet inscription on the photograph — a hairline
+     rule, not a card. */
   .reflection-hero__scripture {
-    border: 1px solid rgba(241, 231, 201, 0.24);
-    background: rgba(255, 253, 247, 0.08);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    @apply self-end rounded-lg p-5;
+    border-left: 2px solid rgba(134, 239, 172, 0.55);
+    @apply mt-10 max-w-lg pl-4 sm:mt-12 sm:pl-5;
   }
 
   .reflection-hero__verse {
-    color: #fff8ea;
-    @apply mt-4 text-lg font-semibold leading-8;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 16px rgba(2, 20, 15, 0.6);
+    @apply text-base font-medium italic leading-7 sm:text-lg sm:leading-8;
   }
 
   .reflection-hero__reference {
-    color: rgba(241, 231, 201, 0.7);
-    @apply mt-3 text-sm font-medium;
+    color: rgba(190, 242, 214, 0.86);
+    @apply mt-2 text-xs font-semibold uppercase tracking-[0.16em];
+  }
+
+  /* Gentle scroll cue — Apple-style: present, never shouting. */
+  .reflection-hero__cue {
+    color: rgba(255, 255, 255, 0.6);
+    animation: savemi-drift 3.4s ease-in-out infinite;
+    @apply mt-12 hidden items-center gap-2 text-[0.7rem] font-medium uppercase tracking-[0.2em] sm:inline-flex;
   }
 
   /* ── Buttons ─────────────────────────────────────────── */
@@ -175,6 +215,22 @@
     @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
   }
 
+  /* ── Media type badge (Image | Audio | Video) ─────────
+     Solid dark green so it stays legible over any cover photo. On phones the
+     label collapses and the icon alone carries the meaning — the accessible
+     name is kept on the element itself. */
+  .media-badge {
+    background: var(--brand-primary-deep);
+    color: #eafaf1;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 1px 6px rgba(2, 20, 15, 0.35);
+    @apply inline-flex items-center justify-center gap-1.5 rounded p-1.5 text-xs font-semibold uppercase tracking-[0.1em] sm:px-2.5 sm:py-1;
+  }
+
+  .media-badge__label {
+    @apply sr-only sm:not-sr-only;
+  }
+
   /* Hero CTA buttons (on dark surfaces) */
   .hero-btn-primary {
     background: #22c55e;
@@ -204,5 +260,123 @@
   .field-input:focus {
     border-color: var(--brand-primary);
     box-shadow: 0 0 0 3px rgba(10, 79, 60, 0.09);
+  }
+
+  /* ── Loading ─────────────────────────────────────────── */
+  /* Shared shimmer for every skeleton in components/ui/Loading.tsx. */
+  .savemi-shimmer {
+    background-color: rgba(10, 79, 60, 0.07);
+    background-image: linear-gradient(
+      90deg,
+      rgba(10, 79, 60, 0) 0%,
+      rgba(10, 79, 60, 0.09) 45%,
+      rgba(10, 79, 60, 0) 90%
+    );
+    background-size: 220% 100%;
+    background-repeat: no-repeat;
+    animation: savemi-shimmer 1.5s ease-in-out infinite;
+  }
+
+  .savemi-loader-ring {
+    border: 1px solid var(--brand-border);
+    background: var(--brand-surface-strong);
+    box-shadow: var(--brand-shadow);
+    @apply inline-flex h-14 w-14 items-center justify-center rounded-full;
+  }
+
+  /* ── Public sidebar ──────────────────────────────────── */
+  .public-sidebar {
+    background: linear-gradient(
+      180deg,
+      var(--brand-primary-deep) 0%,
+      #05412f 58%,
+      #04301f 100%
+    );
+    color: #eafaf1;
+    box-shadow: 8px 0 40px rgba(2, 20, 15, 0.32);
+    @apply flex h-full w-[min(20rem,86vw)] flex-col;
+  }
+
+  .public-sidebar__link {
+    color: rgba(234, 250, 241, 0.78);
+    @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors;
+  }
+
+  .public-sidebar__link:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+  }
+
+  .public-sidebar__link[aria-current="page"] {
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+  }
+
+  /* A leading rail marks the current page without relying on colour alone. */
+  .public-sidebar__link[aria-current="page"]::before {
+    content: "";
+    background: #86efac;
+    @apply absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r;
+  }
+
+  .public-sidebar__section {
+    color: rgba(190, 242, 214, 0.6);
+    @apply px-3 pb-1.5 pt-4 text-[0.65rem] font-semibold uppercase tracking-[0.2em];
+  }
+
+  /* Visible keyboard focus everywhere in the drawer. */
+  .public-sidebar :is(a, button):focus-visible {
+    outline: 2px solid #86efac;
+    outline-offset: 2px;
+  }
+
+  /* Social buttons inherit light-surface styling; restate it for the dark
+     drawer so the hairlines stay visible. */
+  .public-sidebar__social a {
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    color: #eafaf1;
+  }
+
+  .public-sidebar__social a:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* ── Skip link ───────────────────────────────────────── */
+  .skip-link {
+    background: var(--brand-primary);
+    color: var(--brand-accent);
+    @apply sr-only rounded px-4 py-2 text-sm font-semibold;
+  }
+
+  .skip-link:focus {
+    @apply not-sr-only fixed left-4 top-4 z-[110];
+  }
+}
+
+@keyframes savemi-shimmer {
+  0% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -60% 0;
+  }
+}
+
+@keyframes savemi-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .savemi-shimmer,
+  .reflection-hero__cue {
+    animation: none;
   }
 }

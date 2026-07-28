@@ -6,6 +6,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { Spinner } from "../../../components/ui/Loading";
 
 interface RegisterAdminFormProps {
   autoSignInAfterRegister: boolean;
@@ -180,9 +181,14 @@ export default function AdminRegisterForm({
             type="submit"
             className="button-primary w-full"
             disabled={loading}
+            aria-busy={loading || undefined}
           >
-            <UserPlus size={15} className="mr-1.5" />
-            {loading ? "Creating account..." : "Register admin"}
+            {loading ? (
+              <Spinner size="sm" tone="inverse" className="mr-1.5" />
+            ) : (
+              <UserPlus size={15} className="mr-1.5" />
+            )}
+            {loading ? "Creating account…" : "Register admin"}
           </button>
         </form>
 

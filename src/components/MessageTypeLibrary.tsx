@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import type { Message, MessageType } from "../lib/messages";
+import MediaTypeBadge from "./MediaTypeBadge";
 
 interface MessageTypeLibraryConfig {
   type: MessageType;
@@ -142,10 +143,7 @@ function MessageTypeCard({
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            <span className="type-badge absolute left-3 top-3 inline-flex items-center gap-1.5">
-              <Icon size={12} aria-hidden="true" />
-              {config.typeLabel}
-            </span>
+            <MediaTypeBadge type={config.type} className="absolute left-3 top-3" />
           </div>
         </Link>
       ) : null}
@@ -162,12 +160,7 @@ function MessageTypeCard({
           ) : null}
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              {!previewUrl ? (
-                <span className="type-badge inline-flex items-center gap-1.5">
-                  <Icon size={12} aria-hidden="true" />
-                  {config.typeLabel}
-                </span>
-              ) : null}
+              {!previewUrl ? <MediaTypeBadge type={config.type} /> : null}
               <span className="text-brand-muted text-xs">{message.date}</span>
             </div>
 
@@ -215,10 +208,11 @@ function MessageTypeCard({
               <Icon size={14} aria-hidden="true" />
               {config.actionLabel}
             </Link>
-            {message.downloadUrl ? (
+            {/* Same-origin endpoint: one click saves the file under the
+                message's own title. */}
+            {message.downloadHref ? (
               <a
-                href={message.downloadUrl}
-                download
+                href={message.downloadHref}
                 className="button-tertiary gap-1.5"
                 aria-label={`${config.downloadLabel} for ${message.title}`}
               >
@@ -240,7 +234,7 @@ export default function MessageTypeLibrary({
 }: MessageTypeLibraryProps) {
   const Icon = config.icon;
   const hasSearch = Boolean(search);
-  const downloadableCount = items.filter((item) => item.downloadUrl).length;
+  const downloadableCount = items.filter((item) => item.downloadHref).length;
 
   return (
     <section className="space-y-5">

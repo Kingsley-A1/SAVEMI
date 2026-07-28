@@ -50,6 +50,8 @@ export async function POST(req: NextRequest) {
     description,
     author,
     coverImageKey,
+    downloadKey,
+    downloadFileName,
     downloadUrl,
     purchaseUrl,
     priceLabel,
@@ -88,6 +90,9 @@ export async function POST(req: NextRequest) {
         description: String(description),
         author: String(author),
         coverImageKey: typeof coverImageKey === "string" ? coverImageKey || null : null,
+        downloadKey: typeof downloadKey === "string" ? downloadKey || null : null,
+        downloadFileName:
+          typeof downloadFileName === "string" ? downloadFileName || null : null,
         downloadUrl: typeof downloadUrl === "string" ? downloadUrl || null : null,
         purchaseUrl: typeof purchaseUrl === "string" ? purchaseUrl || null : null,
         priceLabel: typeof priceLabel === "string" ? priceLabel || null : null,
