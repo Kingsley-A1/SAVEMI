@@ -228,6 +228,36 @@ Sign in whenever you are ready — we are expecting good things.`,
   };
 }
 
+/** Welcome email for a member of the public who registered on the site. */
+export function renderMemberWelcomeEmail(params: {
+  name: string;
+  siteUrl: string;
+}): RenderedEmail {
+  const heading = `Welcome to SAVEMI, ${greetingName(params.name)}`;
+  const bodyHtml = paragraphsToHtml(
+    `We are glad you have joined the SAVEMI family. Your account is ready.
+
+You can now keep up with Sabbath messages, reflections, and resources as they are shared, and reach the ministry whenever you need prayer or encouragement.
+
+May every visit bring you repose, renewal, and restoration.`,
+  );
+
+  return {
+    subject: "Welcome to SAVEMI",
+    html: renderLayout({
+      preheader: "Your SAVEMI account is ready.",
+      heading,
+      bodyHtml,
+      cta: { label: "Visit SAVEMI", url: params.siteUrl },
+      scripture: {
+        verse:
+          "Come to Me, all you who labor and are heavy laden, and I will give you rest.",
+        reference: "Matthew 11:28 NKJV",
+      },
+    }),
+  };
+}
+
 /**
  * An email composed by an admin and sent through the ministry template.
  * The admin may supply their own Scripture; a hopeful default is used otherwise.

@@ -4,9 +4,14 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShieldCheck } from "lucide-react";
+import { Menu, ShieldCheck, UserRound } from "lucide-react";
 import PublicSidebar from "./PublicSidebar";
 import type { SocialLink } from "../lib/social";
+
+export interface NavAccount {
+  name: string;
+  isAdmin: boolean;
+}
 
 const navigation = [
   { href: "/", label: "Home" },
@@ -20,7 +25,13 @@ const navigation = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Navbar({ socialLinks }: { socialLinks?: SocialLink[] }) {
+export default function Navbar({
+  socialLinks,
+  account,
+}: {
+  socialLinks?: SocialLink[];
+  account?: NavAccount | null;
+}) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -78,18 +89,46 @@ export default function Navbar({ socialLinks }: { socialLinks?: SocialLink[] }) 
             </ul>
 
             <div className="flex shrink-0 items-center gap-2">
-              {/* Ministry office door — guarded, but never hidden. */}
-              <Link
-                href="/admin"
-                className="hidden items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white lg:inline-flex"
-                style={{
-                  borderColor: "var(--brand-border)",
-                  color: "var(--brand-primary)",
-                }}
-              >
-                <ShieldCheck size={14} aria-hidden="true" />
-                Admin
-              </Link>
+              {/* Signed in: their own door. Signed out: an invitation to join. */}
+              {account ? (
+                <Link
+                  href={account.isAdmin ? "/admin" : "/account"}
+                  className="hidden max-w-48 items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white lg:inline-flex"
+                  style={{
+                    borderColor: "var(--brand-border)",
+                    color: "var(--brand-primary)",
+                  }}
+                >
+                  {account.isAdmin ? (
+                    <ShieldCheck size={14} aria-hidden="true" />
+                  ) : (
+                    <UserRound size={14} aria-hidden="true" />
+                  )}
+                  <span className="truncate">
+                    {account.isAdmin ? "Admin" : account.name}
+                  </span>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-brand-muted hover:text-brand-primary hidden rounded px-3 py-1.5 text-xs font-semibold transition-colors lg:inline-flex"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="hidden items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-white lg:inline-flex"
+                    style={{
+                      borderColor: "var(--brand-border)",
+                      color: "var(--brand-primary)",
+                    }}
+                  >
+                    <UserRound size={14} aria-hidden="true" />
+                    Join
+                  </Link>
+                </>
+              )}
 
               {/* Sidebar trigger — available at every width, not just mobile. */}
               <button
@@ -116,6 +155,7 @@ export default function Navbar({ socialLinks }: { socialLinks?: SocialLink[] }) 
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         socialLinks={socialLinks}
+        signedIn={Boolean(account)}
       />
     </>
   );

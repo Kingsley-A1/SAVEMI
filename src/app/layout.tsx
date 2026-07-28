@@ -5,6 +5,7 @@ import AppShell from "../components/AppShell";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getSiteSettings, toSocialLinks } from "../lib/site-settings";
+import { auth } from "../../auth";
 
 const SITE_URL = "https://savemi.org";
 const SITE_NAME = "SAVEMI — Sabbath Vesper Ministry";
@@ -88,12 +89,19 @@ export default async function RootLayout({
   // shared by the navigation drawer and the footer.
   const settings = await getSiteSettings();
   const socialLinks = toSocialLinks(settings);
+  const session = await auth();
+  const account = session?.user
+    ? {
+        name: session.user.name ?? "My account",
+        isAdmin: session.user.role === "admin",
+      }
+    : null;
 
   return (
     <html lang="en">
       <body className="min-h-screen antialiased">
         <AppShell
-          header={<Navbar socialLinks={socialLinks} />}
+          header={<Navbar socialLinks={socialLinks} account={account} />}
           footer={<Footer settings={settings} socialLinks={socialLinks} />}
         >
           {children}

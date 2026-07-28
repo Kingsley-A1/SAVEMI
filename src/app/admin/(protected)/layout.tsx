@@ -12,5 +12,10 @@ export default async function ProtectedAdminLayout({
     redirect("/admin/login");
   }
 
+  // Public members share the session but hold no admin rights.
+  if (session.user.role !== "admin") {
+    redirect("/account");
+  }
+
   return <>{children}</>;
 }

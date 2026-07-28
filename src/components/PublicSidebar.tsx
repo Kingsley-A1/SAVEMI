@@ -13,8 +13,10 @@ import {
   Image as ImageIcon,
   Info,
   Mail,
+  LogIn,
   Quote,
   ShieldCheck,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -68,6 +70,28 @@ const ADMIN_LINK: SidebarLink = {
   icon: ShieldCheck,
 };
 
+const ACCOUNT_LINK: SidebarLink = {
+  href: "/account",
+  label: "My Account",
+  description: "Your profile and password",
+  icon: UserRound,
+};
+
+const JOIN_LINKS: readonly SidebarLink[] = [
+  {
+    href: "/login",
+    label: "Sign In",
+    description: "Welcome back",
+    icon: LogIn,
+  },
+  {
+    href: "/register",
+    label: "Create Account",
+    description: "Join the SAVEMI family",
+    icon: UserRound,
+  },
+];
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -75,10 +99,13 @@ export default function PublicSidebar({
   open,
   onClose,
   socialLinks,
+  signedIn = false,
 }: {
   open: boolean;
   onClose: () => void;
   socialLinks?: SocialLink[];
+  /** Show the member's own door instead of the join links. */
+  signedIn?: boolean;
 }) {
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -226,6 +253,33 @@ export default function PublicSidebar({
               </ul>
             </div>
           ))}
+
+          <h2 className="public-sidebar__section">Your Account</h2>
+          <ul>
+            {(signedIn ? [ACCOUNT_LINK] : JOIN_LINKS).map(
+              ({ href, label, description, icon: Icon }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={onClose}
+                    aria-current={isActive(href) ? "page" : undefined}
+                    className="public-sidebar__link"
+                  >
+                    <Icon size={17} className="shrink-0" aria-hidden="true" />
+                    <span className="min-w-0">
+                      <span className="block truncate">{label}</span>
+                      <span
+                        className="block truncate text-[0.7rem] font-normal"
+                        style={{ color: "rgba(190,242,214,0.55)" }}
+                      >
+                        {description}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ),
+            )}
+          </ul>
 
           <h2 className="public-sidebar__section">Ministry Office</h2>
           <ul>
