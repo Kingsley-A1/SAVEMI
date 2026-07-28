@@ -11,10 +11,13 @@ export default auth((req) => {
   const isAdminRoute = pathname.startsWith("/admin");
   const isAdminApiRoute = pathname.startsWith("/api/admin");
   const isAccountRoute = pathname.startsWith("/account");
+  // Reached before an admin can possibly be signed in, so these stay open.
   const isAuthRoute =
     pathname === "/admin/login" ||
     pathname === "/admin/register" ||
+    pathname === "/admin/verify" ||
     pathname === "/api/admin/register" ||
+    pathname === "/api/admin/verify" ||
     pathname.startsWith("/api/auth");
 
   // Allow login page and auth API through.

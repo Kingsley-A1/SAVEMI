@@ -158,9 +158,12 @@ export default function AdminLoginPage() {
               border: "1px solid rgba(10,79,60,0.18)",
             }}
           >
-            Account created. We&apos;ve sent a confirmation link to your email —
-            open it to verify your address. You can sign in now with the shared
-            access code.
+            Account created. We&apos;ve emailed you a 6-digit confirmation code
+            —{" "}
+            <Link href="/admin/verify" className="underline">
+              enter it here
+            </Link>
+            . You can also sign in now with the shared access code.
           </p>
         ) : null}
 
@@ -186,8 +189,11 @@ export default function AdminLoginPage() {
               border: "1px solid rgba(217,119,6,0.2)",
             }}
           >
-            That confirmation link has expired. You can still sign in, or
-            register again to receive a fresh link.
+            That confirmation code has expired. You can still sign in, or{" "}
+            <Link href="/admin/verify" className="underline">
+              request a new code
+            </Link>
+            .
           </p>
         ) : null}
 
@@ -200,8 +206,11 @@ export default function AdminLoginPage() {
               border: "1px solid rgba(220,38,38,0.2)",
             }}
           >
-            We couldn&apos;t confirm that link. It may already be used. Try
-            signing in below.
+            We couldn&apos;t confirm that request.{" "}
+            <Link href="/admin/verify" className="underline">
+              Try entering your code again
+            </Link>
+            , or sign in below.
           </p>
         ) : null}
 

@@ -56,11 +56,13 @@ export default function AdminRegisterForm({
       return;
     }
 
-    // Self-registration with email verification: guide them to their inbox
-    // instead of silently signing in.
+    // Self-registration with email verification: send them straight to the
+    // code entry page with their address prefilled.
     if (payload?.emailSent) {
       setLoading(false);
-      router.replace("/admin/login?checkEmail=1");
+      router.replace(
+        `/admin/verify?sent=1&email=${encodeURIComponent(email)}`,
+      );
       return;
     }
 

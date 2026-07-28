@@ -103,15 +103,19 @@ model Quote {
 }
 
 model AdminUser {
-  id                String     @id @default(cuid())
-  email             String     @unique
-  passwordHash      String
-  name              String
-  emailVerified     DateTime?
-  verifyToken       String?    @unique
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  name          String
+  emailVerified DateTime?
+  /// bcrypt hash of the 6-digit verification code. Never stored in the clear,
+  /// because a 6-digit code is only a million guesses wide.
+  verifyToken       String?
   verifyTokenExpiry DateTime?
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  /// Wrong guesses against the current code; the code dies at the cap.
+  verifyAttempts    Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   auditLogs         AuditLog[]
 }
 
@@ -124,8 +128,13 @@ model SiteUser {
   name         String
   status       SiteUserStatus @default(ACTIVE)
   lastLoginAt  DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  /// bcrypt hash of the 6-digit password-reset code, with its expiry and a
+  /// wrong-guess counter. Cleared the moment the password is reset.
+  resetCodeHash   String?
+  resetCodeExpiry DateTime?
+  resetAttempts   Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([createdAt])
 }

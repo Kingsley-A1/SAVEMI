@@ -23,6 +23,10 @@ interface LayoutOptions {
   bodyHtml: string;
   scripture: Scripture;
   cta?: { label: string; url: string };
+  /** A 6-digit code shown large and spaced, for the recipient to type. */
+  code?: string;
+  /** Quieter copy placed after the code or CTA, e.g. "if this wasn't you". */
+  trailingHtml?: string;
 }
 
 const BRAND = {
@@ -72,7 +76,16 @@ function renderLayout({
   bodyHtml,
   scripture,
   cta,
+  code,
+  trailingHtml,
 }: LayoutOptions): string {
+  // The code is the action in a code-based email, so it is set large, spaced,
+  // and monospaced — easy to read off a phone and retype without error.
+  const codeHtml = code
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 18px;"><tbody><tr><td style="background:#f4f1e6;border:1px solid ${BRAND.rule};padding:16px 26px;">
+         <p style="margin:0;color:${BRAND.primary};font-size:31px;font-weight:700;letter-spacing:0.22em;font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;line-height:1.1;">${escapeHtml(code)}</p>
+       </td></tr></tbody></table>`
+    : "";
   // Buttons are square-cornered to match the rest of the layout.
   const ctaHtml = cta
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;"><tbody><tr><td style="background:${BRAND.primary};">
@@ -121,7 +134,9 @@ function renderLayout({
             <td style="padding:30px 28px 6px;">
               <h1 style="margin:0 0 16px;color:${BRAND.primary};font-size:21px;font-weight:700;line-height:1.32;">${escapeHtml(heading)}</h1>
               ${bodyHtml}
+              ${codeHtml}
               ${ctaHtml}
+              ${trailingHtml ?? ""}
             </td>
           </tr>
           <!-- Scripture: a quiet rule on the page, not a box within a box -->
@@ -168,31 +183,70 @@ function greetingName(fullName: string): string {
   return first || "friend";
 }
 
-/** Admin email verification on registration. */
+/** Admin email verification on registration — 6-digit code. */
 export function renderVerificationEmail(params: {
   name: string;
-  verifyUrl: string;
+  code: string;
+  minutes: number;
 }): RenderedEmail {
   const heading = `Welcome aboard, ${greetingName(params.name)}`;
   const bodyHtml = paragraphsToHtml(
     `You have been added to the ministry's admin team. We are glad to serve alongside you.
 
-Please confirm this is your email address using the button below. It keeps the admin office secure and readies your account for good work.
+Enter this confirmation code on the verification page to activate your admin account. It expires in ${params.minutes} minutes.`,
+  );
 
-If you did not request this, you can safely ignore this message.`,
+  const footerHtml = paragraphsToHtml(
+    `If you did not request this, you can safely ignore this message and the code will simply expire.`,
   );
 
   return {
-    subject: "Confirm your admin email",
+    subject: `Your SAVEMI confirmation code: ${params.code}`,
     html: renderLayout({
-      preheader: "Confirm your email to activate your admin account.",
+      preheader: `Your admin confirmation code is ${params.code}.`,
       heading,
       bodyHtml,
-      cta: { label: "Confirm my email", url: params.verifyUrl },
+      code: params.code,
+      // Reassurance sits after the code so the action is never buried.
+      trailingHtml: footerHtml,
       scripture: {
         verse:
           "Being confident of this very thing, that he which hath begun a good work in you will perform it until the day of Jesus Christ.",
         reference: "Philippians 1:6",
+      },
+    }),
+  };
+}
+
+/** Password reset for a public member — 6-digit code. */
+export function renderPasswordResetEmail(params: {
+  name: string;
+  code: string;
+  minutes: number;
+}): RenderedEmail {
+  const heading = `Reset your password, ${greetingName(params.name)}`;
+  const bodyHtml = paragraphsToHtml(
+    `We received a request to reset the password on your SAVEMI account.
+
+Enter this code on the reset page to choose a new password. It expires in ${params.minutes} minutes.`,
+  );
+
+  const footerHtml = paragraphsToHtml(
+    `If you did not ask for this, no action is needed — your password stays as it is and the code will expire on its own.`,
+  );
+
+  return {
+    subject: `Your SAVEMI password reset code: ${params.code}`,
+    html: renderLayout({
+      preheader: `Your password reset code is ${params.code}.`,
+      heading,
+      bodyHtml,
+      code: params.code,
+      trailingHtml: footerHtml,
+      scripture: {
+        verse:
+          "The LORD is my strength and my shield; my heart trusted in him, and I am helped.",
+        reference: "Psalm 28:7",
       },
     }),
   };

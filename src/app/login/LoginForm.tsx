@@ -90,9 +90,17 @@ export default function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="field-label">
-            Password
-          </label>
+          <div className="flex items-baseline justify-between gap-2">
+            <label htmlFor="password" className="field-label">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-brand-muted hover:text-brand-primary mb-1.5 text-xs underline transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <div className="relative">
             <input
               id="password"

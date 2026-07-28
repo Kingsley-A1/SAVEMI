@@ -109,3 +109,22 @@ export const contactLimiter = new RateLimiter({
   windowMs: 10 * 60_000,
   max: 5,
 });
+
+/**
+ * Requesting a 6-digit code (verification or password reset):
+ * 4 per 15 minutes per IP. Keeps the mail sender from being used as a weapon.
+ */
+export const codeRequestLimiter = new RateLimiter({
+  windowMs: 15 * 60_000,
+  max: 4,
+});
+
+/**
+ * Submitting a 6-digit code: 12 per 15 minutes per IP. This is the outer wall;
+ * the per-code attempt counter is the inner one, so guessing is capped both by
+ * how fast you can try and by how many tries any single code allows.
+ */
+export const codeVerifyLimiter = new RateLimiter({
+  windowMs: 15 * 60_000,
+  max: 12,
+});

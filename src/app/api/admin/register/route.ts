@@ -16,8 +16,7 @@ import { auth } from "../../../../../auth";
 import { isAllowedAdminEmail } from "../../../../lib/admin-permissions";
 import { isEmailConfigured } from "../../../../lib/email";
 import {
-  buildVerifyUrl,
-  createVerifyToken,
+  issueVerificationCode,
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "../../../../lib/admin-verification";
@@ -117,9 +116,9 @@ export async function POST(request: Request) {
     const emailEnabled = isEmailConfigured();
     const siteUrl = getSiteUrl(request);
 
-    // When email works, hold verification until the admin clicks the link.
-    // When it doesn't, there's no way to deliver a link — auto-verify instead.
-    const verification = emailEnabled ? createVerifyToken() : null;
+    // When email works, hold verification until the admin enters the code.
+    // When it doesn't, there's no way to deliver one — auto-verify instead.
+    const verification = emailEnabled ? await issueVerificationCode() : null;
 
     const admin = await prisma.adminUser.create({
       data: {
@@ -127,8 +126,9 @@ export async function POST(request: Request) {
         passwordHash,
         name,
         emailVerified: emailEnabled ? null : new Date(),
-        verifyToken: verification?.token ?? null,
+        verifyToken: verification?.hash ?? null,
         verifyTokenExpiry: verification?.expiry ?? null,
+        verifyAttempts: 0,
       },
       select: {
         id: true,
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
       await sendVerificationEmail({
         to: admin.email,
         name: admin.name,
-        verifyUrl: buildVerifyUrl(siteUrl, verification.token),
+        code: verification.code,
       });
     } else {
       // No verification step — send the welcome email right away.
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
         data: admin,
         emailSent: emailEnabled,
         message: emailEnabled
-          ? "Account created. Check your inbox to confirm your email."
+          ? "Account created. Check your inbox for a 6-digit confirmation code."
           : "Account created.",
       },
       { status: 201 },
