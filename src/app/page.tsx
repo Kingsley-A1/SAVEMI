@@ -17,7 +17,7 @@ const pillars = [
     icon: Moon,
     heading: '"He maketh me to lie down in green pastures"',
     verse: "Psalm 23:2",
-    body: "The Seventh-day Sabbath is holy rest — an invitation to be still beside quiet waters and repose in the presence of God.",
+    body: "The seventh-day Sabbath is holy rest — an invitation to be still beside quiet waters and repose in the presence of God.",
   },
   {
     label: "Renewal",
@@ -69,9 +69,10 @@ export default async function HomePage() {
             Be still, and know that He is God
           </h1>
           <p className="reflection-hero__copy">
-            SAVEMI, based in Calabar, Nigeria, studies the Seventh-day Sabbath
-            from biblical perspectives — calling weary hearts into meditation,
-            reflection, and holy rest.
+            Welcome to SAVEMI, a media ministry that explores the significance
+            of the seventh-day Sabbath from different biblical perspectives —
+            calling weary hearts to a divine rest, reflection, renewal, and
+            restoration.
           </p>
 
           <div className="reflection-hero__actions">
@@ -88,10 +89,11 @@ export default async function HomePage() {
             aria-label="Scripture foundation"
           >
             <p className="reflection-hero__verse">
-              &ldquo;Remember the sabbath day, to keep it holy.&rdquo;
+              &ldquo;Come to Me, all you who labor and are heavy laden, and I
+              will give you rest.&rdquo;
             </p>
             <cite className="reflection-hero__reference not-italic">
-              Exodus 20:8
+              Matthew 11:28 NKJV
             </cite>
           </blockquote>
 

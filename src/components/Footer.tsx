@@ -24,9 +24,7 @@ export default function Footer({
       <div className="site-container py-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-brand-primary text-sm font-semibold">
-              SAVEMI Ministry
-            </p>
+            <p className="text-brand-primary text-sm font-semibold">SAVEMI</p>
             <p className="text-brand-muted mt-0.5 text-xs">
               Sabbath Vesper Ministry — Repose · Renewal · Restoration
             </p>
@@ -76,8 +74,7 @@ export default function Footer({
         </div>
 
         <p className="text-brand-muted mt-5 text-xs">
-          &copy; {new Date().getFullYear()} SAVEMI Ministry. All rights
-          reserved.
+          &copy; {new Date().getFullYear()} SAVEMI. All rights reserved.
         </p>
       </div>
     </footer>

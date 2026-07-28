@@ -75,7 +75,7 @@ export default function MessageCard({
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
           <span className="text-brand-muted min-w-0 truncate text-xs">
-            {speaker ?? "SAVEMI Ministry"}
+            {speaker ?? "SAVEMI"}
           </span>
           <Link
             href={`/messages/${slug}`}

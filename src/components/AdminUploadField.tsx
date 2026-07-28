@@ -194,7 +194,7 @@ export default function AdminUploadField({
             : "No file selected.";
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <p className="field-label">{label}</p>
       {showUrlInput && onUrlChange ? (
         <div
@@ -226,7 +226,7 @@ export default function AdminUploadField({
       {/* Upload drop zone */}
       {source === "file" ? (
         <label
-          className="group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all"
+          className="group relative flex w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all"
           style={{
             borderColor: isDone
               ? "#16a34a"
@@ -272,18 +272,26 @@ export default function AdminUploadField({
           ) : isError ? (
             <>
               <XCircle size={28} style={{ color: "#dc2626" }} />
-              <p className="text-xs font-semibold" style={{ color: "#dc2626" }}>
+              <p
+                className="w-full min-w-0 wrap-break-word text-xs font-semibold"
+                style={{ color: "#dc2626" }}
+              >
                 {errorMessage ?? "Upload failed."}
               </p>
             </>
           ) : (
             <>
               <span style={{ color: "var(--brand-primary)" }}>{KIND_ICONS[mediaKind]}</span>
-              <div>
-                <p className="text-xs font-semibold" style={{ color: "var(--brand-primary)" }}>
+              <div className="w-full min-w-0">
+                {/* Media filenames are long and often unbroken (no spaces), so
+                    they must be allowed to break rather than widen the form. */}
+                <p
+                  className="w-full wrap-break-word text-xs font-semibold"
+                  style={{ color: "var(--brand-primary)" }}
+                >
                   {file ? file.name : "Click to browse or drag and drop"}
                 </p>
-                <p className="mt-0.5 text-xs" style={{ color: "var(--brand-text-soft)" }}>
+                <p className="mt-0.5 wrap-break-word text-xs" style={{ color: "var(--brand-text-soft)" }}>
                   {file ? "Selected. Upload starts automatically." : resolvedHelperText}
                 </p>
               </div>
@@ -407,7 +415,7 @@ export default function AdminUploadField({
       ) : null}
 
       <p
-        className="text-xs"
+        className="wrap-break-word text-xs"
         style={{ color: isError ? "#b91c1c" : isDone || externalUrl ? "#15803d" : "var(--brand-text-soft)" }}
         role="status"
         aria-live="polite"

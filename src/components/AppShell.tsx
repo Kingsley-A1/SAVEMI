@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import RouteProgress from "./ui/RouteProgress";
 import InstallPrompt from "./InstallPrompt";
+import OfflineNotice from "./OfflineNotice";
 
 interface AppShellProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ export default function AppShell({ children, header, footer }: AppShellProps) {
           <RouteProgress />
         </Suspense>
         <main className="min-h-screen">{children}</main>
+        <OfflineNotice />
         <InstallPrompt />
       </>
     );
@@ -55,6 +57,7 @@ export default function AppShell({ children, header, footer }: AppShellProps) {
       </main>
 
       {footer}
+      <OfflineNotice />
       <InstallPrompt />
     </div>
   );

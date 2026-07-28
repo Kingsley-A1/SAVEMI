@@ -261,8 +261,8 @@ export default function NewMessagePage() {
             <h2 className="mt-1 text-base font-semibold">Publish setup</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+            <div className="min-w-0 sm:col-span-2">
               <AdminUploadField
                 label={`${getMessageTypeLabel(form.type)} media`}
                 mediaKind={form.type.toLowerCase() as "video" | "audio" | "image"}
@@ -354,8 +354,8 @@ export default function NewMessagePage() {
           </summary>
 
           <div className="mt-5 space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <div className="min-w-0 sm:col-span-2">
                 <label htmlFor="summary" className="field-label">
                   Summary
                 </label>
