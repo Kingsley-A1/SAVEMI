@@ -18,6 +18,7 @@ import {
   Users,
   PanelLeftClose,
   Settings,
+  ShieldCheck,
   Globe,
   ExternalLink,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
   { href: "/admin/books", label: "Books", icon: BookOpen },
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
+  { href: "/admin/team", label: "Team", icon: Users },
   { href: "/admin/contacts", label: "Contacts", icon: Mail },
   { href: "/admin/compose", label: "Compose Email", icon: Send },
   { href: "/admin/settings", label: "Site Settings", icon: Settings },
@@ -36,7 +38,7 @@ const NAV = [
 ];
 
 const SUPER_ADMIN_NAV = [
-  { href: "/admin/admin-users", label: "Admin Users", icon: Users },
+  { href: "/admin/admin-users", label: "Admin Users", icon: ShieldCheck },
 ];
 
 export default function AdminSidebar({

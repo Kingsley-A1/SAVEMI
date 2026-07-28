@@ -15,6 +15,7 @@ import {
   Mail,
   Quote,
   ShieldCheck,
+  Users,
   X,
 } from "lucide-react";
 import SocialLinks from "./SocialLinks";
@@ -43,6 +44,7 @@ const SECTIONS: readonly SidebarSection[] = [
     links: [
       { href: "/", label: "Home", description: "Sabbath reflection", icon: Home },
       { href: "/about", label: "About", description: "Our story and mission", icon: Info },
+      { href: "/team", label: "Team", description: "The people who serve", icon: Users },
       { href: "/contact", label: "Contact", description: "Reach the ministry", icon: Mail },
     ],
   },

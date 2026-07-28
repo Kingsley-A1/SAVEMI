@@ -98,3 +98,22 @@ export async function createUniqueQuoteSlug(
     },
   });
 }
+
+export async function createUniqueTeamMemberSlug(
+  name: string,
+  currentId?: string,
+): Promise<string> {
+  const baseSlug = slugifyTitle(name);
+
+  return resolveUniqueSlug({
+    baseSlug,
+    exists: async (slug) => {
+      const record = await prisma.teamMember.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+
+      return Boolean(record && !slugBelongsToRecord(record, currentId));
+    },
+  });
+}

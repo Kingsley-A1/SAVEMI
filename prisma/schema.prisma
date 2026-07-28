@@ -132,6 +132,47 @@ model AuditLog {
   @@index([createdAt])
 }
 
+/// A person serving in the ministry, shown on the public /team page.
+/// Ordering is by role hierarchy first (see TeamRole), then sortOrder, then name.
+model TeamMember {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  name               String
+  /// Hierarchy band. ANCHOR leads the page and is rendered as the lead card.
+  role               TeamRole      @default(MEMBER)
+  /// Free-text title shown under the name, e.g. "Ministry Anchor".
+  title              String
+  bio                String?
+  photoKey           String?
+  email              String?
+  phone              String?
+  facebookUrl        String?
+  youtubeUrl         String?
+  whatsappNumber     String?
+  /// An optional verse the member is known for, shown on their card.
+  scriptureVerse     String?
+  scriptureReference String?
+  /// Manual ordering inside a role band; lower comes first.
+  sortOrder          Int           @default(0)
+  status             MessageStatus @default(DRAFT)
+  publishedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status, role, sortOrder])
+}
+
+/// Ministry role hierarchy, declared most senior first. The public page groups
+/// members in this order, so adding a value means placing it deliberately.
+enum TeamRole {
+  ANCHOR
+  PASTOR
+  ELDER
+  COORDINATOR
+  MEDIA
+  MEMBER
+}
+
 enum MessageType {
   VIDEO
   AUDIO
