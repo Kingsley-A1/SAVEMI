@@ -68,7 +68,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/images/logo.jpg",
-    apple: "/images/logo.jpg",
+    apple: "/icons/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: SITE_NAME,
   },
   alternates: {
     canonical: SITE_URL,

@@ -35,14 +35,17 @@ export type AuditAction =
   | "admin.create"
   | "admin.update"
   | "admin.delete"
-  | "settings.update";
+  | "settings.update"
+  | "email.send"
+  | "email.delete";
 
 export type AuditEntityType =
   | "Message"
   | "Book"
   | "Quote"
   | "AdminUser"
-  | "SiteSetting";
+  | "SiteSetting"
+  | "SentEmail";
 
 export interface AuditParams {
   /** The NextAuth session object from `await auth()`. */

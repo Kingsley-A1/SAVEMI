@@ -110,7 +110,7 @@ function renderLayout({
                   </td>
                   <td style="vertical-align:middle;">
                     <p style="margin:0;color:#fff8ea;font-size:23px;font-weight:700;letter-spacing:0.04em;line-height:1.1;">SAVEMI</p>
-                    <p style="margin:5px 0 0;color:rgba(241,231,201,0.75);font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;line-height:1.2;">Repose &middot; Renewal &middot; Restoration</p>
+                    <p style="margin:4px 0 0;color:rgba(241,231,201,0.68);font-size:9px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;line-height:1.2;">Repose &middot; Renewal &middot; Restoration</p>
                   </td>
                 </tr>
               </table>

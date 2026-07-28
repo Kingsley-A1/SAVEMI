@@ -7,6 +7,8 @@ import {
 } from "../../../../../lib/rate-limit";
 import { isEmailConfigured, sendEmail } from "../../../../../lib/email";
 import { renderAdminComposedEmail } from "../../../../../lib/email-templates";
+import { prisma } from "../../../../../lib/db";
+import { audit } from "../../../../../lib/audit";
 
 // Composed-email sending: 20 messages per 10 minutes per IP.
 const composeLimiter = new RateLimiter({ windowMs: 10 * 60_000, max: 20 });
@@ -139,6 +141,33 @@ export async function POST(request: Request) {
       },
       { status: 502 },
     );
+  }
+
+  try {
+    const record = await prisma.sentEmail.create({
+      data: {
+        subject,
+        bodyText,
+        scriptureVerse: scriptureVerse || null,
+        scriptureReference: scriptureReference || null,
+        recipients: uniqueRecipients,
+        sentCount: sent.length,
+        failedCount: failed.length,
+        sentByEmail: session.user.email ?? "unknown",
+        sentByName: session.user.name ?? null,
+      },
+    });
+
+    await audit({
+      session,
+      request,
+      action: "email.send",
+      entityType: "SentEmail",
+      entityId: record.id,
+      detail: { subject, recipients: uniqueRecipients.length },
+    });
+  } catch {
+    // History logging must never block delivery that already succeeded.
   }
 
   return NextResponse.json({

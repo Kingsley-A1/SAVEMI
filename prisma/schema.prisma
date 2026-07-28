@@ -162,3 +162,21 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
   updatedBy String?
 }
+
+/// History of ministry emails composed and sent by an admin from
+/// Admin -> Compose Email. Kept so admins can review or remove past sends.
+model SentEmail {
+  id                 String   @id @default(cuid())
+  subject            String
+  bodyText           String
+  scriptureVerse     String?
+  scriptureReference String?
+  recipients         String[]
+  sentCount          Int
+  failedCount        Int      @default(0)
+  sentByEmail        String
+  sentByName         String?
+  createdAt          DateTime @default(now())
+
+  @@index([createdAt])
+}

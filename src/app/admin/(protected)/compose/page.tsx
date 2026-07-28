@@ -1,10 +1,40 @@
 import { isEmailConfigured } from "../../../../lib/email";
+import { isDatabaseConfigured, prisma } from "../../../../lib/db";
 import ComposeEmailForm from "./ComposeEmailForm";
+import EmailHistoryList, { type SentEmailRow } from "./EmailHistoryList";
 
 export const dynamic = "force-dynamic";
 
-export default function ComposeEmailPage() {
+async function getHistory(): Promise<SentEmailRow[]> {
+  if (!isDatabaseConfigured()) return [];
+
+  try {
+    const rows = await prisma.sentEmail.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      subject: row.subject,
+      bodyText: row.bodyText,
+      scriptureReference: row.scriptureReference,
+      recipients: row.recipients,
+      sentCount: row.sentCount,
+      failedCount: row.failedCount,
+      sentByName: row.sentByName,
+      sentByEmail: row.sentByEmail,
+      createdAt: row.createdAt.toISOString(),
+    }));
+  } catch {
+    // If the migration has not been applied yet, compose still works.
+    return [];
+  }
+}
+
+export default async function ComposeEmailPage() {
   const emailReady = isEmailConfigured();
+  const history = await getHistory();
 
   return (
     <div className="space-y-6">
@@ -32,6 +62,8 @@ export default function ComposeEmailPage() {
       ) : null}
 
       <ComposeEmailForm emailReady={emailReady} />
+
+      <EmailHistoryList history={history} />
     </div>
   );
 }

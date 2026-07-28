@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Send, CheckCircle2 } from "lucide-react";
 import { LoadingButton } from "../../../../components/ui/Loading";
@@ -16,6 +17,7 @@ interface SendResponse {
 }
 
 export default function ComposeEmailForm({ emailReady }: ComposeEmailFormProps) {
+  const router = useRouter();
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
   const [bodyText, setBodyText] = useState("");
@@ -59,6 +61,7 @@ export default function ComposeEmailForm({ emailReady }: ComposeEmailFormProps) 
       setBodyText("");
       setScriptureVerse("");
       setScriptureReference("");
+      router.refresh();
     } catch {
       setError("The request failed. Check your connection and try again.");
     } finally {
@@ -218,7 +221,7 @@ export default function ComposeEmailForm({ emailReady }: ComposeEmailFormProps) 
               <p className="text-lg font-bold leading-tight tracking-[0.04em] text-[#fff8ea]">
                 SAVEMI
               </p>
-              <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgba(241,231,201,0.75)]">
+              <p className="mt-1 text-[9px] font-normal uppercase tracking-[0.1em] text-[rgba(241,231,201,0.68)]">
                 Repose · Renewal · Restoration
               </p>
             </div>
