@@ -11,47 +11,14 @@ import {
   TEAM_ROLE_ORDER,
   type TeamRole,
 } from "../../../../lib/team";
+// The form's shape and its blank value live in a plain module so the server
+// components that render this form can build initial values without calling
+// into a client module.
+import type { TeamMemberFormValues } from "../../../../lib/team-form";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
 
-export interface TeamMemberFormValues {
-  id?: string;
-  name: string;
-  title: string;
-  role: TeamRole;
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-  sortOrder: number;
-  bio: string;
-  photoKey: string;
-  photoUrl: string;
-  email: string;
-  phone: string;
-  facebookUrl: string;
-  youtubeUrl: string;
-  whatsappNumber: string;
-  scriptureVerse: string;
-  scriptureReference: string;
-}
-
-export function emptyTeamMember(): TeamMemberFormValues {
-  return {
-    name: "",
-    title: "",
-    role: "MEMBER",
-    status: "DRAFT",
-    sortOrder: 0,
-    bio: "",
-    photoKey: "",
-    photoUrl: "",
-    email: "",
-    phone: "",
-    facebookUrl: "",
-    youtubeUrl: "",
-    whatsappNumber: "",
-    scriptureVerse: "",
-    scriptureReference: "",
-  };
-}
+export type { TeamMemberFormValues };
 
 const STATUSES = [
   { value: "DRAFT", label: "Draft" },

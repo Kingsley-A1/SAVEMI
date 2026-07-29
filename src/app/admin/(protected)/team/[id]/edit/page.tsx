@@ -2,9 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma, isDatabaseConfigured } from "../../../../../../lib/db";
 import { resolveAssetUrl } from "../../../../../../lib/r2";
 import { isTeamRole } from "../../../../../../lib/team";
-import TeamMemberForm, {
-  type TeamMemberFormValues,
-} from "../../TeamMemberForm";
+import TeamMemberForm from "../../TeamMemberForm";
+import type { TeamMemberFormValues } from "../../../../../../lib/team-form";
 
 export const dynamic = "force-dynamic";
 

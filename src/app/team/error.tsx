@@ -2,7 +2,7 @@
 
 import ErrorState from "../../components/ui/ErrorState";
 
-export default function BooksError({
+export default function TeamError({
   error,
   reset,
 }: {
@@ -12,8 +12,8 @@ export default function BooksError({
   return (
     <ErrorState
       variant="panel"
-      title="The library could not be loaded"
-      description="We could not reach the book library just now. Try again in a moment."
+      title="The team page could not be loaded"
+      description="We could not reach the ministry team just now. Try again in a moment."
       onRetry={reset}
       digest={error.digest}
     />

@@ -1,30 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect } from "react";
+import ErrorState from "../../../components/ui/ErrorState";
 
-interface Props {
+export default function MessageDetailError({
+  error,
+  reset,
+}: {
   error: Error & { digest?: string };
-}
-
-export default function MessageDetailError({ error }: Props) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
-
+  reset: () => void;
+}) {
   return (
     <article className="mx-auto max-w-3xl">
-      <div className="site-panel p-6 text-center">
-        <p className="text-brand-primary text-sm font-semibold">
-          Could not load this message
-        </p>
-        <p className="text-brand-muted mt-1 text-sm">
-          {error.message ?? "An unexpected error occurred."}
-        </p>
-        <Link href="/messages" className="button-tertiary mt-4 inline-flex">
-          ← Back to messages
-        </Link>
-      </div>
+      <ErrorState
+        variant="panel"
+        title="This message could not be loaded"
+        description="We could not reach it just now. Try again, or go back to the message library."
+        onRetry={reset}
+        homeHref="/videos"
+        homeLabel="Back to messages"
+        digest={error.digest}
+      />
     </article>
   );
 }

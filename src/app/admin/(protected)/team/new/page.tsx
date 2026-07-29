@@ -1,4 +1,5 @@
-import TeamMemberForm, { emptyTeamMember } from "../TeamMemberForm";
+import TeamMemberForm from "../TeamMemberForm";
+import { emptyTeamMember } from "../../../../../lib/team-form";
 
 export const dynamic = "force-dynamic";
 
