@@ -450,6 +450,30 @@ The browser uploads directly to a presigned R2 `PUT` URL. The bucket CORS policy
 
 Origins are matched exactly: scheme, host, and port all count. `savemionline.org` and `www.savemionline.org` are two different origins, and a Vercel preview deployment is a third. Add each one that will be used.
 
+### Telling CORS Apart From A Dropped Connection
+
+A browser reports every network-layer upload failure identically: XHR fires
+`onerror` with `status === 0`. A refused origin and a mobile connection dropping
+mid-transfer are indistinguishable from the error alone, but they need opposite
+responses. One signal separates them:
+
+| Cause | Bytes sent before the error |
+| --- | --- |
+| CORS / refused before sending | `0` — the browser never sent the body |
+| Connection dropped mid-transfer | `> 0` — progress fired, then it died |
+
+`src/lib/admin-upload-client.ts` records bytes sent per attempt and uses this:
+
+- **Every** network failure is retried, with capped exponential backoff and a
+  wait for `navigator.onLine` when the device is offline. Classification only
+  decides what to *report* once attempts are spent — never whether to retry.
+- A refused origin is reported only when no attempt sent a byte **and** nothing
+  in the transfer has yet succeeded. Once one multipart part is in, the origin
+  is proven allowed and a later failure is never attributed to CORS.
+
+The practical tell for an operator: a setup fault fails **every** time, while a
+connection fault fails **intermittently**. "Some uploads work" rules out CORS.
+
 ### Confirming It Works
 
 Admin → Health → **Upload check** runs the whole path and reports which half is broken:

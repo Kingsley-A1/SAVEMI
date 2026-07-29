@@ -32,6 +32,12 @@ interface AdminUploadFieldProps {
   successLabel?: string;
   helperText?: string;
   errorMessage?: string;
+  /**
+   * Live narration from the upload client, e.g. "Retrying part 12 of 61".
+   * A long transfer over a mobile link retries silently otherwise, and a
+   * progress bar that stops moving looks broken.
+   */
+  statusMessage?: string;
   maxSizeBytes?: number;
   onFileChange: (file: File | null) => void;
   onUrlChange?: (url: string) => void;
@@ -121,6 +127,7 @@ export default function AdminUploadField({
   successLabel = "Uploaded successfully",
   helperText,
   errorMessage,
+  statusMessage,
   maxSizeBytes,
   onFileChange,
   onUrlChange,
@@ -182,7 +189,8 @@ export default function AdminUploadField({
   }
 
   const statusText = isUploading
-    ? `Uploading ${Math.max(0, Math.min(100, Math.round(progress)))}%`
+    ? (statusMessage ??
+      `Uploading ${Math.max(0, Math.min(100, Math.round(progress)))}%`)
     : isDone
       ? successLabel
       : isError
@@ -258,6 +266,14 @@ export default function AdminUploadField({
               <p className="text-xs font-medium" style={{ color: "var(--brand-primary)" }}>
                 Uploading {Math.max(0, Math.min(100, Math.round(progress)))}%
               </p>
+              {statusMessage ? (
+                <p
+                  className="max-w-xs text-xs leading-5"
+                  style={{ color: "var(--brand-text-soft)" }}
+                >
+                  {statusMessage}
+                </p>
+              ) : null}
             </>
           ) : isDone ? (
             <>

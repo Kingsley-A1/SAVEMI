@@ -21,6 +21,8 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** Live narration from the upload client, e.g. a retry notice. */
+  status?: string;
 }
 
 interface SavedMessage {
@@ -111,7 +113,9 @@ export default function NewMessagePage() {
         file: uploadedFile,
         fileName: `message-${field}-${Date.now()}-${uploadedFile.name}`,
         onProgress: (progress) =>
-          setSlot({ state: "uploading", progress, error: "" }),
+          setSlot((slot) => ({ ...slot, state: "uploading", progress, error: "" })),
+        onStatus: (status) =>
+          setSlot((slot) => ({ ...slot, status: status.message })),
       });
 
       setKey(result.objectKey);
@@ -278,6 +282,7 @@ export default function NewMessagePage() {
                 externalUrl={externalMediaUrl}
                 uploadState={mediaUpload.state}
                 progress={mediaUpload.progress}
+                statusMessage={mediaUpload.status}
                 showUrlInput={true}
                 urlPlaceholder="https://youtube.com/watch?v=... or https://facebook.com/.../videos/..."
                 successLabel="Media uploaded"
@@ -452,6 +457,7 @@ export default function NewMessagePage() {
                 externalUrl={audioDownloadUrl}
                 uploadState={audioUpload.state}
                 progress={audioUpload.progress}
+                statusMessage={audioUpload.status}
                 showUrlInput={true}
                 urlPlaceholder="https://example.com/message-audio.mp3"
                 successLabel="Audio download ready"
@@ -485,6 +491,7 @@ export default function NewMessagePage() {
               externalUrl={coverImageUrl}
               uploadState={coverUpload.state}
               progress={coverUpload.progress}
+                statusMessage={coverUpload.status}
               showUrlInput={true}
               urlPlaceholder="https://example.com/cover-image.jpg"
               successLabel="Cover uploaded"

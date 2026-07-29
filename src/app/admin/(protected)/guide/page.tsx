@@ -213,7 +213,7 @@ const settingsRows: readonly Row[] = [
 const mediaRows: readonly Row[] = [
   {
     label: "When an upload fails",
-    value: "Platform Health has an Upload check that tests the server and the browser separately, so the failing half names itself instead of leaving you with \u201cupload failed\u201d. Run it before reporting an upload problem.",
+    value: "If it fails every single time, the setup is wrong: run the Upload check in Platform Health, which tests the server and the browser separately and names the failing half. If it fails only sometimes, it is the connection — large files are sent in parts and each part is retried on its own, so let it work through the interruption.",
   },
   {
     label: "Uploading from your device",
@@ -313,8 +313,8 @@ const breakFixRows: readonly Row[] = [
     value: "Confirm the record is Published, saved correctly, and that the public address did not change after a title edit.",
   },
   {
-    label: "Upload fails",
-    value: "Open Platform Health and run the Upload check. It tests the server and the browser separately and names the half that is broken. A server pass with a browser failure means the storage bucket does not yet allow uploads from this website address, and the check prints the exact address for engineering to add.",
+    label: "Upload fails sometimes, but not always",
+    value: "That pattern points at the connection, not the setup. A large file is sent in parts, and a mobile network that drops for a moment interrupts one of them. The upload now waits, reconnects, and re-sends only the affected part, so let it run. If it still gives up, use Retry upload — completed parts are not repeated.",
   },
   {
     label: "Health warning",
