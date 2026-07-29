@@ -237,25 +237,110 @@ export default function AdminUploadField({
         </div>
       ) : null}
 
+      {/* A failed upload gets its own panel: the explanation and the way out
+          of it belong together, and Retry cannot live inside the drop-zone
+          label without also re-opening the file picker. */}
+      {source === "file" && isError ? (
+        <div
+          className="w-full min-w-0 rounded-lg border px-4 py-4"
+          style={{
+            borderColor: "var(--state-attention-border)",
+            background: "var(--state-attention-surface)",
+          }}
+        >
+          <div className="flex gap-3">
+            <AlertTriangle
+              size={18}
+              className="mt-0.5 shrink-0"
+              style={{ color: "var(--state-attention)" }}
+              aria-hidden="true"
+            />
+            <div className="min-w-0 flex-1">
+              <p
+                className="text-xs font-semibold wrap-break-word"
+                style={{ color: "var(--state-attention)" }}
+              >
+                {errorMessage ?? "The upload did not finish."}
+              </p>
+
+              {errorRemedy ? (
+                <p
+                  className="mt-1.5 text-xs leading-5 wrap-break-word"
+                  style={{ color: "var(--brand-text-soft)" }}
+                >
+                  {errorRemedy}
+                </p>
+              ) : null}
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {onRetry && file ? (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    className="button-primary gap-1.5"
+                  >
+                    <RotateCcw size={13} aria-hidden="true" />
+                    Retry upload
+                  </button>
+                ) : null}
+
+                {/* Its own label, so picking a different file never collides
+                    with the retry action. */}
+                <label className="button-tertiary cursor-pointer gap-1.5">
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept={accept}
+                    onChange={(e) =>
+                      handleFileSelect(e.target.files?.[0] ?? null)
+                    }
+                  />
+                  <Upload size={13} aria-hidden="true" />
+                  Choose a different file
+                </label>
+              </div>
+
+              {errorDetails ? (
+                /* Diagnostics stay available without putting jargon in front
+                   of someone who just wants to publish a sermon. */
+                <details className="mt-3 min-w-0">
+                  <summary
+                    className="cursor-pointer text-xs font-medium"
+                    style={{ color: "var(--brand-text-soft)" }}
+                  >
+                    Technical details
+                  </summary>
+                  <code
+                    className="mt-1.5 block min-w-0 rounded px-2 py-1.5 font-mono text-[0.68rem] leading-5 wrap-break-word"
+                    style={{
+                      background: "rgba(156,81,71,0.09)",
+                      color: "var(--state-attention)",
+                    }}
+                  >
+                    {errorDetails}
+                  </code>
+                </details>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Upload drop zone */}
-      {source === "file" ? (
+      {source === "file" && !isError ? (
         <label
           className="group relative flex w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all"
           style={{
             borderColor: isDone
               ? "var(--state-success-border)"
-              : isError
-                ? "var(--state-attention-edge)"
-                : isSelected
-                  ? "var(--brand-primary)"
-                  : "rgba(10,79,60,0.25)",
+              : isSelected
+                ? "var(--brand-primary)"
+                : "rgba(10,79,60,0.25)",
             background: isDone
               ? "var(--state-success-surface)"
-              : isError
-                ? "var(--state-attention-surface)"
-                : isSelected
-                  ? "rgba(10,79,60,0.05)"
-                  : "rgba(10,79,60,0.02)",
+              : isSelected
+                ? "rgba(10,79,60,0.05)"
+                : "rgba(10,79,60,0.02)",
           }}
         >
           <input
@@ -290,49 +375,6 @@ export default function AdminUploadField({
               <p className="text-xs" style={{ color: "var(--brand-text-soft)" }}>
                 Click to replace
               </p>
-            </>
-          ) : isError ? (
-            <>
-              <AlertTriangle
-                size={24}
-                style={{ color: "var(--state-attention)" }}
-                aria-hidden="true"
-              />
-              <p
-                className="w-full min-w-0 text-left text-xs font-semibold wrap-break-word"
-                style={{ color: "var(--state-attention)" }}
-              >
-                {errorMessage ?? "The upload did not finish."}
-              </p>
-              {errorRemedy ? (
-                <p
-                  className="w-full min-w-0 text-left text-xs leading-5 wrap-break-word"
-                  style={{ color: "var(--brand-text-soft)" }}
-                >
-                  {errorRemedy}
-                </p>
-              ) : null}
-              {errorDetails ? (
-                /* Diagnostics stay available without putting jargon in front
-                   of someone who just wants to publish a sermon. */
-                <details className="w-full min-w-0 text-left">
-                  <summary
-                    className="cursor-pointer text-xs font-medium"
-                    style={{ color: "var(--brand-text-soft)" }}
-                  >
-                    Technical details
-                  </summary>
-                  <code
-                    className="mt-1.5 block w-full min-w-0 rounded px-2 py-1.5 font-mono text-[0.68rem] leading-5 wrap-break-word"
-                    style={{
-                      background: "var(--state-attention-surface)",
-                      color: "var(--state-attention)",
-                    }}
-                  >
-                    {errorDetails}
-                  </code>
-                </details>
-              ) : null}
             </>
           ) : (
             <>
@@ -419,17 +461,6 @@ export default function AdminUploadField({
             </p>
           </div>
         </div>
-      ) : null}
-
-      {isError && onRetry && file ? (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="button-tertiary inline-flex items-center gap-1.5"
-        >
-          <RotateCcw size={13} />
-          Retry upload
-        </button>
       ) : null}
 
       {isUploading ? (

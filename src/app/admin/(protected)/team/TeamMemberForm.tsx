@@ -86,6 +86,8 @@ export default function TeamMemberForm({
     } catch (err) {
       const display = toUploadErrorDisplay(err);
       const message = display.message;
+      // Shown by the field itself — deliberately not mirrored into the
+      // form-level banner, which is for problems with saving the record.
       const failure = {
         state: "error" as const,
         progress: 0,
@@ -94,7 +96,6 @@ export default function TeamMemberForm({
         technical: display.technical,
       };
       setPhotoUpload(failure);
-      setError(message);
     }
   }
 
@@ -259,15 +260,14 @@ export default function TeamMemberForm({
               successLabel="Photo uploaded"
               helperText="A clear head-and-shoulders portrait works best"
               errorMessage={photoUpload.error}
-                errorRemedy={photoUpload.remedy}
-                errorDetails={photoUpload.technical}
+              errorRemedy={photoUpload.remedy}
+              errorDetails={photoUpload.technical}
               onFileChange={handlePhotoChange}
               onRetry={() => {
                 if (photoFile) void handlePhotoChange(photoFile);
               }}
               onValidationError={(message) => {
                 setPhotoUpload({ state: "error", progress: 0, error: message });
-                setError(message);
               }}
             />
           </div>

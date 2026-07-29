@@ -131,6 +131,8 @@ export default function NewMessagePage() {
     } catch (err) {
       const display = toUploadErrorDisplay(err);
       const message = display.message;
+      // Shown by the field itself — deliberately not mirrored into the
+      // form-level banner, which is for problems with saving the record.
       const failure = {
         state: "error" as const,
         progress: 0,
@@ -139,7 +141,6 @@ export default function NewMessagePage() {
         technical: display.technical,
       };
       setSlot(failure);
-      setError(message);
       return null;
     }
   }
@@ -318,7 +319,6 @@ export default function NewMessagePage() {
                 }}
                 onValidationError={(message) => {
                   setMediaUpload({ state: "error", progress: 0, error: message });
-                  setError(message);
                 }}
               />
             </div>
@@ -496,7 +496,6 @@ export default function NewMessagePage() {
                 }}
                 onValidationError={(message) => {
                   setAudioUpload({ state: "error", progress: 0, error: message });
-                  setError(message);
                 }}
               />
             ) : null}
@@ -515,8 +514,8 @@ export default function NewMessagePage() {
               urlPlaceholder="https://example.com/cover-image.jpg"
               successLabel="Cover uploaded"
               errorMessage={coverUpload.error}
-                errorRemedy={coverUpload.remedy}
-                errorDetails={coverUpload.technical}
+              errorRemedy={coverUpload.remedy}
+              errorDetails={coverUpload.technical}
               onFileChange={handleCoverFileChange}
               onUrlChange={(url) => {
                 setCoverImageUrl(url);
@@ -531,7 +530,6 @@ export default function NewMessagePage() {
               }}
               onValidationError={(message) => {
                 setCoverUpload({ state: "error", progress: 0, error: message });
-                setError(message);
               }}
             />
           </div>

@@ -604,8 +604,8 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
               urlPlaceholder="https://example.com/cover-image.jpg"
               successLabel={coverKey ? "Current cover linked" : "Cover uploaded"}
               errorMessage={coverUpload.error}
-                errorRemedy={coverUpload.remedy}
-                errorDetails={coverUpload.technical}
+              errorRemedy={coverUpload.remedy}
+              errorDetails={coverUpload.technical}
               onFileChange={handleCoverFileChange}
               onUrlChange={(url) => {
                 setCoverImageUrl(url);

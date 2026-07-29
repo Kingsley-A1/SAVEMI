@@ -75,12 +75,15 @@ export default function NewQuotePage() {
       setImageKey(result.objectKey);
       setUploadState({ state: "done", progress: 100, error: "" });
     } catch (err) {
+      const display = toUploadErrorDisplay(err);
+      // Shown by the field itself — deliberately not mirrored into
+      // the form banner, which is for problems saving the record.
       setUploadState({
         state: "error",
         progress: 0,
-        error: toUploadErrorDisplay(err).message,
-        remedy: toUploadErrorDisplay(err).remedy,
-        technical: toUploadErrorDisplay(err).technical,
+        error: display.message,
+        remedy: display.remedy,
+        technical: display.technical,
       });
     }
   }
@@ -149,8 +152,8 @@ export default function NewQuotePage() {
             urlPlaceholder="https://example.com/quote-image.jpg"
             successLabel="Image uploaded"
             errorMessage={uploadState.error}
-                errorRemedy={uploadState.remedy}
-                errorDetails={uploadState.technical}
+            errorRemedy={uploadState.remedy}
+            errorDetails={uploadState.technical}
             onFileChange={(file) => {
               setImageFile(file);
               setImageUrl("");
@@ -171,7 +174,6 @@ export default function NewQuotePage() {
             }}
             onValidationError={(message) => {
               setUploadState({ state: "error", progress: 0, error: message });
-              setError(message);
             }}
           />
         </div>

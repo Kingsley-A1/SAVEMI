@@ -119,12 +119,15 @@ export default function EditBookForm({ book }: { book: BookData }) {
       setCoverKey(result.objectKey);
       setUploadState({ state: "done", progress: 100, error: "" });
     } catch (err) {
+      const display = toUploadErrorDisplay(err);
+      // Shown by the field itself — deliberately not mirrored into
+      // the form banner, which is for problems saving the record.
       setUploadState({
         state: "error",
         progress: 0,
-        error: toUploadErrorDisplay(err).message,
-        remedy: toUploadErrorDisplay(err).remedy,
-        technical: toUploadErrorDisplay(err).technical,
+        error: display.message,
+        remedy: display.remedy,
+        technical: display.technical,
       });
     }
   }
@@ -143,12 +146,15 @@ export default function EditBookForm({ book }: { book: BookData }) {
       setBookFileName(file.name);
       setBookUploadState({ state: "done", progress: 100, error: "" });
     } catch (err) {
+      const display = toUploadErrorDisplay(err);
+      // Shown by the field itself — deliberately not mirrored into
+      // the form banner, which is for problems saving the record.
       setBookUploadState({
         state: "error",
         progress: 0,
-        error: toUploadErrorDisplay(err).message,
-        remedy: toUploadErrorDisplay(err).remedy,
-        technical: toUploadErrorDisplay(err).technical,
+        error: display.message,
+        remedy: display.remedy,
+        technical: display.technical,
       });
     }
   }
@@ -253,8 +259,8 @@ export default function EditBookForm({ book }: { book: BookData }) {
             urlPlaceholder="https://example.com/book-cover.jpg"
             successLabel={coverKey ? "Current cover linked" : "Cover image uploaded"}
             errorMessage={uploadState.error}
-                errorRemedy={uploadState.remedy}
-                errorDetails={uploadState.technical}
+            errorRemedy={uploadState.remedy}
+            errorDetails={uploadState.technical}
             onFileChange={(file) => {
               setCoverFile(file);
               setCoverImageUrl("");
@@ -275,7 +281,6 @@ export default function EditBookForm({ book }: { book: BookData }) {
             }}
             onValidationError={(message) => {
               setUploadState({ state: "error", progress: 0, error: message });
-              setError(message);
             }}
           />
         </div>
@@ -383,7 +388,6 @@ export default function EditBookForm({ book }: { book: BookData }) {
                 }}
                 onValidationError={(message) => {
                   setBookUploadState({ state: "error", progress: 0, error: message });
-                  setError(message);
                 }}
               />
               {bookKey ? (
