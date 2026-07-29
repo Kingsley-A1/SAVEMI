@@ -20,9 +20,11 @@ export default function AboutPage() {
         <article className="site-panel p-4 sm:p-5">
           <h2 className="eyebrow text-brand-primary">Mission</h2>
           <p className="text-brand-muted mt-2 text-sm leading-6">
-            Present biblically grounded seventh-day Sabbath teachings and
-            Reflection at Eventide resources that help believers find repose,
-            renewal, and restoration in the presence of God.
+            Present a more nuanced, biblically grounded teaching on the
+            significance of the seventh-day Sabbath, along with Reflections at
+            Eventide and other resources that help believers remember,
+            delight in, and cherish the invitation to rest in the presence of
+            God.
           </p>
         </article>
         <article className="site-panel p-4 sm:p-5">
