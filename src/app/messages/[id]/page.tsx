@@ -6,6 +6,8 @@ import MediaPlayer from "../../../components/MediaPlayer";
 import MessageDownloadActions from "../../../components/MessageDownloadActions";
 import MediaTypeBadge from "../../../components/MediaTypeBadge";
 import { isEmbeddableUrl } from "../../../lib/embed";
+import { buildShareMetadata } from "../../../lib/share";
+import ShareButton from "../../../components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,16 +35,15 @@ export async function generateMetadata({
     return { title: "Message Not Found" };
   }
 
-  return {
+  // The message's own cover becomes the preview card in WhatsApp, X, and
+  // anywhere else the link is pasted.
+  return buildShareMetadata({
     title: message.title,
     description: message.summary,
-    openGraph: {
-      title: `${message.title} | SAVEMI`,
-      description: message.summary,
-      type: "article",
-    },
-    alternates: { canonical: `/messages/${id}` },
-  };
+    path: `/messages/${message.slug}`,
+    imageUrl: message.coverImageUrl,
+    imageAlt: `Cover image for ${message.title}`,
+  });
 }
 
 export default async function MessageDetail({
@@ -115,19 +116,30 @@ export default async function MessageDetail({
         </div>
       )}
 
-      {message.description ? (
-        <div className="site-panel p-4 sm:p-6">
-          <h2 className="eyebrow text-brand-primary">Overview</h2>
-          <p className="text-brand-muted mt-2 text-sm leading-6">
-            {message.description}
-          </p>
+      {/* Overview and actions. Sharing is always offered, even for a message
+          that carries no written overview. */}
+      <div className="site-panel p-4 sm:p-6">
+        {message.description ? (
+          <>
+            <h2 className="eyebrow text-brand-primary">Overview</h2>
+            <p className="text-brand-muted mb-4 mt-2 text-sm leading-6">
+              {message.description}
+            </p>
+          </>
+        ) : null}
 
+        <div className="flex flex-wrap items-start gap-2">
           <MessageDownloadActions
             type={message.type}
             title={message.title}
             mediaDownloadHref={!isEmbed ? message.downloadHref : null}
             audioDownloadHref={message.audioDownloadHref}
             originalUrl={isEmbed ? message.externalMediaUrl : null}
+          />
+          <ShareButton
+            path={`/messages/${message.slug}`}
+            title={message.title}
+            summary={message.summary}
           />
 
           {/* For embeds, link to the original platform */}
@@ -136,13 +148,13 @@ export default async function MessageDetail({
               href={message.externalMediaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="button-tertiary mt-4 inline-flex"
+              className="button-tertiary inline-flex"
             >
               Watch on original platform ↗
             </a>
           ) : null}
         </div>
-      ) : null}
+      </div>
 
       <Link
         href={libraryLink.href}

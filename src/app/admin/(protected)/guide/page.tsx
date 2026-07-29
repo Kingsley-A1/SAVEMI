@@ -224,6 +224,14 @@ const mediaRows: readonly Row[] = [
     value: "Upload the book itself — PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT. The external download link is optional and only used when no file was uploaded; an uploaded file always takes precedence.",
   },
   {
+    label: "Cover images are the link preview",
+    value: "The cover you upload is what WhatsApp, X, and Facebook show when someone shares the link. Give every message, book, and quote a cover. A landscape image around 1200 by 630 and under 300KB previews best; anything much larger may be skipped by WhatsApp. An item with no cover falls back to the ministry card.",
+  },
+  {
+    label: "Sharing",
+    value: "Every message, book, and quote carries a Share button. On a phone it opens the device's own share sheet; on a computer it offers WhatsApp, X, Facebook, and Copy link.",
+  },
+  {
     label: "One-click downloads",
     value: "A visitor clicking Download saves the file immediately. They are never taken to a storage address, and never have to click a second time.",
   },

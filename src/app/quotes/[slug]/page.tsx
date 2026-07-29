@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getQuoteBySlug } from "../../../lib/quotes";
+import { buildShareMetadata } from "../../../lib/share";
+import ShareButton from "../../../components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -18,19 +20,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Quote Not Found" };
   }
 
-  return {
+  return buildShareMetadata({
     title: quote.title,
-    description: quote.text.slice(0, 155),
-    openGraph: {
-      title: `${quote.title} | SAVEMI`,
-      description: quote.text.slice(0, 155),
-      type: "article",
-      ...(quote.imageUrl
-        ? { images: [{ url: quote.imageUrl, alt: quote.title }] }
-        : {}),
-    },
-    alternates: { canonical: `/quotes/${slug}` },
-  };
+    description: quote.text,
+    path: `/quotes/${slug}`,
+    imageUrl: quote.imageUrl,
+    imageAlt: quote.title,
+  });
 }
 
 export default async function QuoteDetailPage({ params }: Props) {
@@ -104,6 +100,13 @@ export default async function QuoteDetailPage({ params }: Props) {
             </div>
           ) : null}
         </dl>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <ShareButton
+            path={`/quotes/${quote.slug}`}
+            title={quote.title}
+            summary={quote.text}
+          />
+        </div>
       </div>
 
       <Link

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Download } from "lucide-react";
 import { getBookBySlug } from "../../../lib/books";
+import { buildShareMetadata } from "../../../lib/share";
+import ShareButton from "../../../components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -19,19 +21,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Book Not Found" };
   }
 
-  return {
+  return buildShareMetadata({
     title: book.title,
-    description: book.tagline || book.description?.slice(0, 155),
-    openGraph: {
-      title: `${book.title} | SAVEMI`,
-      description: book.tagline || book.description?.slice(0, 155),
-      type: "article",
-      ...(book.coverImageUrl
-        ? { images: [{ url: book.coverImageUrl, alt: book.title }] }
-        : {}),
-    },
-    alternates: { canonical: `/books/${slug}` },
-  };
+    description: book.tagline || book.description || "",
+    path: `/books/${slug}`,
+    imageUrl: book.coverImageUrl,
+    imageAlt: `Cover of ${book.title}`,
+  });
 }
 
 export default async function BookDetailPage({ params }: Props) {
@@ -156,6 +152,11 @@ export default async function BookDetailPage({ params }: Props) {
                   {book.priceLabel ? `Buy — ${book.priceLabel}` : "Purchase Book"}
                 </a>
               ) : null}
+              <ShareButton
+                path={`/books/${book.slug}`}
+                title={book.title}
+                summary={book.tagline}
+              />
               <Link href="/books" className="button-tertiary">
                 ← Back to Library
               </Link>

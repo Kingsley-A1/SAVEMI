@@ -5,9 +5,18 @@ import AppShell from "../components/AppShell";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getSiteSettings, toSocialLinks } from "../lib/site-settings";
+import { getSiteUrl } from "../lib/site-url";
+import {
+  DEFAULT_SHARE_IMAGE,
+  DEFAULT_SHARE_IMAGE_HEIGHT,
+  DEFAULT_SHARE_IMAGE_WIDTH,
+} from "../lib/share";
 import { auth } from "../../auth";
 
-const SITE_URL = "https://savemi.org";
+// Drives `metadataBase`, which is what turns a site-relative OG image path
+// into the absolute URL WhatsApp and X require. It must match the domain the
+// site is actually served from, so it is read from the environment first.
+const SITE_URL = getSiteUrl();
 const SITE_NAME = "SAVEMI — Sabbath Vesper Ministry";
 const SITE_DESCRIPTION =
   "Sabbath Vesper Ministry (SAVEMI) in Calabar, Nigeria, sharing biblical reflection on the seventh-day Sabbath through teaching, worship, and Reflection at Eventide.";
@@ -44,10 +53,10 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: [
       {
-        url: "/images/og-default.jpg",
-        width: 1200,
-        height: 630,
-        alt: "SAVEMI — Sabbath Vesper Ministry",
+        url: DEFAULT_SHARE_IMAGE,
+        width: DEFAULT_SHARE_IMAGE_WIDTH,
+        height: DEFAULT_SHARE_IMAGE_HEIGHT,
+        alt: SITE_NAME,
       },
     ],
   },
@@ -55,7 +64,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: ["/images/og-default.jpg"],
+    images: [DEFAULT_SHARE_IMAGE],
   },
   robots: {
     index: true,

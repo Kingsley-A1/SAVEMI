@@ -72,7 +72,7 @@ export default function MessageDownloadActions({
       <DownloadLink
         href={mediaDownloadHref}
         ariaLabel={`${downloadLabel(type)} for ${title}`}
-        className="button-tertiary mt-4 inline-flex items-center gap-1.5"
+        className="button-tertiary inline-flex items-center gap-1.5"
       >
         <Download size={14} aria-hidden="true" />
         {downloadLabel(type)}
@@ -84,14 +84,14 @@ export default function MessageDownloadActions({
     "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-[rgba(10,79,60,0.06)] focus:bg-[rgba(10,79,60,0.06)] focus:outline-none";
 
   return (
-    <details className="group mt-4 w-full max-w-xs">
+    <details className="group relative">
       <summary className="button-tertiary inline-flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden">
         <Download size={14} aria-hidden="true" />
         Download
       </summary>
 
       <div
-        className="mt-2 overflow-hidden rounded-lg border bg-white p-1.5 shadow-sm"
+        className="absolute left-0 z-20 mt-2 w-56 overflow-hidden rounded-lg border bg-white p-1.5 shadow-lg"
         style={{ borderColor: "var(--brand-border)" }}
       >
         {audioDownloadHref ? (

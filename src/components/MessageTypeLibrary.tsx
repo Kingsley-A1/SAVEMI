@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import type { Message, MessageType } from "../lib/messages";
 import MediaTypeBadge from "./MediaTypeBadge";
+import ShareButton from "./ShareButton";
 
 interface MessageTypeLibraryConfig {
   type: MessageType;
@@ -220,6 +221,11 @@ function MessageTypeCard({
                 Download
               </a>
             ) : null}
+            <ShareButton
+              path={detailHref}
+              title={message.title}
+              summary={message.summary}
+            />
           </div>
         </div>
       </div>
