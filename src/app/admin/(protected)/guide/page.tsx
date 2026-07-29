@@ -212,6 +212,10 @@ const settingsRows: readonly Row[] = [
 
 const mediaRows: readonly Row[] = [
   {
+    label: "When an upload fails",
+    value: "Platform Health has an Upload check that tests the server and the browser separately, so the failing half names itself instead of leaving you with \u201cupload failed\u201d. Run it before reporting an upload problem.",
+  },
+  {
     label: "Uploading from your device",
     value: "Messages, covers, quote images, and book files are all chosen straight from your computer or phone. Large files upload in parts, so a dropped connection re-sends only the piece that failed.",
   },
@@ -302,7 +306,7 @@ const breakFixRows: readonly Row[] = [
   },
   {
     label: "Upload fails",
-    value: "Check R2 credentials, bucket permissions, file type, file size, and CORS. Browser uploads require PUT from the website origin.",
+    value: "Open Platform Health and run the Upload check. It tests the server and the browser separately and names the half that is broken. A server pass with a browser failure means the storage bucket does not yet allow uploads from this website address, and the check prints the exact address for engineering to add.",
   },
   {
     label: "Health warning",

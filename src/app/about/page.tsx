@@ -1,3 +1,5 @@
+import { BookOpen } from "lucide-react";
+
 export default function AboutPage() {
   return (
     <section className="space-y-4">
@@ -16,17 +18,23 @@ export default function AboutPage() {
         </p>
       </div>
 
+      {/* The mission is the ministry's charge, so it is set apart from the
+          reference cards below: full width, deep green, and given room. */}
+      <article className="mission-card">
+        <p className="eyebrow mission-card__eyebrow">Our Mission</p>
+        <p className="mission-card__statement">
+          Present a more nuanced, biblically grounded teaching on the
+          significance of the seventh-day Sabbath, along with Reflections at
+          Eventide and other resources that help believers remember, delight
+          in, and cherish the invitation to rest in the presence of God.
+        </p>
+        <p className="mission-card__seal">
+          <BookOpen size={13} aria-hidden="true" />
+          Repose · Renewal · Restoration
+        </p>
+      </article>
+
       <div className="grid gap-3 sm:grid-cols-2">
-        <article className="site-panel p-4 sm:p-5">
-          <h2 className="eyebrow text-brand-primary">Mission</h2>
-          <p className="text-brand-muted mt-2 text-sm leading-6">
-            Present a more nuanced, biblically grounded teaching on the
-            significance of the seventh-day Sabbath, along with Reflections at
-            Eventide and other resources that help believers remember,
-            delight in, and cherish the invitation to rest in the presence of
-            God.
-          </p>
-        </article>
         <article className="site-panel p-4 sm:p-5">
           <h2 className="eyebrow text-brand-primary">Anchor</h2>
           <p className="text-brand-muted mt-2 text-sm leading-6">

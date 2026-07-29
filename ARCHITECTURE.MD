@@ -424,7 +424,7 @@ video/2026/06/4df5c4ea-2c8a-44ce-sabbath-reflection.mp4
 
 The browser uploads directly to a presigned R2 `PUT` URL. The bucket CORS policy must therefore allow the application origins, `PUT`, and the request headers sent by the browser upload. A `GET`-only policy is not enough; it allows reads but blocks direct uploads.
 
-Current production-ready policy:
+**`AllowedOrigins` must list every address the admin office is actually served from.** An origin that is missing here fails the browser's preflight, and the upload dies before it reaches R2 — the browser reports only a network error, never an HTTP status. This is the single most common cause of "the upload failed" in the admin office.
 
 ```json
 [
@@ -434,6 +434,8 @@ Current production-ready policy:
       "http://localhost:3004",
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3004",
+      "https://savemionline.org",
+      "https://www.savemionline.org",
       "https://savemi.vercel.app",
       "https://savemi.org",
       "https://www.savemi.org"
@@ -446,7 +448,16 @@ Current production-ready policy:
 ]
 ```
 
-This policy has been applied and verified with a browser-equivalent preflight from `http://localhost:3004` and a signed `PUT` upload probe. The preflight returned `204`, the upload returned `200`, and the temporary object was deleted.
+Origins are matched exactly: scheme, host, and port all count. `savemionline.org` and `www.savemionline.org` are two different origins, and a Vercel preview deployment is a third. Add each one that will be used.
+
+### Confirming It Works
+
+Admin → Health → **Upload check** runs the whole path and reports which half is broken:
+
+1. The server writes, reads, and deletes a test object. This proves `CF_ACCOUNT_ID`, `CF_ACCESS_KEY_ID`, `CF_SECRET_ACCESS_KEY`, and `CF_BUCKET` are correct.
+2. The browser then PUTs directly to a presigned URL, exactly as a real upload does. This is the half CORS governs.
+
+A server pass with a browser failure means the bucket policy is missing the origin, and the check prints the exact address to add.
 
 ## Contact Flow
 

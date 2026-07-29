@@ -163,6 +163,51 @@
     @apply mt-12 hidden items-center gap-2 text-[0.7rem] font-medium uppercase tracking-[0.2em] sm:inline-flex;
   }
 
+  /* ── Mission statement ───────────────────────────────── */
+  /* The ministry's charge, not another fact card: deep green, generous, and
+     weighted so the eye lands here first on the About page. */
+  .mission-card {
+    background:
+      linear-gradient(135deg, var(--brand-primary-deep) 0%, var(--brand-primary) 100%);
+    color: #fff8ea;
+    box-shadow: 0 8px 30px rgba(6, 55, 39, 0.18);
+    @apply relative overflow-hidden rounded-lg px-6 py-8 sm:px-10 sm:py-10;
+  }
+
+  /* An open-book watermark, barely there — presence without decoration. */
+  .mission-card::after {
+    content: "";
+    position: absolute;
+    inset-block: -20%;
+    right: -6%;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    background: radial-gradient(
+      circle,
+      rgba(134, 239, 172, 0.14) 0%,
+      rgba(134, 239, 172, 0) 68%
+    );
+    pointer-events: none;
+  }
+
+  .mission-card__eyebrow {
+    color: rgba(190, 242, 214, 0.82);
+    @apply relative z-10;
+  }
+
+  .mission-card__statement {
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    text-wrap: pretty;
+    @apply relative z-10 mt-4 max-w-3xl text-lg font-medium leading-8 sm:text-xl sm:leading-9;
+  }
+
+  .mission-card__seal {
+    border-top: 1px solid rgba(241, 231, 201, 0.22);
+    color: rgba(190, 242, 214, 0.78);
+    @apply relative z-10 mt-7 inline-flex items-center gap-2 pt-4 text-xs font-semibold uppercase tracking-[0.18em];
+  }
+
   /* ── Buttons ─────────────────────────────────────────── */
   .button-primary {
     @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium tracking-wide transition-opacity duration-150 hover:opacity-85 active:opacity-75;

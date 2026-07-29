@@ -5,6 +5,7 @@ import {
 import { getConfiguredSuperAdminEmail } from "../../../../lib/admin-permissions";
 import { isDatabaseConfigured, prisma } from "../../../../lib/db";
 import { isStorageConfigured } from "../../../../lib/r2";
+import StorageCheck from "./StorageCheck";
 
 export const dynamic = "force-dynamic";
 
@@ -399,7 +400,11 @@ export default async function AdminHealthPage() {
         <CheckCard
           label="Storage"
           healthy={storageConfigured}
-          detail={storageConfigured ? "Cloudflare R2 upload settings are configured." : "R2 settings are incomplete; uploads may fail."}
+          detail={
+            storageConfigured
+              ? "R2 settings are present. Run the upload check below to confirm uploads actually work."
+              : "R2 settings are incomplete; uploads will fail."
+          }
         />
         <CheckCard
           label="Audit Trail"
@@ -421,6 +426,8 @@ export default async function AdminHealthPage() {
         <StatCard label="Audit Events" value={auditEventsCount} detail="Recorded admin actions" />
         <StatCard label="Storage" value={storageConfigured ? "Ready" : "Check"} detail="R2 media pipeline" />
       </div>
+
+      <StorageCheck />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="site-panel p-5">

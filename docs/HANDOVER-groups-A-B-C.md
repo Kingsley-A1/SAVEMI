@@ -90,7 +90,11 @@ dashboard → R2 → your bucket → **Settings → CORS Policy**, add:
 ```json
 [
   {
-    "AllowedOrigins": ["https://savemionline.org", "http://localhost:3000"],
+    "AllowedOrigins": [
+      "https://savemionline.org",
+      "https://www.savemionline.org",
+      "http://localhost:3000"
+    ],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
     "AllowedHeaders": ["*"],
     "ExposeHeaders": ["ETag"],
@@ -102,6 +106,17 @@ dashboard → R2 → your bucket → **Settings → CORS Policy**, add:
 Without `ExposeHeaders: ["ETag"]`, large uploads will fail at the "did not
 return an ETag" step. (Small single-PUT uploads work without it but still need
 PUT allowed.)
+
+`AllowedOrigins` is matched exactly — scheme, host, and port. `savemionline.org`
+and `www.savemionline.org` are two different origins, and each Vercel preview
+URL is another. Any origin the admin office is served from and that is missing
+here will fail the browser's preflight, and the upload dies before it reaches
+R2: the browser sees only a network error, never an HTTP status.
+
+To confirm the policy is right, open **Admin → Health → Upload check**. It
+writes a test object from the server, then uploads one from the browser. If the
+server half passes and the browser half fails, the origin is missing — the
+check prints the exact address to add.
 
 ### 5. Cloudflare Email Routing (after Resend is confirmed — Group B follow-up)
 This was scoped as a follow-up. Once email is confirmed working:

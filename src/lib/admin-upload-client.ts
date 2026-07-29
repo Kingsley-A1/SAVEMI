@@ -22,6 +22,31 @@ export interface UploadAdminFileOptions {
   onProgress?: (progress: number) => void;
 }
 
+/** The current site origin, or a readable stand-in during server render. */
+function currentOrigin(): string {
+  return typeof window === "undefined" ? "this site" : window.location.origin;
+}
+
+/**
+ * The browser blocked the upload before it reached storage.
+ *
+ * Raised for a network-layer failure on the direct-to-R2 PUT. It carries the
+ * fix in its message because the admin seeing it is usually not the person
+ * who configured the bucket.
+ */
+export class StorageBlockedError extends Error {
+  readonly origin: string;
+
+  constructor() {
+    const origin = currentOrigin();
+    super(
+      `The browser could not reach storage. This is almost always the storage bucket's CORS policy: it must allow PUT from ${origin}. Ask engineering to add that exact address to the R2 bucket's allowed origins, then try again.`,
+    );
+    this.name = "StorageBlockedError";
+    this.origin = origin;
+  }
+}
+
 const MB = 1024 * 1024;
 // Files at or below this size use a single PUT; larger files go multipart.
 const MULTIPART_THRESHOLD = 32 * MB;
@@ -40,6 +65,11 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
       return await fn();
     } catch (error) {
       lastError = error;
+
+      // A CORS block is a configuration fact, not a flaky connection.
+      // Retrying only makes the admin wait for a certain failure.
+      if (error instanceof StorageBlockedError) throw error;
+
       if (attempt < MAX_ATTEMPTS) {
         // Exponential backoff with jitter: ~0.5s, 1s, 2s.
         const backoff = 500 * 2 ** (attempt - 1) + Math.random() * 300;
@@ -79,10 +109,24 @@ function putToUrl(
         resolve({ eTag: eTag ? eTag.replace(/^"|"$/g, "") : null });
         return;
       }
-      reject(new Error(`Upload failed with status ${request.status}.`));
+      // R2 answers a rejected PUT with an XML error code — surface it, since
+      // "AccessDenied" and "SignatureDoesNotMatch" need different fixes.
+      const code = /<Code>([^<]+)<\/Code>/.exec(request.responseText ?? "")?.[1];
+      reject(
+        new Error(
+          code
+            ? `Storage rejected the upload (${request.status} ${code}).`
+            : `Storage rejected the upload with status ${request.status}.`,
+        ),
+      );
     };
 
-    request.onerror = () => reject(new Error("Upload to storage failed."));
+    // XHR reports `onerror` only when the request never reached the
+    // application layer: the browser refused it, or the connection dropped.
+    // For a cross-origin PUT the overwhelmingly common cause is the storage
+    // bucket's CORS policy not listing this site's origin, so say that
+    // plainly rather than leaving the admin with "upload failed".
+    request.onerror = () => reject(new StorageBlockedError());
     request.ontimeout = () => reject(new Error("Upload timed out."));
 
     request.open("PUT", url);
