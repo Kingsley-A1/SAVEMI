@@ -28,6 +28,10 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** What the admin can do about it. */
+  remedy?: string;
+  /** One-line technical trace for a bug report. */
+  technical?: string;
   /** Live narration from the upload client, e.g. a retry notice. */
   status?: string;
 }
@@ -316,7 +320,7 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
           <button
             type="button"
             onClick={handleDelete}
-            className="button-tertiary flex items-center gap-1.5 text-red-600 border-red-200"
+            className="button-tertiary flex items-center gap-1.5 text-attention border-[var(--state-attention-border)]"
             disabled={deleting}
           >
             <Trash2 size={13} />
@@ -361,6 +365,8 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 urlPlaceholder="https://youtube.com/watch?v=... or https://facebook.com/.../videos/..."
                 successLabel={mediaKey ? "Current media linked" : "Media uploaded"}
                 errorMessage={mediaUpload.error}
+                errorRemedy={mediaUpload.remedy}
+                errorDetails={mediaUpload.technical}
                 onFileChange={handleMediaFileChange}
                 onUrlChange={(url) => {
                   setExternalMediaUrl(url);
@@ -559,6 +565,8 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 }
                 helperText="Optional MP3, M4A, or WAV for public audio download"
                 errorMessage={audioUpload.error}
+                errorRemedy={audioUpload.remedy}
+                errorDetails={audioUpload.technical}
                 onFileChange={handleAudioDownloadFileChange}
                 onUrlChange={(url) => {
                   setAudioDownloadUrl(url);
@@ -596,6 +604,8 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
               urlPlaceholder="https://example.com/cover-image.jpg"
               successLabel={coverKey ? "Current cover linked" : "Cover uploaded"}
               errorMessage={coverUpload.error}
+                errorRemedy={coverUpload.remedy}
+                errorDetails={coverUpload.technical}
               onFileChange={handleCoverFileChange}
               onUrlChange={(url) => {
                 setCoverImageUrl(url);
@@ -624,9 +634,9 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
           <p
             className="rounded px-3 py-2 text-xs"
             style={{
-              background: "rgba(220,38,38,0.07)",
-              color: "#b91c1c",
-              border: "1px solid rgba(220,38,38,0.2)",
+              background: "var(--state-attention-surface)",
+              color: "var(--state-attention)",
+              border: "1px solid var(--state-attention-border)",
             }}
             role="alert"
           >

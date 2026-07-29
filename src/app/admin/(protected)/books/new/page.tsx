@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, X } from "lucide-react";
 import AdminUploadField from "../../../../../components/AdminUploadField";
-import { uploadAdminFile } from "../../../../../lib/admin-upload-client";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../../lib/admin-upload-client";
 import {
   BOOK_FILE_ACCEPT,
   BOOK_FILE_HELPER_TEXT,
@@ -28,6 +31,10 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** What the admin can do about it. */
+  remedy?: string;
+  /** One-line technical trace for a bug report. */
+  technical?: string;
 }
 
 function initialUploadSlot(): UploadSlot {
@@ -93,7 +100,9 @@ export default function NewBookPage() {
       setUploadState({
         state: "error",
         progress: 0,
-        error: err instanceof Error ? err.message : "Upload failed.",
+        error: toUploadErrorDisplay(err).message,
+        remedy: toUploadErrorDisplay(err).remedy,
+        technical: toUploadErrorDisplay(err).technical,
       });
     }
   }
@@ -115,7 +124,9 @@ export default function NewBookPage() {
       setBookUploadState({
         state: "error",
         progress: 0,
-        error: err instanceof Error ? err.message : "Upload failed.",
+        error: toUploadErrorDisplay(err).message,
+        remedy: toUploadErrorDisplay(err).remedy,
+        technical: toUploadErrorDisplay(err).technical,
       });
     }
   }
@@ -167,7 +178,7 @@ export default function NewBookPage() {
         {error ? (
           <div
             className="rounded p-3 text-sm"
-            style={{ background: "rgba(220,38,38,0.07)", color: "#b91c1c" }}
+            style={{ background: "var(--state-attention-surface)", color: "var(--state-attention)" }}
           >
             {error}
           </div>
@@ -188,6 +199,8 @@ export default function NewBookPage() {
             urlPlaceholder="https://example.com/book-cover.jpg"
             successLabel="Cover image uploaded"
             errorMessage={uploadState.error}
+                errorRemedy={uploadState.remedy}
+                errorDetails={uploadState.technical}
             onFileChange={(f) => {
               setCoverFile(f);
               setCoverImageUrl("");
@@ -338,6 +351,8 @@ export default function NewBookPage() {
                 successLabel="Book file uploaded"
                 helperText={BOOK_FILE_HELPER_TEXT}
                 errorMessage={bookUploadState.error}
+                errorRemedy={bookUploadState.remedy}
+                errorDetails={bookUploadState.technical}
                 onFileChange={(f) => {
                   setBookFile(f);
                   setBookKey("");

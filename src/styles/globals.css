@@ -12,6 +12,23 @@
   --brand-text-soft: #5a7268;
   --brand-shadow:
     0 1px 3px rgba(6, 55, 39, 0.07), 0 1px 2px rgba(6, 55, 39, 0.04);
+
+  /* ── Attention states ──────────────────────────────────────────────
+     A muted clay rather than an alarm red. Nothing on this platform is an
+     emergency: an interrupted upload or a mistyped code is recoverable, and
+     a warning that shouts makes the whole office feel fragile. Clay sits
+     naturally beside the deep greens and still passes AA on cream
+     (#9c5147 on #fffdf7 ≈ 5.6:1). */
+  --state-attention: #9c5147;
+  --state-attention-strong: #85423a;
+  --state-attention-border: rgba(156, 81, 71, 0.26);
+  /* For a 2px dashed outline, which reads far heavier than a hairline. */
+  --state-attention-edge: rgba(156, 81, 71, 0.45);
+  --state-attention-surface: rgba(156, 81, 71, 0.055);
+
+  --state-success: #15803d;
+  --state-success-border: rgba(21, 128, 61, 0.24);
+  --state-success-surface: rgba(21, 128, 61, 0.06);
 }
 
 @layer base {
@@ -305,6 +322,40 @@
   .field-input:focus {
     border-color: var(--brand-primary);
     box-shadow: 0 0 0 3px rgba(10, 79, 60, 0.09);
+  }
+
+  /* ── Notices ─────────────────────────────────────────── */
+  /* One shape for every "something needs your attention" message, so they
+     read consistently instead of each form inventing its own red box. */
+  .notice-attention {
+    background: var(--state-attention-surface);
+    border: 1px solid var(--state-attention-border);
+    color: var(--state-attention);
+    @apply rounded px-3 py-2 text-sm leading-6;
+  }
+
+  .notice-success {
+    background: var(--state-success-surface);
+    border: 1px solid var(--state-success-border);
+    color: var(--state-success);
+    @apply rounded px-3 py-2 text-sm leading-6;
+  }
+
+  .text-attention {
+    color: var(--state-attention);
+  }
+
+  /* Destructive buttons: serious, not alarming. The word and the icon carry
+     the weight; the colour only needs to set it apart. */
+  .button-danger {
+    border: 1px solid var(--state-attention-border);
+    color: var(--state-attention);
+    @apply inline-flex items-center justify-center rounded px-3 py-1.5 text-sm font-medium transition-colors duration-150;
+  }
+
+  .button-danger:hover:not(:disabled) {
+    background: var(--state-attention-surface);
+    color: var(--state-attention-strong);
   }
 
   /* ── Loading ─────────────────────────────────────────── */

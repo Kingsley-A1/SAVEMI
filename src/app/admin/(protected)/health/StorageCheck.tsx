@@ -24,7 +24,7 @@ interface Result {
 const VERDICT_COPY: Record<Verdict, { title: string; tone: string }> = {
   healthy: { title: "Uploads are working", tone: "#15803d" },
   cors: { title: "The browser is blocked by the bucket", tone: "#b45309" },
-  server: { title: "The server cannot reach storage", tone: "#b91c1c" },
+  server: { title: "The server cannot reach storage", tone: "var(--state-attention)" },
   unknown: { title: "The check could not be completed", tone: "#b45309" },
 };
 

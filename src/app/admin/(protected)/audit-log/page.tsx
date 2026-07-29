@@ -25,7 +25,7 @@ const ENTITY_COLOR: Record<string, string> = {
   Message: "var(--brand-primary)",
   Book:    "#7c6cf0",
   Quote:   "#d97706",
-  AdminUser: "#dc2626",
+  AdminUser: "var(--state-attention)",
 };
 
 export default async function AuditLogPage() {

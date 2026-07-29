@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Save, Trash2, X } from "lucide-react";
 import AdminUploadField from "../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../components/ui/Loading";
-import { uploadAdminFile } from "../../../../lib/admin-upload-client";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../lib/admin-upload-client";
 import {
   TEAM_ROLE_LABEL,
   TEAM_ROLE_ORDER,
@@ -41,6 +44,10 @@ export default function TeamMemberForm({
     state: UploadState;
     progress: number;
     error: string;
+    /** What the admin can do about a failure. */
+    remedy?: string;
+    /** One-line technical trace for a bug report. */
+    technical?: string;
   }>({ state: "idle", progress: 0, error: "" });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -77,8 +84,16 @@ export default function TeamMemberForm({
       update("photoKey", result.objectKey);
       setPhotoUpload({ state: "done", progress: 100, error: "" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed.";
-      setPhotoUpload({ state: "error", progress: 0, error: message });
+      const display = toUploadErrorDisplay(err);
+      const message = display.message;
+      const failure = {
+        state: "error" as const,
+        progress: 0,
+        error: message,
+        remedy: display.remedy,
+        technical: display.technical,
+      };
+      setPhotoUpload(failure);
       setError(message);
     }
   }
@@ -244,6 +259,8 @@ export default function TeamMemberForm({
               successLabel="Photo uploaded"
               helperText="A clear head-and-shoulders portrait works best"
               errorMessage={photoUpload.error}
+                errorRemedy={photoUpload.remedy}
+                errorDetails={photoUpload.technical}
               onFileChange={handlePhotoChange}
               onRetry={() => {
                 if (photoFile) void handlePhotoChange(photoFile);
@@ -408,9 +425,9 @@ export default function TeamMemberForm({
           role="alert"
           className="rounded px-3 py-2 text-xs"
           style={{
-            background: "rgba(220,38,38,0.07)",
-            color: "#b91c1c",
-            border: "1px solid rgba(220,38,38,0.2)",
+            background: "var(--state-attention-surface)",
+            color: "var(--state-attention)",
+            border: "1px solid var(--state-attention-border)",
           }}
         >
           {error}
@@ -424,7 +441,7 @@ export default function TeamMemberForm({
             onClick={handleDelete}
             disabled={deleting || saving}
             className="button-tertiary inline-flex items-center gap-1.5 sm:mr-auto"
-            style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+            style={{ borderColor: "var(--state-attention-border)", color: "var(--state-attention)" }}
           >
             <Trash2 size={14} />
             {deleting ? "Removing…" : "Remove member"}

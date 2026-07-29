@@ -5,7 +5,7 @@ import {
   Upload,
   Link as LinkIcon,
   CheckCircle,
-  XCircle,
+  AlertTriangle,
   Loader2,
   Image as ImageIcon,
   Film,
@@ -32,6 +32,10 @@ interface AdminUploadFieldProps {
   successLabel?: string;
   helperText?: string;
   errorMessage?: string;
+  /** What the admin can do about the failure. */
+  errorRemedy?: string;
+  /** One-line technical trace, tucked behind a disclosure. */
+  errorDetails?: string;
   /**
    * Live narration from the upload client, e.g. "Retrying part 12 of 61".
    * A long transfer over a mobile link retries silently otherwise, and a
@@ -127,6 +131,8 @@ export default function AdminUploadField({
   successLabel = "Uploaded successfully",
   helperText,
   errorMessage,
+  errorRemedy,
+  errorDetails,
   statusMessage,
   maxSizeBytes,
   onFileChange,
@@ -237,16 +243,16 @@ export default function AdminUploadField({
           className="group relative flex w-full cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed px-6 py-8 text-center transition-all"
           style={{
             borderColor: isDone
-              ? "#16a34a"
+              ? "var(--state-success-border)"
               : isError
-                ? "#dc2626"
+                ? "var(--state-attention-edge)"
                 : isSelected
                   ? "var(--brand-primary)"
                   : "rgba(10,79,60,0.25)",
             background: isDone
-              ? "rgba(22,163,74,0.04)"
+              ? "var(--state-success-surface)"
               : isError
-                ? "rgba(220,38,38,0.04)"
+                ? "var(--state-attention-surface)"
                 : isSelected
                   ? "rgba(10,79,60,0.05)"
                   : "rgba(10,79,60,0.02)",
@@ -277,8 +283,8 @@ export default function AdminUploadField({
             </>
           ) : isDone ? (
             <>
-              <CheckCircle size={28} style={{ color: "#16a34a" }} />
-              <p className="text-xs font-semibold" style={{ color: "#16a34a" }}>
+              <CheckCircle size={28} style={{ color: "var(--state-success)" }} />
+              <p className="text-xs font-semibold" style={{ color: "var(--state-success)" }}>
                 {successLabel}
               </p>
               <p className="text-xs" style={{ color: "var(--brand-text-soft)" }}>
@@ -287,13 +293,46 @@ export default function AdminUploadField({
             </>
           ) : isError ? (
             <>
-              <XCircle size={28} style={{ color: "#dc2626" }} />
+              <AlertTriangle
+                size={24}
+                style={{ color: "var(--state-attention)" }}
+                aria-hidden="true"
+              />
               <p
-                className="w-full min-w-0 wrap-break-word text-xs font-semibold"
-                style={{ color: "#dc2626" }}
+                className="w-full min-w-0 text-left text-xs font-semibold wrap-break-word"
+                style={{ color: "var(--state-attention)" }}
               >
-                {errorMessage ?? "Upload failed."}
+                {errorMessage ?? "The upload did not finish."}
               </p>
+              {errorRemedy ? (
+                <p
+                  className="w-full min-w-0 text-left text-xs leading-5 wrap-break-word"
+                  style={{ color: "var(--brand-text-soft)" }}
+                >
+                  {errorRemedy}
+                </p>
+              ) : null}
+              {errorDetails ? (
+                /* Diagnostics stay available without putting jargon in front
+                   of someone who just wants to publish a sermon. */
+                <details className="w-full min-w-0 text-left">
+                  <summary
+                    className="cursor-pointer text-xs font-medium"
+                    style={{ color: "var(--brand-text-soft)" }}
+                  >
+                    Technical details
+                  </summary>
+                  <code
+                    className="mt-1.5 block w-full min-w-0 rounded px-2 py-1.5 font-mono text-[0.68rem] leading-5 wrap-break-word"
+                    style={{
+                      background: "var(--state-attention-surface)",
+                      color: "var(--state-attention)",
+                    }}
+                  >
+                    {errorDetails}
+                  </code>
+                </details>
+              ) : null}
             </>
           ) : (
             <>
@@ -430,9 +469,24 @@ export default function AdminUploadField({
           </div>
       ) : null}
 
+      {/* Live region for assistive tech. When the drop zone is on screen it
+          has already spelled the failure out, so this is announced without
+          repeating the same paragraph visually. */}
       <p
-        className="wrap-break-word text-xs"
-        style={{ color: isError ? "#b91c1c" : isDone || externalUrl ? "#15803d" : "var(--brand-text-soft)" }}
+        className={
+          isError && source === "file"
+            ? "sr-only"
+            : "wrap-break-word text-xs"
+        }
+        style={
+          isError && source === "file"
+            ? undefined
+            : {
+                color: isDone || externalUrl
+                  ? "var(--state-success)"
+                  : "var(--brand-text-soft)",
+              }
+        }
         role="status"
         aria-live="polite"
       >

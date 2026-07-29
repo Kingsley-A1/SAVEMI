@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Save, X, Trash2 } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../../../components/ui/Loading";
-import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../../../lib/admin-upload-client";
 import {
   BOOK_FILE_ACCEPT,
   BOOK_FILE_HELPER_TEXT,
@@ -28,6 +31,10 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** What the admin can do about it. */
+  remedy?: string;
+  /** One-line technical trace for a bug report. */
+  technical?: string;
 }
 
 function initialUploadSlot(): UploadSlot {
@@ -115,7 +122,9 @@ export default function EditBookForm({ book }: { book: BookData }) {
       setUploadState({
         state: "error",
         progress: 0,
-        error: err instanceof Error ? err.message : "Upload failed.",
+        error: toUploadErrorDisplay(err).message,
+        remedy: toUploadErrorDisplay(err).remedy,
+        technical: toUploadErrorDisplay(err).technical,
       });
     }
   }
@@ -137,7 +146,9 @@ export default function EditBookForm({ book }: { book: BookData }) {
       setBookUploadState({
         state: "error",
         progress: 0,
-        error: err instanceof Error ? err.message : "Upload failed.",
+        error: toUploadErrorDisplay(err).message,
+        remedy: toUploadErrorDisplay(err).remedy,
+        technical: toUploadErrorDisplay(err).technical,
       });
     }
   }
@@ -220,7 +231,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
         {error ? (
           <div
             className="rounded p-3 text-sm"
-            style={{ background: "rgba(220,38,38,0.07)", color: "#b91c1c" }}
+            style={{ background: "var(--state-attention-surface)", color: "var(--state-attention)" }}
           >
             {error}
           </div>
@@ -242,6 +253,8 @@ export default function EditBookForm({ book }: { book: BookData }) {
             urlPlaceholder="https://example.com/book-cover.jpg"
             successLabel={coverKey ? "Current cover linked" : "Cover image uploaded"}
             errorMessage={uploadState.error}
+                errorRemedy={uploadState.remedy}
+                errorDetails={uploadState.technical}
             onFileChange={(file) => {
               setCoverFile(file);
               setCoverImageUrl("");
@@ -356,6 +369,8 @@ export default function EditBookForm({ book }: { book: BookData }) {
                 }
                 helperText={BOOK_FILE_HELPER_TEXT}
                 errorMessage={bookUploadState.error}
+                errorRemedy={bookUploadState.remedy}
+                errorDetails={bookUploadState.technical}
                 onFileChange={(file) => {
                   setBookFile(file);
                   setBookKey("");

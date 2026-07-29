@@ -162,7 +162,7 @@ export default function SiteSettingsForm({
       {error ? (
         <div
           className="rounded p-3 text-sm"
-          style={{ background: "rgba(220,38,38,0.07)", color: "#b91c1c" }}
+          style={{ background: "var(--state-attention-surface)", color: "var(--state-attention)" }}
           role="alert"
         >
           {error}

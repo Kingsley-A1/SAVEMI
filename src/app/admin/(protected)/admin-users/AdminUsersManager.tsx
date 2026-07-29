@@ -140,9 +140,9 @@ export default function AdminUsersManager({
         <div
           className="rounded border px-4 py-3 text-sm"
           style={{
-            background: "rgba(220,38,38,0.07)",
-            borderColor: "rgba(220,38,38,0.2)",
-            color: "#b91c1c",
+            background: "var(--state-attention-surface)",
+            borderColor: "var(--state-attention-border)",
+            color: "var(--state-attention)",
           }}
         >
           {error}
@@ -264,7 +264,7 @@ export default function AdminUsersManager({
                   <button
                     type="button"
                     className="button-tertiary inline-flex items-center gap-1.5"
-                    style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+                    style={{ borderColor: "var(--state-attention-border)", color: "var(--state-attention)" }}
                     disabled={admin.isCurrentUser || admin.isSuperAdmin || busyId === admin.id}
                     onClick={() => handleDelete(admin)}
                   >
@@ -355,7 +355,7 @@ export default function AdminUsersManager({
                       <button
                         type="button"
                         className="button-tertiary inline-flex items-center gap-1.5"
-                        style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+                        style={{ borderColor: "var(--state-attention-border)", color: "var(--state-attention)" }}
                         disabled={admin.isCurrentUser || admin.isSuperAdmin || busyId === admin.id}
                         onClick={() => handleDelete(admin)}
                       >

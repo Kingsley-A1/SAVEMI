@@ -130,7 +130,7 @@ export default function AdminFilterBar({
         <button
           type="button"
           onClick={clearAll}
-          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs transition-colors hover:bg-red-50 hover:text-red-600"
+          className="inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs transition-colors hover:bg-[var(--state-attention-surface)] hover:text-attention"
           style={{ borderColor: "var(--border-subtle)", color: "var(--fg-muted)" }}
           aria-label="Clear all filters"
         >

@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Save, X, Trash2 } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../../../components/ui/Loading";
-import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../../../lib/admin-upload-client";
 
 const STATUSES = [
   { value: "DRAFT", label: "Draft" },
@@ -19,6 +22,10 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** What the admin can do about it. */
+  remedy?: string;
+  /** One-line technical trace for a bug report. */
+  technical?: string;
 }
 
 function initialUploadSlot(): UploadSlot {
@@ -86,7 +93,9 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
       setUploadState({
         state: "error",
         progress: 0,
-        error: err instanceof Error ? err.message : "Upload failed.",
+        error: toUploadErrorDisplay(err).message,
+        remedy: toUploadErrorDisplay(err).remedy,
+        technical: toUploadErrorDisplay(err).technical,
       });
     }
   }
@@ -153,7 +162,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
           onClick={handleDelete}
           disabled={deleting}
           className="button-tertiary flex items-center gap-1.5"
-          style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+          style={{ borderColor: "var(--state-attention-border)", color: "var(--state-attention)" }}
         >
           <Trash2 size={14} />
           {deleting ? "Deleting…" : "Delete"}
@@ -164,7 +173,7 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
         {error ? (
           <div
             className="rounded p-3 text-sm"
-            style={{ background: "rgba(220,38,38,0.07)", color: "#b91c1c" }}
+            style={{ background: "var(--state-attention-surface)", color: "var(--state-attention)" }}
           >
             {error}
           </div>
@@ -186,6 +195,8 @@ export default function EditQuoteForm({ quote }: { quote: QuoteData }) {
             urlPlaceholder="https://example.com/quote-image.jpg"
             successLabel={imageKey ? "Current image linked" : "Image uploaded"}
             errorMessage={uploadState.error}
+                errorRemedy={uploadState.remedy}
+                errorDetails={uploadState.technical}
             onFileChange={(file) => {
               setImageFile(file);
               setImageUrl("");

@@ -94,9 +94,9 @@ export default function AdminLoginPage() {
           role="alert"
           className="rounded px-3 py-2 text-xs"
           style={{
-            background: "rgba(220,38,38,0.07)",
-            color: "#b91c1c",
-            border: "1px solid rgba(220,38,38,0.2)",
+            background: "var(--state-attention-surface)",
+            color: "var(--state-attention)",
+            border: "1px solid var(--state-attention-border)",
           }}
         >
           {error}
@@ -201,9 +201,9 @@ export default function AdminLoginPage() {
           <p
             className="mb-4 rounded px-3 py-2 text-xs"
             style={{
-              background: "rgba(220,38,38,0.07)",
-              color: "#b91c1c",
-              border: "1px solid rgba(220,38,38,0.2)",
+              background: "var(--state-attention-surface)",
+              color: "var(--state-attention)",
+              border: "1px solid var(--state-attention-border)",
             }}
           >
             We couldn&apos;t confirm that request.{" "}

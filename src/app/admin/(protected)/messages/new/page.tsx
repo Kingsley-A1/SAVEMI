@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Eye, Save, Send, X } from "lucide-react";
 import AdminUploadField from "../../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../../components/ui/Loading";
-import { uploadAdminFile } from "../../../../../lib/admin-upload-client";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../../lib/admin-upload-client";
 
 const MESSAGE_TYPES = [
   { value: "VIDEO", label: "Video" },
@@ -21,6 +24,10 @@ interface UploadSlot {
   state: UploadState;
   progress: number;
   error: string;
+  /** What the admin can do about it. */
+  remedy?: string;
+  /** One-line technical trace for a bug report. */
+  technical?: string;
   /** Live narration from the upload client, e.g. a retry notice. */
   status?: string;
 }
@@ -122,8 +129,16 @@ export default function NewMessagePage() {
       setSlot({ state: "done", progress: 100, error: "" });
       return result.objectKey;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Upload failed.";
-      setSlot({ state: "error", progress: 0, error: message });
+      const display = toUploadErrorDisplay(err);
+      const message = display.message;
+      const failure = {
+        state: "error" as const,
+        progress: 0,
+        error: message,
+        remedy: display.remedy,
+        technical: display.technical,
+      };
+      setSlot(failure);
       setError(message);
       return null;
     }
@@ -287,6 +302,8 @@ export default function NewMessagePage() {
                 urlPlaceholder="https://youtube.com/watch?v=... or https://facebook.com/.../videos/..."
                 successLabel="Media uploaded"
                 errorMessage={mediaUpload.error}
+                errorRemedy={mediaUpload.remedy}
+                errorDetails={mediaUpload.technical}
                 onFileChange={handleMediaFileChange}
                 onUrlChange={(url) => {
                   setExternalMediaUrl(url);
@@ -463,6 +480,8 @@ export default function NewMessagePage() {
                 successLabel="Audio download ready"
                 helperText="Optional MP3, M4A, or WAV for public audio download"
                 errorMessage={audioUpload.error}
+                errorRemedy={audioUpload.remedy}
+                errorDetails={audioUpload.technical}
                 onFileChange={handleAudioDownloadFileChange}
                 onUrlChange={(url) => {
                   setAudioDownloadUrl(url);
@@ -496,6 +515,8 @@ export default function NewMessagePage() {
               urlPlaceholder="https://example.com/cover-image.jpg"
               successLabel="Cover uploaded"
               errorMessage={coverUpload.error}
+                errorRemedy={coverUpload.remedy}
+                errorDetails={coverUpload.technical}
               onFileChange={handleCoverFileChange}
               onUrlChange={(url) => {
                 setCoverImageUrl(url);
@@ -520,9 +541,9 @@ export default function NewMessagePage() {
           <p
             className="rounded px-3 py-2 text-xs"
             style={{
-              background: "rgba(220,38,38,0.07)",
-              color: "#b91c1c",
-              border: "1px solid rgba(220,38,38,0.2)",
+              background: "var(--state-attention-surface)",
+              color: "var(--state-attention)",
+              border: "1px solid var(--state-attention-border)",
             }}
             role="alert"
           >

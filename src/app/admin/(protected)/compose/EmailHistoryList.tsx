@@ -84,9 +84,9 @@ export default function EmailHistoryList({
           role="alert"
           className="mt-3 rounded px-3 py-2 text-xs"
           style={{
-            background: "rgba(220,38,38,0.07)",
-            color: "#b91c1c",
-            border: "1px solid rgba(220,38,38,0.2)",
+            background: "var(--state-attention-surface)",
+            color: "var(--state-attention)",
+            border: "1px solid var(--state-attention-border)",
           }}
         >
           {error}
@@ -130,7 +130,7 @@ export default function EmailHistoryList({
               onClick={() => handleDelete(entry)}
               disabled={busyId === entry.id}
               className="button-tertiary inline-flex shrink-0 items-center gap-1.5"
-              style={{ borderColor: "rgba(220,38,38,0.3)", color: "#dc2626" }}
+              style={{ borderColor: "var(--state-attention-border)", color: "var(--state-attention)" }}
               aria-label={`Delete "${entry.subject}" from history`}
             >
               <Trash2 size={13} />

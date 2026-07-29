@@ -144,7 +144,7 @@ export default function ContactForm() {
 
       {state.message ? (
         <p
-          className={`text-sm ${state.status === "error" ? "text-red-700" : "text-brand-primary"}`}
+          className={`text-sm ${state.status === "error" ? "text-attention" : "text-brand-primary"}`}
           role="status"
         >
           {state.message}

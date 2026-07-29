@@ -1,10 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   NetworkInterruptedError,
-  StorageBlockedError,
+  StorageRejectedError,
+  UploadError,
   uploadAdminFile,
   type PutFn,
 } from "./admin-upload-client";
+
+/** Run an upload and return the UploadError it produced. */
+async function failureOf(
+  put: PutFn,
+  sizeBytes = 4 * MB,
+): Promise<UploadError> {
+  const error = await uploadAdminFile(
+    { file: fakeFile(sizeBytes), fileName: "sermon.mp4" },
+    put,
+  ).catch((caught) => caught);
+  expect(error).toBeInstanceOf(UploadError);
+  return error as UploadError;
+}
 
 /**
  * These tests pin the behaviour that matters for a 900MB upload over a mobile
@@ -102,14 +116,25 @@ describe("a connection that drops mid-transfer", () => {
   });
 
   it("is never reported as a storage/CORS problem", async () => {
-    const put: PutFn = async ({ onProgress }) => {
+    const failure = await failureOf(async ({ onProgress }) => {
       onProgress?.(400_000);
       throw new NetworkInterruptedError(400_000);
-    };
+    });
 
-    await expect(
-      uploadAdminFile({ file: fakeFile(4 * MB), fileName: "sermon.mp4" }, put),
-    ).rejects.toBeInstanceOf(NetworkInterruptedError);
+    expect(failure.detail.reason).toBe("interrupted");
+  });
+
+  it("says how far the last attempt got, and how many were made", async () => {
+    const failure = await failureOf(async ({ onProgress }) => {
+      onProgress?.(3_400_000);
+      throw new NetworkInterruptedError(3_400_000);
+    });
+
+    expect(failure.detail.bytesSentOnLastAttempt).toBe(3_400_000);
+    expect(failure.detail.attempts).toBe(6);
+    expect(failure.message).toMatch(/connection dropped/i);
+    expect(failure.message).toMatch(/3\.2 MB into that attempt/);
+    expect(failure.message).toMatch(/after 6 attempts/);
   });
 
   it("retries an individual part rather than restarting a large upload", async () => {
@@ -138,34 +163,43 @@ describe("a connection that drops mid-transfer", () => {
   });
 
   it("does not blame the origin once a part has already gone through", async () => {
-    const put: PutFn = async ({ url, onProgress }) => {
+    const failure = await failureOf(async ({ url, onProgress }) => {
       if (url.endsWith("/part/1")) return { eTag: "etag-1" };
       // Every later attempt is refused outright — but part 1 proved the
       // origin is allowed, so this must not be reported as blocked.
       onProgress?.(0);
       throw new NetworkInterruptedError(0);
-    };
+    }, 48 * MB);
 
-    await expect(
-      uploadAdminFile({ file: fakeFile(48 * MB), fileName: "sermon.mp4" }, put),
-    ).rejects.not.toBeInstanceOf(StorageBlockedError);
+    expect(failure.detail.reason).not.toBe("blocked");
+  });
+
+  it("names the part that failed and what was already stored", async () => {
+    const failure = await failureOf(async ({ url, onProgress }) => {
+      if (url.endsWith("/part/1")) return { eTag: "etag-1" };
+      onProgress?.(1_000);
+      throw new NetworkInterruptedError(1_000);
+    }, 48 * MB);
+
+    expect(failure.detail.partNumber).toBe(2);
+    expect(failure.detail.totalParts).toBe(3);
+    expect(failure.message).toMatch(/^Part 2 of 3/);
+    // One 16MB part was confirmed before the failure.
+    expect(failure.detail.uploadedBytes).toBe(16 * MB);
+    expect(failure.message).toMatch(/16 MB of 48 MB had already been stored/);
   });
 });
 
 describe("a request refused before any data is sent", () => {
   it("is reported as a blocked origin after retries are spent", async () => {
-    const put: PutFn = async () => {
+    const failure = await failureOf(async () => {
       // Zero bytes, every time: the CORS-preflight signature.
       throw new NetworkInterruptedError(0);
-    };
+    });
 
-    const error = await uploadAdminFile(
-      { file: fakeFile(4 * MB), fileName: "sermon.mp4" },
-      put,
-    ).catch((caught) => caught);
-
-    expect(error).toBeInstanceOf(StorageBlockedError);
-    expect(String(error.message)).toMatch(/allowed origins/i);
+    expect(failure.detail.reason).toBe("blocked");
+    expect(failure.message).toMatch(/before any data left this device/i);
+    expect(failure.detail.remedy).toMatch(/allowed origins/i);
   });
 
   it("still retries first, so a transient refusal recovers", async () => {
@@ -182,6 +216,41 @@ describe("a request refused before any data is sent", () => {
     );
 
     expect(calls).toBe(3);
+  });
+});
+
+describe("a storage-level rejection", () => {
+  it("reports the status and the storage code, not a generic failure", async () => {
+    const failure = await failureOf(async () => {
+      throw new StorageRejectedError(403, "SignatureDoesNotMatch");
+    });
+
+    expect(failure.detail.reason).toBe("rejected");
+    expect(failure.detail.httpStatus).toBe(403);
+    expect(failure.detail.storageCode).toBe("SignatureDoesNotMatch");
+    expect(failure.message).toMatch(/status 403 SignatureDoesNotMatch/);
+  });
+
+  it("offers a one-line technical trace for a bug report", async () => {
+    const failure = await failureOf(async () => {
+      throw new StorageRejectedError(403, "AccessDenied");
+    });
+
+    expect(failure.technicalSummary).toMatch(/reason=rejected/);
+    expect(failure.technicalSummary).toMatch(/http=403/);
+    expect(failure.technicalSummary).toMatch(/code=AccessDenied/);
+    expect(failure.technicalSummary).toMatch(/attempts=6/);
+  });
+});
+
+describe("a missing ETag", () => {
+  it("is reported as configuration, not as a flaky connection", async () => {
+    const failure = await failureOf(
+      async () => ({ eTag: null }), // R2 CORS not exposing ETag
+      48 * MB,
+    );
+
+    expect(failure.detail.reason).toBe("config");
   });
 });
 

@@ -22,7 +22,7 @@ function formatDate(value: string | null): string {
 
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
   ACTIVE: { background: "rgba(22,163,74,0.1)", color: "#15803d" },
-  SUSPENDED: { background: "rgba(220,38,38,0.08)", color: "#b91c1c" },
+  SUSPENDED: { background: "var(--state-attention-surface)", color: "var(--state-attention)" },
 };
 
 export default function SiteUsersManager({ users }: { users: SiteUserRow[] }) {
@@ -110,9 +110,9 @@ export default function SiteUsersManager({ users }: { users: SiteUserRow[] }) {
           role="alert"
           className="rounded border px-4 py-3 text-sm"
           style={{
-            background: "rgba(220,38,38,0.07)",
-            borderColor: "rgba(220,38,38,0.2)",
-            color: "#b91c1c",
+            background: "var(--state-attention-surface)",
+            borderColor: "var(--state-attention-border)",
+            color: "var(--state-attention)",
           }}
         >
           {error}
@@ -170,8 +170,8 @@ export default function SiteUsersManager({ users }: { users: SiteUserRow[] }) {
                   disabled={busyId === user.id}
                   className="button-tertiary inline-flex items-center gap-1.5"
                   style={{
-                    borderColor: "rgba(220,38,38,0.3)",
-                    color: "#dc2626",
+                    borderColor: "var(--state-attention-border)",
+                    color: "var(--state-attention)",
                   }}
                 >
                   <Trash2 size={13} /> Delete
@@ -254,7 +254,7 @@ export default function SiteUsersManager({ users }: { users: SiteUserRow[] }) {
                         onClick={() => remove(user)}
                         disabled={busyId === user.id}
                         className="inline-flex items-center gap-1 text-xs"
-                        style={{ color: "#dc2626" }}
+                        style={{ color: "var(--state-attention)" }}
                       >
                         <Trash2 size={13} /> Delete
                       </button>
