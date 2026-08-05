@@ -64,6 +64,7 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
   if (!message) notFound();
 
   const mediaDownloadUrl = await resolveAssetUrl(message.mediaKey);
+  const coverImageUrl = await resolveAssetUrl(message.coverImageKey);
   const mediaSrc = message.externalMediaUrl || mediaDownloadUrl;
   const isEmbed = message.externalMediaUrl
     ? isEmbeddableUrl(message.externalMediaUrl)
@@ -134,6 +135,7 @@ export default async function AdminMessagePreviewPage({ params }: Props) {
             src={mediaSrc}
             type={message.type.toLowerCase() as "video" | "audio" | "image"}
             title={message.title}
+            coverImageUrl={coverImageUrl}
           />
         </div>
       ) : (
