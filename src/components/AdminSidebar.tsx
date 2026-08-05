@@ -27,7 +27,7 @@ import {
 const NAV = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
-  { href: "/admin/books", label: "Books", icon: BookOpen },
+  { href: "/admin/resources", label: "Resources", icon: BookOpen },
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
   { href: "/admin/team", label: "Team", icon: Users },
   { href: "/admin/users", label: "Members", icon: UserRound },

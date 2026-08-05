@@ -4,7 +4,7 @@ const BASE_URL = "https://savemi.org";
 
 /**
  * Dynamic sitemap generated at build time.
- * Static routes are always included. Content routes (messages, books, quotes)
+ * Static routes are always included. Content routes (messages, resources, quotes)
  * are fetched from the database when available, and skipped gracefully if not.
  *
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap
@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/videos`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/audio`, lastModified: now, changeFrequency: "daily", priority: 0.85 },
     { url: `${BASE_URL}/images`, lastModified: now, changeFrequency: "weekly", priority: 0.75 },
-    { url: `${BASE_URL}/books`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/resources`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE_URL}/quotes`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE_URL}/team`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
@@ -62,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       for (const b of books) {
         dynamicRoutes.push({
-          url: `${BASE_URL}/books/${b.slug}`,
+          url: `${BASE_URL}/resources/${b.slug}`,
           lastModified: b.updatedAt,
           changeFrequency: "monthly",
           priority: 0.7,

@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Trash2 } from "lucide-react";
-import AdminUploadField from "../../../../../../components/AdminUploadField";
-import { LoadingButton } from "../../../../../../components/ui/Loading";
+import { Save, X } from "lucide-react";
+import AdminUploadField from "../../../../../components/AdminUploadField";
 import {
   toUploadErrorDisplay,
   uploadAdminFile,
-} from "../../../../../../lib/admin-upload-client";
+} from "../../../../../lib/admin-upload-client";
 import {
-  BOOK_FILE_ACCEPT,
-  BOOK_FILE_HELPER_TEXT,
-} from "../../../../../../lib/book-uploads";
+  RESOURCE_FILE_ACCEPT,
+  RESOURCE_FILE_HELPER_TEXT,
+} from "../../../../../lib/resource-uploads";
+import { RESOURCE_TYPE_LABEL, RESOURCE_TYPE_ORDER } from "../../../../../lib/resources";
+import { LoadingButton } from "../../../../../components/ui/Loading";
 
 const AVAILABILITIES = [
   { value: "FREE", label: "Free" },
@@ -23,6 +24,10 @@ const STATUSES = [
   { value: "PUBLISHED", label: "Published" },
   { value: "ARCHIVED", label: "Archived" },
 ] as const;
+const RESOURCE_TYPES = RESOURCE_TYPE_ORDER.map((value) => ({
+  value: value.toUpperCase() as "BOOK" | "DEVOTIONAL" | "PULPIT" | "ARTICLE",
+  label: RESOURCE_TYPE_LABEL[value],
+}));
 const FORMATS = ["PDF", "EPUB", "MOBI", "Paperback", "Hardcover"] as const;
 
 type UploadState = "idle" | "uploading" | "done" | "error";
@@ -41,59 +46,38 @@ function initialUploadSlot(): UploadSlot {
   return { state: "idle", progress: 0, error: "" };
 }
 
-interface BookData {
-  id: string;
-  title: string;
-  tagline: string;
-  description: string;
-  author: string;
-  coverImageKey: string | null;
-  downloadKey: string | null;
-  downloadFileName: string | null;
-  downloadUrl: string | null;
-  purchaseUrl: string | null;
-  priceLabel: string | null;
-  format: string | null;
-  pageCount: number | null;
-  featured: boolean;
-  availability: "FREE" | "PAID";
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
-}
-
-export default function EditBookForm({ book }: { book: BookData }) {
+export default function NewResourcePage() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    title: book.title,
-    tagline: book.tagline,
-    description: book.description,
-    author: book.author,
-    downloadUrl: book.downloadUrl ?? "",
-    purchaseUrl: book.purchaseUrl ?? "",
-    priceLabel: book.priceLabel ?? "",
-    format: book.format ?? "",
-    pageCount: book.pageCount?.toString() ?? "",
-    featured: book.featured,
-    availability: book.availability,
-    status: book.status,
+    title: "",
+    tagline: "",
+    description: "",
+    author: "",
+    downloadUrl: "",
+    purchaseUrl: "",
+    priceLabel: "",
+    format: "",
+    pageCount: "",
+    featured: false,
+    availability: "FREE" as (typeof AVAILABILITIES)[number]["value"],
+    resourceType: "BOOK" as (typeof RESOURCE_TYPES)[number]["value"],
+    status: "DRAFT" as (typeof STATUSES)[number]["value"],
   });
 
-  const [coverKey, setCoverKey] = useState(book.coverImageKey ?? "");
-  const [coverImageUrl, setCoverImageUrl] = useState(
-    (book.coverImageKey?.startsWith("http") ? book.coverImageKey : "") ?? ""
-  );
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverKey, setCoverKey] = useState("");
+  const [coverImageUrl, setCoverImageUrl] = useState("");
   const [uploadState, setUploadState] = useState<UploadSlot>(initialUploadSlot);
 
-  // The book file itself, uploaded from the admin's device.
-  const [bookFile, setBookFile] = useState<File | null>(null);
-  const [bookKey, setBookKey] = useState(book.downloadKey ?? "");
-  const [bookFileName, setBookFileName] = useState(book.downloadFileName ?? "");
-  const [bookUploadState, setBookUploadState] =
+  // The resource file itself, uploaded straight from the admin's device.
+  const [resourceFile, setResourceFile] = useState<File | null>(null);
+  const [resourceKey, setResourceKey] = useState("");
+  const [resourceFileName, setResourceFileName] = useState("");
+  const [resourceUploadState, setResourceUploadState] =
     useState<UploadSlot>(initialUploadSlot);
 
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   function handleChange(
@@ -111,7 +95,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
     try {
       const result = await uploadAdminFile({
         file,
-          fileName: `book-cover-${Date.now()}-${file.name}`,
+        fileName: `resource-cover-${Date.now()}-${file.name}`,
         onProgress: (progress) =>
           setUploadState({ state: "uploading", progress, error: "" }),
       });
@@ -132,24 +116,24 @@ export default function EditBookForm({ book }: { book: BookData }) {
     }
   }
 
-  async function uploadBookFile(file: File) {
-    setBookUploadState({ state: "uploading", progress: 0, error: "" });
+  async function uploadResourceFile(file: File) {
+    setResourceUploadState({ state: "uploading", progress: 0, error: "" });
     try {
       const result = await uploadAdminFile({
         file,
-        fileName: `book-${Date.now()}-${file.name}`,
+        fileName: `resource-${Date.now()}-${file.name}`,
         onProgress: (progress) =>
-          setBookUploadState({ state: "uploading", progress, error: "" }),
+          setResourceUploadState({ state: "uploading", progress, error: "" }),
       });
 
-      setBookKey(result.objectKey);
-      setBookFileName(file.name);
-      setBookUploadState({ state: "done", progress: 100, error: "" });
+      setResourceKey(result.objectKey);
+      setResourceFileName(file.name);
+      setResourceUploadState({ state: "done", progress: 100, error: "" });
     } catch (err) {
       const display = toUploadErrorDisplay(err);
       // Shown by the field itself — deliberately not mirrored into
       // the form banner, which is for problems saving the record.
-      setBookUploadState({
+      setResourceUploadState({
         state: "error",
         progress: 0,
         error: display.message,
@@ -165,19 +149,19 @@ export default function EditBookForm({ book }: { book: BookData }) {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/admin/books/${book.id}`, {
-        method: "PATCH",
+      const res = await fetch("/api/admin/resources", {
+        method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...form,
-          coverImageKey: coverKey || (coverImageUrl || null),
-          downloadKey: bookKey || null,
-          downloadFileName: bookFileName || null,
-          pageCount: form.pageCount ? Number(form.pageCount) : null,
-          downloadUrl: form.downloadUrl || null,
-          purchaseUrl: form.purchaseUrl || null,
-          priceLabel: form.priceLabel || null,
-          format: form.format || null,
+          coverImageKey: coverKey || (coverImageUrl || undefined),
+          downloadKey: resourceKey || undefined,
+          downloadFileName: resourceFileName || undefined,
+          pageCount: form.pageCount ? Number(form.pageCount) : undefined,
+          downloadUrl: form.downloadUrl || undefined,
+          purchaseUrl: form.purchaseUrl || undefined,
+          priceLabel: form.priceLabel || undefined,
+          format: form.format || undefined,
         }),
       });
 
@@ -186,7 +170,7 @@ export default function EditBookForm({ book }: { book: BookData }) {
         throw new Error(payload.error ?? "Failed to save");
       }
 
-      router.push("/admin/books");
+      router.push("/admin/resources");
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -195,42 +179,11 @@ export default function EditBookForm({ book }: { book: BookData }) {
     }
   }
 
-  async function handleDelete() {
-    if (!confirm("Permanently delete this book? This cannot be undone.")) return;
-    setDeleting(true);
-
-    try {
-      const res = await fetch(`/api/admin/books/${book.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}));
-        throw new Error(payload.error ?? "Delete failed");
-      }
-      router.push("/admin/books");
-      router.refresh();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Delete failed");
-      setDeleting(false);
-    }
-  }
-
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Edit Book</h1>
-          <p className="text-brand-muted mt-1 text-sm truncate max-w-xs">{book.title}</p>
-        </div>
-        <LoadingButton
-          type="button"
-          onClick={handleDelete}
-          loading={deleting}
-          loadingLabel="Deleting…"
-          spinnerTone="muted"
-          icon={<Trash2 size={14} />}
-          className="button-tertiary"
-        >
-          Delete
-        </LoadingButton>
+      <div>
+        <h1 className="text-2xl font-semibold">New Resource</h1>
+        <p className="text-brand-muted mt-1 text-sm">Add a resource to the library.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -243,38 +196,33 @@ export default function EditBookForm({ book }: { book: BookData }) {
           </div>
         ) : null}
 
-        {/* Cover upload */}
         <div className="site-panel p-5 space-y-3">
           <h2 className="text-sm font-semibold">Cover Image</h2>
           <AdminUploadField
-            label="Replace cover"
+            label="Upload cover (optional)"
             mediaKind="cover"
             accept="image/*"
             file={coverFile}
-            objectKey={coverKey && !coverKey.startsWith("http") ? coverKey : ""}
+            objectKey={coverKey}
             externalUrl={coverImageUrl}
             uploadState={uploadState.state}
             progress={uploadState.progress}
             showUrlInput={true}
-            urlPlaceholder="https://example.com/book-cover.jpg"
-            successLabel={coverKey ? "Current cover linked" : "Cover image uploaded"}
+            urlPlaceholder="https://example.com/resource-cover.jpg"
+            successLabel="Cover image uploaded"
             errorMessage={uploadState.error}
             errorRemedy={uploadState.remedy}
             errorDetails={uploadState.technical}
-            onFileChange={(file) => {
-              setCoverFile(file);
+            onFileChange={(f) => {
+              setCoverFile(f);
               setCoverImageUrl("");
               setCoverKey("");
               setUploadState(initialUploadSlot());
-              if (file) void uploadCover(file);
+              if (f) uploadCover(f);
             }}
             onUrlChange={(url) => {
               setCoverImageUrl(url);
-              if (url) {
-                setCoverFile(null);
-                setCoverKey("");
-                setUploadState(initialUploadSlot());
-              }
+              if (url) { setCoverFile(null); setCoverKey(""); setUploadState(initialUploadSlot()); }
             }}
             onRetry={() => {
               if (coverFile) void uploadCover(coverFile);
@@ -287,52 +235,103 @@ export default function EditBookForm({ book }: { book: BookData }) {
 
         {/* Core fields */}
         <div className="site-panel p-5 space-y-4">
-          <h2 className="text-sm font-semibold">Book Details</h2>
+          <h2 className="text-sm font-semibold">Resource Details</h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block sm:col-span-2">
-              <span className="field-label">Title *</span>
-              <input name="title" value={form.title} onChange={handleChange} required
+              <span className="field-label">Section</span>
+              <select
+                name="resourceType"
+                value={form.resourceType}
+                onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              >
+                {RESOURCE_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
+              <span className="text-brand-muted mt-1 block text-xs leading-5">
+                Which Resources section this appears under on the public site.
+              </span>
+            </label>
+
+            <label className="block sm:col-span-2">
+              <span className="field-label">Title *</span>
+              <input
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full rounded border px-3 py-2 text-sm"
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
 
             <label className="block sm:col-span-2">
               <span className="field-label">Tagline *</span>
-              <input name="tagline" value={form.tagline} onChange={handleChange} required
+              <input
+                name="tagline"
+                value={form.tagline}
+                onChange={handleChange}
+                required
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
 
             <label className="block">
               <span className="field-label">Author *</span>
-              <input name="author" value={form.author} onChange={handleChange} required
+              <input
+                name="author"
+                value={form.author}
+                onChange={handleChange}
+                required
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
 
             <label className="block">
               <span className="field-label">Format</span>
-              <select name="format" value={form.format} onChange={handleChange}
+              <select
+                name="format"
+                value={form.format}
+                onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }}>
+                style={{ borderColor: "var(--brand-border)" }}
+              >
                 <option value="">Select format…</option>
-                {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
+                {FORMATS.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
               </select>
             </label>
 
             <label className="block">
               <span className="field-label">Page Count</span>
-              <input name="pageCount" type="number" min={1} value={form.pageCount} onChange={handleChange}
+              <input
+                name="pageCount"
+                type="number"
+                min={1}
+                value={form.pageCount}
+                onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
 
             <label className="block sm:col-span-2">
               <span className="field-label">Description *</span>
-              <textarea name="description" value={form.description} onChange={handleChange} required rows={5}
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                required
+                rows={5}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
           </div>
         </div>
@@ -344,86 +343,90 @@ export default function EditBookForm({ book }: { book: BookData }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="field-label">Availability</span>
-              <select name="availability" value={form.availability} onChange={handleChange}
+              <select
+                name="availability"
+                value={form.availability}
+                onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }}>
-                {AVAILABILITIES.map((availability) => <option key={availability.value} value={availability.value}>{availability.label}</option>)}
+                style={{ borderColor: "var(--brand-border)" }}
+              >
+                {AVAILABILITIES.map((availability) => (
+                  <option key={availability.value} value={availability.value}>{availability.label}</option>
+                ))}
               </select>
             </label>
 
             <label className="block">
               <span className="field-label">Price Label</span>
-              <input name="priceLabel" value={form.priceLabel} onChange={handleChange} placeholder="e.g. $9.99"
+              <input
+                name="priceLabel"
+                value={form.priceLabel}
+                onChange={handleChange}
+                placeholder="e.g. $9.99"
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
 
             <div className="sm:col-span-2">
               <AdminUploadField
-                label="Book file (upload from your device)"
+                label="Resource file (upload from your device)"
                 mediaKind="document"
-                accept={BOOK_FILE_ACCEPT}
-                file={bookFile}
-                objectKey={bookKey}
-                uploadState={bookUploadState.state}
-                progress={bookUploadState.progress}
-                successLabel={
-                  bookFileName
-                    ? `Book file ready: ${bookFileName}`
-                    : "Book file uploaded"
-                }
-                helperText={BOOK_FILE_HELPER_TEXT}
-                errorMessage={bookUploadState.error}
-                errorRemedy={bookUploadState.remedy}
-                errorDetails={bookUploadState.technical}
-                onFileChange={(file) => {
-                  setBookFile(file);
-                  setBookKey("");
-                  setBookFileName("");
-                  setBookUploadState(initialUploadSlot());
-                  if (file) void uploadBookFile(file);
+                accept={RESOURCE_FILE_ACCEPT}
+                file={resourceFile}
+                objectKey={resourceKey}
+                uploadState={resourceUploadState.state}
+                progress={resourceUploadState.progress}
+                successLabel="Resource file uploaded"
+                helperText={RESOURCE_FILE_HELPER_TEXT}
+                errorMessage={resourceUploadState.error}
+                errorRemedy={resourceUploadState.remedy}
+                errorDetails={resourceUploadState.technical}
+                onFileChange={(f) => {
+                  setResourceFile(f);
+                  setResourceKey("");
+                  setResourceFileName("");
+                  setResourceUploadState(initialUploadSlot());
+                  if (f) uploadResourceFile(f);
                 }}
                 onRetry={() => {
-                  if (bookFile) void uploadBookFile(bookFile);
+                  if (resourceFile) void uploadResourceFile(resourceFile);
                 }}
                 onValidationError={(message) => {
-                  setBookUploadState({ state: "error", progress: 0, error: message });
+                  setResourceUploadState({ state: "error", progress: 0, error: message });
                 }}
               />
-              {bookKey ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBookFile(null);
-                    setBookKey("");
-                    setBookFileName("");
-                    setBookUploadState(initialUploadSlot());
-                  }}
-                  className="button-tertiary mt-2 gap-1.5"
-                >
-                  <X size={13} />
-                  Remove book file
-                </button>
-              ) : null}
             </div>
 
             <label className="block sm:col-span-2">
               <span className="field-label">
                 Download URL (optional — only if no file was uploaded)
               </span>
-              <input name="downloadUrl" type="url" value={form.downloadUrl} onChange={handleChange} placeholder="https://…"
+              <input
+                name="downloadUrl"
+                type="url"
+                value={form.downloadUrl}
+                onChange={handleChange}
+                placeholder="https://…"
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
               <span className="text-brand-muted mt-1 block text-xs leading-5">
                 An uploaded file always takes precedence over this link.
               </span>
             </label>
 
             <label className="block sm:col-span-2">
-              <span className="field-label">Purchase URL (for paid books)</span>
-              <input name="purchaseUrl" type="url" value={form.purchaseUrl} onChange={handleChange} placeholder="https://…"
+              <span className="field-label">Purchase URL (for paid resources)</span>
+              <input
+                name="purchaseUrl"
+                type="url"
+                value={form.purchaseUrl}
+                onChange={handleChange}
+                placeholder="https://…"
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }} />
+                style={{ borderColor: "var(--brand-border)" }}
+              />
             </label>
           </div>
         </div>
@@ -435,16 +438,28 @@ export default function EditBookForm({ book }: { book: BookData }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <span className="field-label">Status</span>
-              <select name="status" value={form.status} onChange={handleChange}
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
                 className="mt-1 block w-full rounded border px-3 py-2 text-sm"
-                style={{ borderColor: "var(--brand-border)" }}>
-                {STATUSES.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+                style={{ borderColor: "var(--brand-border)" }}
+              >
+                {STATUSES.map((status) => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
               </select>
             </label>
 
             <label className="flex items-center gap-2 pt-6">
-              <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className="rounded" />
-              <span className="text-sm">Featured book</span>
+              <input
+                type="checkbox"
+                name="featured"
+                checked={form.featured}
+                onChange={handleChange}
+                className="rounded"
+              />
+              <span className="text-sm">Featured resource</span>
             </label>
           </div>
         </div>
@@ -458,12 +473,16 @@ export default function EditBookForm({ book }: { book: BookData }) {
             icon={<Save size={14} />}
             disabled={
               uploadState.state === "uploading" ||
-              bookUploadState.state === "uploading"
+              resourceUploadState.state === "uploading"
             }
           >
-            Save Changes
+            Save Resource
           </LoadingButton>
-          <button type="button" onClick={() => router.back()} className="button-tertiary flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="button-tertiary flex items-center gap-1.5"
+          >
             <X size={14} />
             Cancel
           </button>

@@ -185,8 +185,8 @@ export function MediaCardSkeleton() {
   );
 }
 
-/** Portrait card — matches the books library. */
-export function BookCardSkeleton() {
+/** Portrait card — matches the resources library. */
+export function ResourceCardSkeleton() {
   return (
     <article className="site-panel flex h-full flex-col overflow-hidden p-4 sm:p-5">
       <Skeleton className="aspect-[3/4] w-full" rounded="rounded-lg" />
@@ -216,13 +216,13 @@ export function CardGridSkeleton({
   label = "Loading content",
 }: {
   count?: number;
-  variant?: "media" | "book" | "text";
+  variant?: "media" | "resource" | "text";
   className?: string;
   label?: string;
 }) {
   const Card =
-    variant === "book"
-      ? BookCardSkeleton
+    variant === "resource"
+      ? ResourceCardSkeleton
       : variant === "text"
         ? CardSkeleton
         : MediaCardSkeleton;

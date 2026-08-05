@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../lib/db";
 import { audit } from "../../../../lib/audit";
-import { createUniqueBookSlug } from "../../../../lib/slugs";
+import { createUniqueResourceSlug } from "../../../../lib/slugs";
+import { isResourceType } from "../../../../lib/resources";
 
 function guardDb() {
   if (!isDatabaseConfigured()) {
@@ -11,7 +12,7 @@ function guardDb() {
   return null;
 }
 
-// GET /api/admin/books — list all (all statuses)
+// GET /api/admin/resources — list all (all statuses)
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,16 +21,16 @@ export async function GET() {
   if (guard) return guard;
 
   try {
-    const books = await prisma.book.findMany({
+    const resources = await prisma.book.findMany({
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json(books);
+    return NextResponse.json(resources);
   } catch {
     return NextResponse.json({ error: "Query failed" }, { status: 500 });
   }
 }
 
-// POST /api/admin/books — create
+// POST /api/admin/resources — create
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     pageCount,
     featured,
     availability,
+    resourceType,
     status,
   } = body as Record<string, unknown>;
 
@@ -69,10 +71,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const resolvedSlug = await createUniqueBookSlug(String(title));
+  const resolvedSlug = await createUniqueResourceSlug(String(title));
 
   const resolvedAvailability =
     availability === "PAID" ? "PAID" : "FREE";
+
+  const resolvedResourceType =
+    typeof resourceType === "string" && isResourceType(resourceType.toLowerCase())
+      ? (resourceType.toUpperCase() as "BOOK" | "DEVOTIONAL" | "PULPIT" | "ARTICLE")
+      : "BOOK";
 
   const resolvedStatus =
     status === "PUBLISHED"
@@ -82,7 +89,7 @@ export async function POST(req: NextRequest) {
         : "DRAFT";
 
   try {
-    const book = await prisma.book.create({
+    const resource = await prisma.book.create({
       data: {
         title: String(title),
         slug: resolvedSlug,
@@ -100,25 +107,26 @@ export async function POST(req: NextRequest) {
         pageCount: pageCount ? Number(pageCount) : null,
         featured: featured === true,
         availability: resolvedAvailability,
+        resourceType: resolvedResourceType,
         status: resolvedStatus,
         publishedAt: resolvedStatus === "PUBLISHED" ? new Date() : null,
       },
     });
-    // Audit: record book creation.
+    // Audit: record resource creation.
     await audit({
       session,
       request: req,
       action: "book.create",
       entityType: "Book",
-      entityId: book.id,
-      detail: { title: book.title, status: book.status, availability: book.availability },
+      entityId: resource.id,
+      detail: { title: resource.title, status: resource.status, availability: resource.availability },
     });
-    return NextResponse.json(book, { status: 201 });
+    return NextResponse.json(resource, { status: 201 });
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
     if (code === "P2002") {
       return NextResponse.json({ error: "A generated slug already exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: "Failed to create book" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create resource" }, { status: 500 });
   }
 }

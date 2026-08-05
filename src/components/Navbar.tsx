@@ -18,7 +18,7 @@ const navigation = [
   { href: "/videos", label: "Videos" },
   { href: "/audio", label: "Audio" },
   { href: "/images", label: "Images" },
-  { href: "/books", label: "Books" },
+  { href: "/resources", label: "Resources" },
   { href: "/quotes", label: "Quotes" },
   { href: "/about", label: "About" },
   { href: "/team", label: "Team" },

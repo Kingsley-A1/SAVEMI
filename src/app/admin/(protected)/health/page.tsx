@@ -337,11 +337,11 @@ export default async function AdminHealthPage() {
       value: publishedMessagesMissingMedia,
     },
     {
-      label: "Published free books without download link",
+      label: "Published free resources without download link",
       value: publishedFreeBooksMissingLinks,
     },
     {
-      label: "Published paid books without purchase link",
+      label: "Published paid resources without purchase link",
       value: publishedPaidBooksMissingLinks,
     },
     {
@@ -419,7 +419,7 @@ export default async function AdminHealthPage() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Messages" value={totalMessages} detail={`${publishedMessages} published`} />
-        <StatCard label="Books" value={totalBooks} detail={`${publishedBooks} published`} />
+        <StatCard label="Resources" value={totalBooks} detail={`${publishedBooks} published`} />
         <StatCard label="Quotes" value={totalQuotes} detail={`${publishedQuotes} published`} />
         <StatCard label="Contacts" value={contacts} detail="Visitor submissions" />
         <StatCard label="Admins" value={admins} detail="Registered operators" />
@@ -437,13 +437,13 @@ export default async function AdminHealthPage() {
           </div>
           <div className="space-y-2 text-sm">
             <p>Messages: {publishedMessages} published, {draftMessages} draft, {archivedMessages} archived.</p>
-            <p>Books: {publishedBooks} published, {draftBooks} draft, {archivedBooks} archived.</p>
+            <p>Resources: {publishedBooks} published, {draftBooks} draft, {archivedBooks} archived.</p>
             <p>Quotes: {publishedQuotes} published, {draftQuotes} draft, {archivedQuotes} archived.</p>
             <p className="text-brand-muted text-xs">
               Message mix: {videoMessages} video, {audioMessages} audio, {imageMessages} image.
             </p>
             <p className="text-brand-muted text-xs">
-              Book mix: {freeBooks} free, {paidBooks} paid. Featured quotes: {featuredQuotes}.
+              Resource mix: {freeBooks} free, {paidBooks} paid. Featured quotes: {featuredQuotes}.
             </p>
           </div>
         </div>
@@ -455,7 +455,7 @@ export default async function AdminHealthPage() {
           </div>
           <div className="space-y-2 text-sm">
             <p>Message: {latestMessage?.title ?? "None"} <span className="text-brand-muted text-xs">({latestMessage?.status ?? "n/a"})</span></p>
-            <p>Book: {latestBook?.title ?? "None"} <span className="text-brand-muted text-xs">({latestBook?.status ?? "n/a"})</span></p>
+            <p>Resource: {latestBook?.title ?? "None"} <span className="text-brand-muted text-xs">({latestBook?.status ?? "n/a"})</span></p>
             <p>Quote: {latestQuote?.title ?? "None"} <span className="text-brand-muted text-xs">({latestQuote?.status ?? "n/a"})</span></p>
             <p>Contact: {latestContact?.email ?? "None"} <span className="text-brand-muted text-xs">({formatDate(latestContact?.createdAt ?? null)})</span></p>
           </div>

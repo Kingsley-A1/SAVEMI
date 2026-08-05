@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBookBySlug } from "../../../../lib/books";
+import { getResourceBySlug } from "../../../../lib/resources";
 
 export const dynamic = "force-dynamic";
 
@@ -9,11 +9,11 @@ interface RouteContext {
 
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   const { slug } = await params;
-  const book = await getBookBySlug(slug);
+  const resource = await getResourceBySlug(slug);
 
-  if (!book) {
+  if (!resource) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(book);
+  return NextResponse.json(resource);
 }

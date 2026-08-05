@@ -61,7 +61,7 @@ export async function createUniqueMessageSlug(
   });
 }
 
-export async function createUniqueBookSlug(
+export async function createUniqueResourceSlug(
   title: string,
   currentId?: string,
 ): Promise<string> {

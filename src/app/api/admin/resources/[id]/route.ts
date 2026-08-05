@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../../auth";
 import { prisma, isDatabaseConfigured } from "../../../../../lib/db";
 import { audit } from "../../../../../lib/audit";
-import { createUniqueBookSlug } from "../../../../../lib/slugs";
+import { createUniqueResourceSlug } from "../../../../../lib/slugs";
+import { isResourceType } from "../../../../../lib/resources";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -15,7 +16,7 @@ function guardDb() {
   return null;
 }
 
-// PATCH /api/admin/books/:id — update
+// PATCH /api/admin/resources/:id — update
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -47,6 +48,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     pageCount,
     featured,
     availability,
+    resourceType,
     status,
   } = body as Record<string, unknown>;
 
@@ -59,7 +61,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
   }
   const nextSlug =
-    title !== undefined ? await createUniqueBookSlug(String(title), id) : undefined;
+    title !== undefined ? await createUniqueResourceSlug(String(title), id) : undefined;
+
+  const nextResourceType =
+    typeof resourceType === "string" && isResourceType(resourceType.toLowerCase())
+      ? (resourceType.toUpperCase() as "BOOK" | "DEVOTIONAL" | "PULPIT" | "ARTICLE")
+      : undefined;
 
   try {
     const updated = await prisma.book.update({
@@ -80,11 +87,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         ...(pageCount !== undefined && { pageCount: pageCount ? Number(pageCount) : null }),
         ...(featured !== undefined && { featured: featured === true }),
         ...(availability !== undefined && { availability: availability === "PAID" ? "PAID" : "FREE" }),
+        ...(nextResourceType !== undefined && { resourceType: nextResourceType }),
         ...(status !== undefined && { status: status === "PUBLISHED" ? "PUBLISHED" : status === "ARCHIVED" ? "ARCHIVED" : "DRAFT" }),
         ...(publishedAt !== undefined && { publishedAt }),
       },
     });
-    // Audit: record book update.
+    // Audit: record resource update.
     await audit({
       session,
       request: req,
@@ -102,11 +110,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (code === "P2002") {
       return NextResponse.json({ error: "A generated slug already exists" }, { status: 409 });
     }
-    return NextResponse.json({ error: "Failed to update book" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to update resource" }, { status: 500 });
   }
 }
 
-// DELETE /api/admin/books/:id
+// DELETE /api/admin/resources/:id
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -120,7 +128,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     const deleted = await prisma.book.findUnique({ where: { id }, select: { id: true, title: true } });
     await prisma.book.delete({ where: { id } });
 
-    // Audit: record book deletion.
+    // Audit: record resource deletion.
     await audit({
       session,
       request: _req,
@@ -136,6 +144,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     if (code === "P2025") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json({ error: "Failed to delete book" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete resource" }, { status: 500 });
   }
 }

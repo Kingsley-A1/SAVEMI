@@ -8,11 +8,11 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/download/books/[slug]
+ * GET /api/download/resources/[slug]
  *
- * Streams a published book file uploaded from an admin device, named after the
- * book title. Books that only carry an external link are redirected to that
- * link instead — there is nothing of ours to stream.
+ * Streams a published resource file uploaded from an admin device, named
+ * after the resource title. Resources that only carry an external link are
+ * redirected to that link instead — there is nothing of ours to stream.
  */
 export async function GET(
   request: Request,
@@ -26,11 +26,11 @@ export async function GET(
 
   const { slug } = await params;
 
-  // Visitors only ever reach published books; a signed-in admin can also pull
-  // a draft down to check it before publishing.
+  // Visitors only ever reach published resources; a signed-in admin can also
+  // pull a draft down to check it before publishing.
   const session = await auth().catch(() => null);
 
-  const book = await prisma.book
+  const resource = await prisma.book
     .findFirst({
       where: {
         ...(session ? {} : { status: "PUBLISHED" as const }),
@@ -45,28 +45,28 @@ export async function GET(
     })
     .catch(() => null);
 
-  if (!book) {
-    return new Response("Book not found.", { status: 404 });
+  if (!resource) {
+    return new Response("Resource not found.", { status: 404 });
   }
 
-  if (!book.downloadKey) {
-    if (book.downloadUrl) {
-      return Response.redirect(book.downloadUrl, 302);
+  if (!resource.downloadKey) {
+    if (resource.downloadUrl) {
+      return Response.redirect(resource.downloadUrl, 302);
     }
 
-    return new Response("No file has been attached to this book.", {
+    return new Response("No file has been attached to this resource.", {
       status: 404,
     });
   }
 
   return streamAttachment({
-    key: book.downloadKey,
+    key: resource.downloadKey,
     request,
     fileName: buildDownloadFileName({
-      title: book.title,
+      title: resource.title,
       kind: "document",
       // Prefer the uploaded file's own extension, then the object key's.
-      source: book.downloadFileName || book.downloadKey,
+      source: resource.downloadFileName || resource.downloadKey,
     }),
   });
 }

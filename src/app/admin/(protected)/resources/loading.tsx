@@ -3,11 +3,11 @@ import {
   TableSkeleton,
 } from "../../../../components/ui/Loading";
 
-export default function AdminBooksLoading() {
+export default function AdminResourcesLoading() {
   return (
     <div className="space-y-5">
       <PageHeaderSkeleton />
-      <TableSkeleton rows={6} columns={5} label="Loading books" />
+      <TableSkeleton rows={6} columns={5} label="Loading resources" />
     </div>
   );
 }

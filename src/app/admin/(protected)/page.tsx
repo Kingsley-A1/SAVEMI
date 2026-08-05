@@ -98,18 +98,18 @@ export default async function AdminDashboard() {
       href: "/admin/contacts",
     },
     {
-      label: "Total Books",
+      label: "Total Resources",
       value: stats.totalBooks,
       icon: BookOpen,
       color: "var(--brand-primary-soft)",
-      href: "/admin/books",
+      href: "/admin/resources",
     },
     {
-      label: "Published Books",
+      label: "Published Resources",
       value: stats.publishedBooks,
       icon: BookOpen,
       color: "#16a34a",
-      href: "/admin/books", // Books page doesn't currently support status filter, just link to books
+      href: "/admin/resources", // Resources page doesn't currently support status filter, just link to resources
     },
     {
       label: "Total Quotes",
@@ -197,11 +197,11 @@ export default async function AdminDashboard() {
             View Contacts
           </Link>
           <Link
-            href="/admin/books/new"
+            href="/admin/resources/new"
             className="button-primary flex items-center gap-1.5"
           >
             <PlusCircle size={14} />
-            New Book
+            New Resource
           </Link>
           <Link
             href="/admin/quotes/new"
@@ -210,8 +210,8 @@ export default async function AdminDashboard() {
             <PlusCircle size={14} />
             New Quote
           </Link>
-          <Link href="/admin/books" className="button-tertiary">
-            View All Books
+          <Link href="/admin/resources" className="button-tertiary">
+            View All Resources
           </Link>
           <Link href="/admin/quotes" className="button-tertiary">
             View All Quotes

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { isDatabaseConfigured, prisma } from "../../../lib/db";
 import { buildPageMeta, parsePaginationParams } from "../../../lib/pagination";
 import { resolveAssetUrl } from "../../../lib/r2";
+import { isResourceType } from "../../../lib/resources";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   if (!isDatabaseConfigured()) {
     return NextResponse.json(
-      { error: "Book data is not available until the database is configured." },
+      { error: "Resource data is not available until the database is configured." },
       { status: 503 },
     );
   }
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
 
   const search = searchParams.get("search")?.trim() || undefined;
   const availability = searchParams.get("availability")?.toUpperCase() || undefined;
+  const typeParam = searchParams.get("type")?.trim().toLowerCase();
   const featuredParam = searchParams.get("featured");
   const featured = featuredParam === "true" ? true : undefined;
 
@@ -28,12 +30,17 @@ export async function GET(req: NextRequest) {
   const availabilityFilter = availability && validAvailability.includes(availability)
     ? (availability as "FREE" | "PAID")
     : undefined;
+  const resourceTypeFilter =
+    typeParam && isResourceType(typeParam)
+      ? (typeParam.toUpperCase() as "BOOK" | "DEVOTIONAL" | "PULPIT" | "ARTICLE")
+      : undefined;
 
   try {
     const raw = await prisma.book.findMany({
       where: {
         status: "PUBLISHED",
         ...(availabilityFilter && { availability: availabilityFilter }),
+        ...(resourceTypeFilter && { resourceType: resourceTypeFilter }),
         ...(featured !== undefined && { featured }),
         ...(search && {
           OR: [
@@ -62,6 +69,7 @@ export async function GET(req: NextRequest) {
         pageCount: true,
         featured: true,
         availability: true,
+        resourceType: true,
         publishedAt: true,
         createdAt: true,
       },
@@ -70,25 +78,26 @@ export async function GET(req: NextRequest) {
     const { items, meta } = buildPageMeta(raw, take);
 
     const data = await Promise.all(
-      items.map(async (b) => ({
-        id: b.id,
-        slug: b.slug,
-        title: b.title,
-        tagline: b.tagline,
-        author: b.author,
-        coverImageUrl: await resolveAssetUrl(b.coverImageKey),
-        // An uploaded file downloads through this site under the book title.
-        downloadUrl: b.downloadKey
-          ? `/api/download/books/${b.slug}`
-          : b.downloadUrl,
-        hostedDownload: Boolean(b.downloadKey),
-        purchaseUrl: b.purchaseUrl,
-        priceLabel: b.priceLabel,
-        format: b.format,
-        pageCount: b.pageCount,
-        featured: b.featured,
-        availability: b.availability.toLowerCase(),
-        publishedAt: b.publishedAt?.toISOString() ?? null,
+      items.map(async (r) => ({
+        id: r.id,
+        slug: r.slug,
+        title: r.title,
+        tagline: r.tagline,
+        author: r.author,
+        coverImageUrl: await resolveAssetUrl(r.coverImageKey),
+        // An uploaded file downloads through this site under the resource title.
+        downloadUrl: r.downloadKey
+          ? `/api/download/resources/${r.slug}`
+          : r.downloadUrl,
+        hostedDownload: Boolean(r.downloadKey),
+        purchaseUrl: r.purchaseUrl,
+        priceLabel: r.priceLabel,
+        format: r.format,
+        pageCount: r.pageCount,
+        featured: r.featured,
+        availability: r.availability.toLowerCase(),
+        resourceType: r.resourceType.toLowerCase(),
+        publishedAt: r.publishedAt?.toISOString() ?? null,
       }))
     );
 

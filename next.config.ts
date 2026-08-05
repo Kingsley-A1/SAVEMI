@@ -22,6 +22,26 @@ const nextConfig: NextConfig = {
         destination: "/videos",
         permanent: true,
       },
+      {
+        source: "/books",
+        destination: "/resources",
+        permanent: true,
+      },
+      {
+        source: "/books/:slug",
+        destination: "/resources/:slug",
+        permanent: true,
+      },
+      {
+        source: "/admin/books",
+        destination: "/admin/resources",
+        permanent: true,
+      },
+      {
+        source: "/admin/books/:path*",
+        destination: "/admin/resources/:path*",
+        permanent: true,
+      },
     ];
   },
 

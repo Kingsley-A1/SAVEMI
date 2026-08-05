@@ -44,22 +44,22 @@ async function exportMessages(): Promise<string> {
   return [header, ...lines].join("\n");
 }
 
-async function exportBooks(): Promise<string> {
+async function exportResources(): Promise<string> {
   const rows = await prisma.book.findMany({
     orderBy: { createdAt: "desc" },
     select: {
       id: true, title: true, slug: true, author: true,
-      availability: true, status: true, featured: true,
+      resourceType: true, availability: true, status: true, featured: true,
       priceLabel: true, format: true, pageCount: true,
       downloadUrl: true, purchaseUrl: true,
       createdAt: true, publishedAt: true,
     },
   });
 
-  const header = "id,title,slug,author,availability,status,featured,priceLabel,format,pageCount,downloadUrl,purchaseUrl,createdAt,publishedAt";
+  const header = "id,title,slug,author,resourceType,availability,status,featured,priceLabel,format,pageCount,downloadUrl,purchaseUrl,createdAt,publishedAt";
   const lines = rows.map((r) =>
     rowToCsv([
-      r.id, r.title, r.slug, r.author, r.availability,
+      r.id, r.title, r.slug, r.author, r.resourceType, r.availability,
       r.status, r.featured, r.priceLabel, r.format,
       r.pageCount, r.downloadUrl, r.purchaseUrl,
       r.createdAt.toISOString(), r.publishedAt?.toISOString() ?? "",
@@ -90,7 +90,7 @@ async function exportQuotes(): Promise<string> {
 }
 
 /**
- * GET /api/admin/export?type=messages|books|quotes
+ * GET /api/admin/export?type=messages|resources|quotes
  *
  * Returns a UTF-8 CSV file. Requires an active admin session.
  * Streaming is not used — for the expected data sizes this is fine.
@@ -106,11 +106,11 @@ export async function GET(req: NextRequest) {
   }
 
   const type = new URL(req.url).searchParams.get("type") ?? "";
-  const validTypes = ["messages", "books", "quotes"];
+  const validTypes = ["messages", "resources", "quotes"];
 
   if (!validTypes.includes(type)) {
     return NextResponse.json(
-      { error: "Invalid type. Use one of: messages, books, quotes." },
+      { error: "Invalid type. Use one of: messages, resources, quotes." },
       { status: 400 },
     );
   }
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
   try {
     let csv = "";
     if (type === "messages") csv = await exportMessages();
-    else if (type === "books") csv = await exportBooks();
+    else if (type === "resources") csv = await exportResources();
     else csv = await exportQuotes();
 
     const filename = `savemi-${type}-${new Date().toISOString().slice(0, 10)}.csv`;

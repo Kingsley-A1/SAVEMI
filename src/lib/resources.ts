@@ -2,10 +2,37 @@ import type { Prisma } from "@prisma/client";
 import { isDatabaseConfigured, prisma } from "./db";
 import { resolveAssetUrl } from "./r2";
 
-export type BookAvailability = "free" | "paid";
-export type BookStatus = "draft" | "published" | "archived";
+export type ResourceAvailability = "free" | "paid";
+export type ResourceStatus = "draft" | "published" | "archived";
+export type ResourceType = "book" | "devotional" | "pulpit" | "article";
 
-export interface Book {
+/** Display order and labels for the four Resources sections. */
+export const RESOURCE_TYPE_ORDER: readonly ResourceType[] = [
+  "book",
+  "devotional",
+  "pulpit",
+  "article",
+];
+
+export const RESOURCE_TYPE_LABEL: Record<ResourceType, string> = {
+  book: "Books",
+  devotional: "Devotionals",
+  pulpit: "Pastor's Pulpit",
+  article: "Articles",
+};
+
+export const RESOURCE_TYPE_SINGULAR: Record<ResourceType, string> = {
+  book: "Book",
+  devotional: "Devotional",
+  pulpit: "Pulpit Message",
+  article: "Article",
+};
+
+export function isResourceType(value: string): value is ResourceType {
+  return (RESOURCE_TYPE_ORDER as readonly string[]).includes(value);
+}
+
+export interface Resource {
   id: string;
   slug: string;
   title: string;
@@ -15,8 +42,8 @@ export interface Book {
   coverImageUrl: string | null;
   /**
    * Where the "Download" button points. An uploaded file streams through the
-   * site's own download endpoint under the book title; otherwise this is the
-   * external link the admin supplied.
+   * site's own download endpoint under the resource title; otherwise this is
+   * the external link the admin supplied.
    */
   downloadUrl: string | null;
   /** True when the file is served by SAVEMI rather than a third-party link. */
@@ -26,19 +53,21 @@ export interface Book {
   format: string | null;
   pageCount: number | null;
   featured: boolean;
-  availability: BookAvailability;
-  status: BookStatus;
+  availability: ResourceAvailability;
+  resourceType: ResourceType;
+  status: ResourceStatus;
   publishedAt: string | null;
 }
 
-export interface GetBooksOptions {
+export interface GetResourcesOptions {
   limit?: number;
   search?: string;
-  availability?: BookAvailability;
+  availability?: ResourceAvailability;
+  resourceType?: ResourceType;
   featured?: boolean;
 }
 
-const bookSelect = {
+const resourceSelect = {
   id: true,
   slug: true,
   title: true,
@@ -55,11 +84,12 @@ const bookSelect = {
   pageCount: true,
   featured: true,
   availability: true,
+  resourceType: true,
   status: true,
   publishedAt: true,
 } as const;
 
-type BookRecord = {
+type ResourceRecord = {
   id: string;
   slug: string;
   title: string;
@@ -76,11 +106,12 @@ type BookRecord = {
   pageCount: number | null;
   featured: boolean;
   availability: "FREE" | "PAID";
+  resourceType: "BOOK" | "DEVOTIONAL" | "PULPIT" | "ARTICLE";
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   publishedAt: Date | null;
 };
 
-async function mapBook(record: BookRecord): Promise<Book> {
+async function mapResource(record: ResourceRecord): Promise<Resource> {
   return {
     id: record.id,
     slug: record.slug,
@@ -90,9 +121,9 @@ async function mapBook(record: BookRecord): Promise<Book> {
     author: record.author,
     coverImageUrl: await resolveAssetUrl(record.coverImageKey),
     // An uploaded file always wins: it downloads in one click, under the
-    // book's own title, without leaving the site.
+    // resource's own title, without leaving the site.
     downloadUrl: record.downloadKey
-      ? `/api/download/books/${record.slug}`
+      ? `/api/download/resources/${record.slug}`
       : record.downloadUrl,
     hostedDownload: Boolean(record.downloadKey),
     purchaseUrl: record.purchaseUrl,
@@ -100,14 +131,15 @@ async function mapBook(record: BookRecord): Promise<Book> {
     format: record.format,
     pageCount: record.pageCount,
     featured: record.featured,
-    availability: record.availability.toLowerCase() as BookAvailability,
-    status: record.status.toLowerCase() as BookStatus,
+    availability: record.availability.toLowerCase() as ResourceAvailability,
+    resourceType: record.resourceType.toLowerCase() as ResourceType,
+    status: record.status.toLowerCase() as ResourceStatus,
     publishedAt: record.publishedAt ? record.publishedAt.toISOString() : null,
   };
 }
 
 function buildWhereClause(
-  options: GetBooksOptions,
+  options: GetResourcesOptions,
 ): Prisma.BookWhereInput {
   const where: Prisma.BookWhereInput = {
     status: "PUBLISHED",
@@ -126,6 +158,14 @@ function buildWhereClause(
     where.availability = options.availability.toUpperCase() as "FREE" | "PAID";
   }
 
+  if (options.resourceType) {
+    where.resourceType = options.resourceType.toUpperCase() as
+      | "BOOK"
+      | "DEVOTIONAL"
+      | "PULPIT"
+      | "ARTICLE";
+  }
+
   if (options.featured === true) {
     where.featured = true;
   }
@@ -133,7 +173,9 @@ function buildWhereClause(
   return where;
 }
 
-export async function getBooks(options: GetBooksOptions = {}): Promise<Book[]> {
+export async function getResources(
+  options: GetResourcesOptions = {},
+): Promise<Resource[]> {
   if (!isDatabaseConfigured()) {
     return [];
   }
@@ -143,16 +185,16 @@ export async function getBooks(options: GetBooksOptions = {}): Promise<Book[]> {
       where: buildWhereClause(options),
       orderBy: [{ featured: "desc" }, { publishedAt: "desc" }, { createdAt: "desc" }],
       take: options.limit ?? 48,
-      select: bookSelect,
+      select: resourceSelect,
     });
 
-    return Promise.all(records.map((record) => mapBook(record as BookRecord)));
+    return Promise.all(records.map((record) => mapResource(record as ResourceRecord)));
   } catch {
     return [];
   }
 }
 
-export async function getBookBySlug(slug: string): Promise<Book | undefined> {
+export async function getResourceBySlug(slug: string): Promise<Resource | undefined> {
   if (!isDatabaseConfigured()) {
     return undefined;
   }
@@ -160,19 +202,41 @@ export async function getBookBySlug(slug: string): Promise<Book | undefined> {
   try {
     const record = await prisma.book.findFirst({
       where: { slug, status: "PUBLISHED" },
-      select: bookSelect,
+      select: resourceSelect,
     });
 
     if (!record) {
       return undefined;
     }
 
-    return mapBook(record as BookRecord);
+    return mapResource(record as ResourceRecord);
   } catch {
     return undefined;
   }
 }
 
-export async function getFeaturedBooks(limit = 4): Promise<Book[]> {
-  return getBooks({ featured: true, limit });
+export async function getFeaturedResources(limit = 4): Promise<Resource[]> {
+  return getResources({ featured: true, limit });
+}
+
+/**
+ * One published resource per type, in section order — used to render the
+ * Resources hub without a separate query per section.
+ */
+export async function getResourcesByType(
+  limitPerType = 6,
+): Promise<Record<ResourceType, Resource[]>> {
+  const results = await Promise.all(
+    RESOURCE_TYPE_ORDER.map((resourceType) =>
+      getResources({ resourceType, limit: limitPerType }),
+    ),
+  );
+
+  return RESOURCE_TYPE_ORDER.reduce(
+    (acc, resourceType, index) => {
+      acc[resourceType] = results[index];
+      return acc;
+    },
+    {} as Record<ResourceType, Resource[]>,
+  );
 }

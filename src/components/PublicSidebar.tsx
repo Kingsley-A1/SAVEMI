@@ -56,7 +56,7 @@ const SECTIONS: readonly SidebarSection[] = [
       { href: "/videos", label: "Videos", description: "Sabbath teachings", icon: Film },
       { href: "/audio", label: "Audio", description: "Quiet listening", icon: Headphones },
       { href: "/images", label: "Images", description: "Visual reflections", icon: ImageIcon },
-      { href: "/books", label: "Books", description: "Downloads and resources", icon: BookOpen },
+      { href: "/resources", label: "Resources", description: "Books, devotionals, and more", icon: BookOpen },
       { href: "/quotes", label: "Quotes", description: "Short encouragements", icon: Quote },
     ],
   },

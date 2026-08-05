@@ -1,6 +1,6 @@
 import { prisma, isDatabaseConfigured } from "../../../../../../lib/db";
 import { notFound } from "next/navigation";
-import EditBookForm from "./EditBookForm";
+import EditResourceForm from "./EditResourceForm";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default async function EditBookPage({ params }: Props) {
+export default async function EditResourcePage({ params }: Props) {
   const { id } = await params;
 
   if (!isDatabaseConfigured()) {
@@ -19,9 +19,9 @@ export default async function EditBookPage({ params }: Props) {
     );
   }
 
-  let book;
+  let resource;
   try {
-    book = await prisma.book.findUnique({
+    resource = await prisma.book.findUnique({
       where: { id },
       select: {
         id: true,
@@ -39,6 +39,7 @@ export default async function EditBookPage({ params }: Props) {
         pageCount: true,
         featured: true,
         availability: true,
+        resourceType: true,
         status: true,
       },
     });
@@ -46,7 +47,7 @@ export default async function EditBookPage({ params }: Props) {
     notFound();
   }
 
-  if (!book) notFound();
+  if (!resource) notFound();
 
-  return <EditBookForm book={book} />;
+  return <EditResourceForm resource={resource} />;
 }

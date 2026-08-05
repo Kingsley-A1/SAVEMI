@@ -124,7 +124,7 @@ const operatingRooms: readonly GuideCard[] = [
   },
   {
     title: "Media Cabinet",
-    body: "Cloudflare R2 stores large files such as videos, audio, covers, quote images, book files, and downloadable assets.",
+    body: "Cloudflare R2 stores large files such as videos, audio, covers, quote images, resource files, and downloadable assets.",
     icon: UploadCloud,
   },
   {
@@ -144,7 +144,7 @@ const publicPages: readonly Row[] = [
   { label: "About", value: "Explains Sabbath Vesper Ministry, its mission, location, and seventh-day Sabbath focus." },
   { label: "Contact", value: "Lets visitors send private messages to the ministry office." },
   { label: "Messages", value: "Lists published videos, audios, and image-based ministry messages." },
-  { label: "Books", value: "Lists approved books, downloads, and ministry resources." },
+  { label: "Resources", value: "Lists approved books, devotionals, pastor's pulpit messages, and articles." },
   { label: "Quotes", value: "Shows published reflections, Bible-linked statements, and quote images." },
   { label: "Navigation drawer", value: "The Menu button opens a grouped drawer on every screen size: Ministry, Library, and the guarded door to the Ministry Office." },
 ];
@@ -152,7 +152,7 @@ const publicPages: readonly Row[] = [
 const adminPages: readonly Row[] = [
   { label: "Dashboard", value: "Shows operating KPIs and quick actions for content work." },
   { label: "Messages", value: "Creates, edits, publishes, archives, filters, and exports message records." },
-  { label: "Books", value: "Manages free and paid ministry resources, covers, descriptions, and links." },
+  { label: "Resources", value: "Manages books, devotionals, pastor's pulpit messages, and articles — free or paid, with covers, descriptions, and links." },
   { label: "Quotes", value: "Manages short reflections, attribution, scripture references, and quote images." },
   { label: "Contacts", value: "Reads visitor contact submissions. Treat these messages as private correspondence." },
   { label: "Compose Email", value: "Writes and sends a ministry email through the SAVEMI template, with a live preview of exactly what lands in the inbox." },
@@ -217,19 +217,19 @@ const mediaRows: readonly Row[] = [
   },
   {
     label: "Uploading from your device",
-    value: "Messages, covers, quote images, and book files are all chosen straight from your computer or phone. Large files upload in parts, so a dropped connection re-sends only the piece that failed.",
+    value: "Messages, covers, quote images, and resource files are all chosen straight from your computer or phone. Large files upload in parts, so a dropped connection re-sends only the piece that failed.",
   },
   {
-    label: "Book files",
-    value: "Upload the book itself — PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT. The external download link is optional and only used when no file was uploaded; an uploaded file always takes precedence.",
+    label: "Resource files",
+    value: "Upload the resource itself — PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT. The external download link is optional and only used when no file was uploaded; an uploaded file always takes precedence.",
   },
   {
     label: "Cover images are the link preview",
-    value: "The cover you upload is what WhatsApp, X, and Facebook show when someone shares the link. Give every message, book, and quote a cover. A landscape image around 1200 by 630 and under 300KB previews best; anything much larger may be skipped by WhatsApp. An item with no cover falls back to the ministry card.",
+    value: "The cover you upload is what WhatsApp, X, and Facebook show when someone shares the link. Give every message, resource, and quote a cover. A landscape image around 1200 by 630 and under 300KB previews best; anything much larger may be skipped by WhatsApp. An item with no cover falls back to the ministry card.",
   },
   {
     label: "Sharing",
-    value: "Every message, book, and quote carries a Share button. On a phone it opens the device's own share sheet; on a computer it offers WhatsApp, X, Facebook, and Copy link.",
+    value: "Every message, resource, and quote carries a Share button. On a phone it opens the device's own share sheet; on a computer it offers WhatsApp, X, Facebook, and Copy link.",
   },
   {
     label: "One-click downloads",
@@ -283,7 +283,7 @@ const publishingChecks = [
 ];
 
 const launchChecks = [
-  "Home, About, Contact, Messages, Books, and Quotes have been reviewed.",
+  "Home, About, Contact, Messages, Resources, and Quotes have been reviewed.",
   "Anonymous visitors cannot open admin pages.",
   "Anonymous visitors cannot use admin APIs.",
   "At least one approved admin can sign in.",
@@ -294,7 +294,7 @@ const launchChecks = [
   "Draft and archived content do not appear publicly.",
   "Site Settings holds the correct contact details and social handles.",
   "A test email has been sent and the logo appears in the masthead.",
-  "Downloading a message and a book each saves in one click, under the right name.",
+  "Downloading a message and a resource each saves in one click, under the right name.",
   "The navigation drawer opens, closes on Escape, and works from the keyboard.",
   "Production migrations have completed successfully.",
 ];
@@ -333,7 +333,7 @@ const breakFixRows: readonly Row[] = [
     value: "The saved name comes from the title on the record. Correct the title, save, and download again.",
   },
   {
-    label: "Book file will not upload",
+    label: "Resource file will not upload",
     value: "Check the format is one of PDF, EPUB, MOBI, AZW3, DOC, DOCX, RTF, or TXT, and that the file is under 512MB. Use Retry upload before starting over — it re-sends only what failed.",
   },
   {
@@ -345,7 +345,7 @@ const breakFixRows: readonly Row[] = [
 const knowledgeRows: readonly Row[] = [
   {
     label: "Know by heart",
-    value: "Draft is private. Published is public. Archived is hidden but preserved. Admin access is powerful and must stay limited. An uploaded book file always beats an external link. Blank settings simply do not render.",
+    value: "Draft is private. Published is public. Archived is hidden but preserved. Admin access is powerful and must stay limited. An uploaded resource file always beats an external link. Blank settings simply do not render.",
   },
   {
     label: "Recognize",
@@ -450,10 +450,11 @@ export default function AdminGuidePage() {
           </article>
           <article className="site-panel p-4">
             <BookOpen size={18} style={{ color: "var(--brand-primary)" }} />
-            <h3 className="mt-3 text-sm font-semibold">Books</h3>
+            <h3 className="mt-3 text-sm font-semibold">Resources</h3>
             <p className="text-brand-muted mt-1 text-sm leading-6">
-              Use books for ministry resources. Upload the file itself from your
-              device so visitors download it in one click, named after the book.
+              Use Resources for books, devotionals, pastor&apos;s pulpit
+              messages, and articles. Upload the file itself from your device
+              so visitors download it in one click, named after the title.
               The external link is optional. Paid resources need a tested
               purchase URL.
             </p>
