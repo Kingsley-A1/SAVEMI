@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { getEmbedInfo } from "../lib/embed";
 
 interface MediaPlayerProps {
@@ -7,6 +8,8 @@ interface MediaPlayerProps {
   src: string;
   type: string;
   title: string;
+  /** Shown as cover art above an audio player — audio has no visual of its own. */
+  coverImageUrl?: string | null;
 }
 
 /**
@@ -15,7 +18,7 @@ interface MediaPlayerProps {
  * - YouTube / Facebook URLs → responsive iframe embed
  * - Direct file URLs → native <video>, <audio>, or <img>
  */
-export default function MediaPlayer({ src, type, title }: MediaPlayerProps) {
+export default function MediaPlayer({ src, type, title, coverImageUrl }: MediaPlayerProps) {
   // ─── Embed check ────────────────────────────────────────────────
   const embed = getEmbedInfo(src);
 
@@ -53,8 +56,24 @@ export default function MediaPlayer({ src, type, title }: MediaPlayerProps) {
   // ─── Native audio ───────────────────────────────────────────────
   if (type === "audio") {
     return (
-      <div className="flex flex-col items-center gap-3 py-4">
-        <p className="text-brand-primary text-sm font-medium">{title}</p>
+      <div className="flex flex-col items-center gap-4 py-4">
+        {coverImageUrl ? (
+          <div
+            className="relative aspect-square w-full max-w-[220px] overflow-hidden rounded-xl"
+            style={{ background: "var(--brand-primary-deep)" }}
+          >
+            <Image
+              src={coverImageUrl}
+              alt=""
+              fill
+              sizes="220px"
+              className="object-cover"
+            />
+          </div>
+        ) : null}
+        <p className="text-brand-primary px-4 text-center text-sm font-medium">
+          {title}
+        </p>
         <audio
           controls
           src={src}

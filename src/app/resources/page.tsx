@@ -92,7 +92,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
               src={resource.coverImageUrl}
               alt={`Cover of ${resource.title}`}
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
@@ -107,29 +107,35 @@ function ResourceCard({ resource }: { resource: Resource }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          {resource.format ? <span className="type-badge">{resource.format}</span> : null}
+      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+        <div className="mb-1.5 flex flex-wrap items-center gap-1 sm:mb-2 sm:gap-2">
+          {resource.format ? (
+            <span className="type-badge px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs">
+              {resource.format}
+            </span>
+          ) : null}
           {resource.pageCount ? (
-            <span className="text-brand-muted text-xs">{resource.pageCount} pages</span>
+            <span className="text-brand-muted text-[10px] sm:text-xs">
+              {resource.pageCount} pages
+            </span>
           ) : null}
         </div>
         <Link href={`/resources/${resource.slug}`} className="group">
-          <h3 className="text-base font-semibold leading-snug group-hover:text-brand-primary transition-colors sm:text-lg">
+          <h3 className="text-sm font-semibold leading-snug group-hover:text-brand-primary transition-colors sm:text-base lg:text-lg">
             {resource.title}
           </h3>
         </Link>
-        <p className="text-brand-primary mt-1 text-xs font-semibold">
+        <p className="text-brand-primary mt-1 text-[11px] font-semibold sm:text-xs">
           {resource.author}
         </p>
 
         {resource.tagline ? (
-          <p className="text-brand-muted mt-3 line-clamp-3 text-sm leading-6">
+          <p className="text-brand-muted mt-2 line-clamp-2 text-xs leading-5 sm:mt-3 sm:line-clamp-3 sm:text-sm sm:leading-6">
             {resource.tagline}
           </p>
         ) : null}
 
-        <div className="mt-auto pt-4">
+        <div className="mt-auto pt-3 sm:pt-4">
           {resource.availability === "free" ? (
             resource.downloadUrl ? (
               // Hosted files stream from this site under the resource title;
@@ -138,14 +144,17 @@ function ResourceCard({ resource }: { resource: Resource }) {
                 href={resource.downloadUrl}
                 target={resource.hostedDownload ? undefined : "_blank"}
                 rel={resource.hostedDownload ? undefined : "noopener noreferrer"}
-                className="button-primary w-full justify-center gap-1.5"
+                className="button-primary w-full justify-center gap-1 px-2 py-1.5 text-xs sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
                 aria-label={`Download ${resource.title}`}
               >
                 {actionIcon}
                 Download Free
               </a>
             ) : (
-              <Link href={`/resources/${resource.slug}`} className="button-primary w-full justify-center gap-1.5">
+              <Link
+                href={`/resources/${resource.slug}`}
+                className="button-primary w-full justify-center gap-1 px-2 py-1.5 text-xs sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
+              >
                 <ArrowRight size={14} />
                 View
               </Link>
@@ -155,13 +164,16 @@ function ResourceCard({ resource }: { resource: Resource }) {
               href={resource.purchaseUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="button-primary w-full justify-center gap-1.5"
+              className="button-primary w-full justify-center gap-1 px-2 py-1.5 text-xs sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
             >
               {actionIcon}
               {resource.priceLabel ? `Buy — ${resource.priceLabel}` : "Purchase"}
             </a>
           ) : (
-            <Link href={`/resources/${resource.slug}`} className="button-tertiary w-full justify-center gap-1.5">
+            <Link
+              href={`/resources/${resource.slug}`}
+              className="button-tertiary w-full justify-center gap-1 px-2 py-1.5 text-xs sm:gap-1.5 sm:px-4 sm:py-2 sm:text-sm"
+            >
               <ArrowRight size={14} />
               View Details
             </Link>
@@ -328,7 +340,7 @@ export default async function ResourcesPage({ searchParams }: ResourcesPageProps
                 {items.length === 0 ? (
                   <SectionEmptyState resourceType={type} />
                 ) : (
-                  <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {items.map((resource) => (
                       <li key={resource.id}>
                         <ResourceCard resource={resource} />

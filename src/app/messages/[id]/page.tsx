@@ -106,6 +106,7 @@ export default async function MessageDetail({
             src={mediaSrc}
             type={message.type}
             title={message.title}
+            coverImageUrl={message.coverImageUrl}
           />
         </div>
       ) : (
