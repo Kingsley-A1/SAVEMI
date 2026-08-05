@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Save, Send, Trash2, X } from "lucide-react";
+import { Eye, Info, Save, Send, Trash2, X } from "lucide-react";
 import AdminUploadField from "../../../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../../../components/ui/Loading";
-import { uploadAdminFile } from "../../../../../../lib/admin-upload-client";
+import { isEmbeddableUrl } from "../../../../../../lib/embed";
+import {
+  toUploadErrorDisplay,
+  uploadAdminFile,
+} from "../../../../../../lib/admin-upload-client";
 
 const MESSAGE_TYPES = [
   { value: "VIDEO", label: "Video" },
@@ -165,11 +169,64 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
       setSlot({ state: "done", progress: 100, error: "" });
       return result.objectKey;
     } catch (err) {
-      const nextError = err instanceof Error ? err.message : "Upload failed.";
-      setSlot({ state: "error", progress: 0, error: nextError });
-      setError(nextError);
+      const display = toUploadErrorDisplay(err);
+      // Shown by the field itself — deliberately not mirrored into the
+      // form banner, which is for problems saving the record.
+      setSlot({
+        state: "error",
+        progress: 0,
+        error: display.message,
+        remedy: display.remedy,
+        technical: display.technical,
+      });
       return null;
     }
+  }
+
+  /**
+   * The Type select used to clear `mediaKey`/`audioDownloadKey` unconditionally
+   * on every change, with no way back. Picking a different type by mistake —
+   * or just exploring the dropdown — then saving would silently null out a
+   * live message's video and its audio companion, because those cleared
+   * values are exactly what gets sent to the PATCH endpoint.
+   *
+   * Switching to a genuinely different type still clears the fields, since a
+   * file uploaded for one media kind isn't valid for another. But landing
+   * back on the type the message actually has restores exactly what was
+   * loaded from the database, so idle clicking through the options — or
+   * reconsidering — costs nothing.
+   */
+  function handleTypeChange(nextType: MessageType) {
+    if (nextType === message.type) {
+      setFile(null);
+      setMediaKey(message.mediaKey ?? "");
+      setExternalMediaUrl(message.externalMediaUrl ?? "");
+      setMediaUpload(initialUploadSlot());
+
+      setAudioDownloadFile(null);
+      setAudioDownloadKey(
+        message.audioDownloadKey?.startsWith("http")
+          ? ""
+          : (message.audioDownloadKey ?? ""),
+      );
+      setAudioDownloadUrl(
+        message.audioDownloadKey?.startsWith("http")
+          ? message.audioDownloadKey
+          : "",
+      );
+      setAudioUpload(initialUploadSlot());
+      return;
+    }
+
+    setFile(null);
+    setMediaKey("");
+    setExternalMediaUrl("");
+    setMediaUpload(initialUploadSlot());
+
+    setAudioDownloadFile(null);
+    setAudioDownloadKey("");
+    setAudioDownloadUrl("");
+    setAudioUpload(initialUploadSlot());
   }
 
   function handleMediaFileChange(nextFile: File | null) {
@@ -385,9 +442,25 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                     progress: 0,
                     error: validationError,
                   });
-                  setError(validationError);
                 }}
               />
+
+              {/* YouTube/Facebook links always embed as a video player,
+                  whatever the declared type — the ministry's audio content
+                  often only exists as a short Facebook video, and that's a
+                  reasonable choice, but it should be a seen choice. */}
+              {form.type === "AUDIO" && externalMediaUrl && isEmbeddableUrl(externalMediaUrl) ? (
+                <p className="notice-info mt-2 flex items-start gap-2">
+                  <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    This link plays as a video on the site — YouTube and
+                    Facebook links always embed their own video player,
+                    regardless of the Audio type. That&apos;s fine if this is
+                    a short devotional posted as a video; upload an audio
+                    file above instead if you want a listen-only page.
+                  </span>
+                </p>
+              ) : null}
             </div>
 
             <div>
@@ -401,13 +474,7 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 value={form.type}
                 onChange={(event) => {
                   handleChange(event);
-                  setFile(null);
-                  setMediaKey("");
-                  setMediaUpload(initialUploadSlot());
-                  setAudioDownloadFile(null);
-                  setAudioDownloadKey("");
-                  setAudioDownloadUrl("");
-                  setAudioUpload(initialUploadSlot());
+                  handleTypeChange(event.target.value as MessageType);
                 }}
               >
                 {MESSAGE_TYPES.map((type) => (
@@ -450,6 +517,55 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                 onChange={handleChange}
               />
             </div>
+
+            {/* Kept beside the main media field, not buried under Advanced
+                details — a video message with no companion audio file is
+                easy to publish and forget when this is out of sight. */}
+            {form.type === "VIDEO" ? (
+              <div className="min-w-0 sm:col-span-2">
+                <AdminUploadField
+                  label="Audio download (optional)"
+                  mediaKind="audio"
+                  accept="audio/*"
+                  file={audioDownloadFile}
+                  objectKey={audioDownloadKey}
+                  externalUrl={audioDownloadUrl}
+                  uploadState={audioUpload.state}
+                  progress={audioUpload.progress}
+                  statusMessage={audioUpload.status}
+                  showUrlInput={true}
+                  urlPlaceholder="https://example.com/message-audio.mp3"
+                  successLabel={
+                    audioDownloadKey
+                      ? "Current audio download linked"
+                      : "Audio download ready"
+                  }
+                  helperText="Adds a separate audio-only download for this video — MP3, M4A, or WAV. Skip this if the video has no standalone audio version."
+                  errorMessage={audioUpload.error}
+                  errorRemedy={audioUpload.remedy}
+                  errorDetails={audioUpload.technical}
+                  onFileChange={handleAudioDownloadFileChange}
+                  onUrlChange={(url) => {
+                    setAudioDownloadUrl(url);
+                    if (url) {
+                      setAudioDownloadFile(null);
+                      setAudioDownloadKey("");
+                      setAudioUpload(initialUploadSlot());
+                    }
+                  }}
+                  onRetry={() => {
+                    if (audioDownloadFile) void uploadFile(audioDownloadFile, "audio");
+                  }}
+                  onValidationError={(validationError) => {
+                    setAudioUpload({
+                      state: "error",
+                      progress: 0,
+                      error: validationError,
+                    });
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -547,49 +663,6 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
               </div>
             </div>
 
-            {form.type === "VIDEO" ? (
-              <AdminUploadField
-                label="Audio download"
-                mediaKind="audio"
-                accept="audio/*"
-                file={audioDownloadFile}
-                objectKey={audioDownloadKey}
-                externalUrl={audioDownloadUrl}
-                uploadState={audioUpload.state}
-                progress={audioUpload.progress}
-                statusMessage={audioUpload.status}
-                showUrlInput={true}
-                urlPlaceholder="https://example.com/message-audio.mp3"
-                successLabel={
-                  audioDownloadKey ? "Current audio download linked" : "Audio download ready"
-                }
-                helperText="Optional MP3, M4A, or WAV for public audio download"
-                errorMessage={audioUpload.error}
-                errorRemedy={audioUpload.remedy}
-                errorDetails={audioUpload.technical}
-                onFileChange={handleAudioDownloadFileChange}
-                onUrlChange={(url) => {
-                  setAudioDownloadUrl(url);
-                  if (url) {
-                    setAudioDownloadFile(null);
-                    setAudioDownloadKey("");
-                    setAudioUpload(initialUploadSlot());
-                  }
-                }}
-                onRetry={() => {
-                  if (audioDownloadFile) void uploadFile(audioDownloadFile, "audio");
-                }}
-                onValidationError={(validationError) => {
-                  setAudioUpload({
-                    state: "error",
-                    progress: 0,
-                    error: validationError,
-                  });
-                  setError(validationError);
-                }}
-              />
-            ) : null}
-
             <AdminUploadField
               label="Cover image"
               mediaKind="cover"
@@ -624,7 +697,6 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
                   progress: 0,
                   error: validationError,
                 });
-                setError(validationError);
               }}
             />
           </div>

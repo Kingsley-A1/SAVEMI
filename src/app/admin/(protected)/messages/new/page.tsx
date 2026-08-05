@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Save, Send, X } from "lucide-react";
+import { Eye, Info, Save, Send, X } from "lucide-react";
 import AdminUploadField from "../../../../../components/AdminUploadField";
 import { LoadingButton } from "../../../../../components/ui/Loading";
+import { isEmbeddableUrl } from "../../../../../lib/embed";
 import {
   toUploadErrorDisplay,
   uploadAdminFile,
@@ -321,6 +322,23 @@ export default function NewMessagePage() {
                   setMediaUpload({ state: "error", progress: 0, error: message });
                 }}
               />
+
+              {/* YouTube/Facebook links always embed as a video player,
+                  whatever the declared type — the ministry's audio content
+                  often only exists as a short Facebook video, and that's a
+                  reasonable choice, but it should be a seen choice. */}
+              {form.type === "AUDIO" && externalMediaUrl && isEmbeddableUrl(externalMediaUrl) ? (
+                <p className="notice-info mt-2 flex items-start gap-2">
+                  <Info size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    This link plays as a video on the site — YouTube and
+                    Facebook links always embed their own video player,
+                    regardless of the Audio type. That&apos;s fine if this is
+                    a short devotional posted as a video; upload an audio
+                    file above instead if you want a listen-only page.
+                  </span>
+                </p>
+              ) : null}
             </div>
 
             <div>
@@ -364,6 +382,47 @@ export default function NewMessagePage() {
                 onChange={handleChange}
               />
             </div>
+
+            {/* Kept beside the main media field, not buried under Advanced
+                details — a video message with no companion audio file is
+                easy to publish and forget when this is out of sight. */}
+            {form.type === "VIDEO" ? (
+              <div className="min-w-0 sm:col-span-2">
+                <AdminUploadField
+                  label="Audio download (optional)"
+                  mediaKind="audio"
+                  accept="audio/*"
+                  file={audioDownloadFile}
+                  objectKey={audioDownloadKey}
+                  externalUrl={audioDownloadUrl}
+                  uploadState={audioUpload.state}
+                  progress={audioUpload.progress}
+                  statusMessage={audioUpload.status}
+                  showUrlInput={true}
+                  urlPlaceholder="https://example.com/message-audio.mp3"
+                  successLabel="Audio download ready"
+                  helperText="Adds a separate audio-only download for this video — MP3, M4A, or WAV. Skip this if the video has no standalone audio version."
+                  errorMessage={audioUpload.error}
+                  errorRemedy={audioUpload.remedy}
+                  errorDetails={audioUpload.technical}
+                  onFileChange={handleAudioDownloadFileChange}
+                  onUrlChange={(url) => {
+                    setAudioDownloadUrl(url);
+                    if (url) {
+                      setAudioDownloadFile(null);
+                      setAudioDownloadKey("");
+                      setAudioUpload(initialUploadSlot());
+                    }
+                  }}
+                  onRetry={() => {
+                    if (audioDownloadFile) void uploadFile(audioDownloadFile, "audio");
+                  }}
+                  onValidationError={(message) => {
+                    setAudioUpload({ state: "error", progress: 0, error: message });
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -463,42 +522,6 @@ export default function NewMessagePage() {
                 />
               </div>
             </div>
-
-            {form.type === "VIDEO" ? (
-              <AdminUploadField
-                label="Audio download"
-                mediaKind="audio"
-                accept="audio/*"
-                file={audioDownloadFile}
-                objectKey={audioDownloadKey}
-                externalUrl={audioDownloadUrl}
-                uploadState={audioUpload.state}
-                progress={audioUpload.progress}
-                statusMessage={audioUpload.status}
-                showUrlInput={true}
-                urlPlaceholder="https://example.com/message-audio.mp3"
-                successLabel="Audio download ready"
-                helperText="Optional MP3, M4A, or WAV for public audio download"
-                errorMessage={audioUpload.error}
-                errorRemedy={audioUpload.remedy}
-                errorDetails={audioUpload.technical}
-                onFileChange={handleAudioDownloadFileChange}
-                onUrlChange={(url) => {
-                  setAudioDownloadUrl(url);
-                  if (url) {
-                    setAudioDownloadFile(null);
-                    setAudioDownloadKey("");
-                    setAudioUpload(initialUploadSlot());
-                  }
-                }}
-                onRetry={() => {
-                  if (audioDownloadFile) void uploadFile(audioDownloadFile, "audio");
-                }}
-                onValidationError={(message) => {
-                  setAudioUpload({ state: "error", progress: 0, error: message });
-                }}
-              />
-            ) : null}
 
             <AdminUploadField
               label="Cover image"

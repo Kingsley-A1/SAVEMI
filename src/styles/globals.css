@@ -341,6 +341,15 @@
     @apply rounded px-3 py-2 text-sm leading-6;
   }
 
+  /* A fact worth knowing, not a problem to fix — brand-tinted rather than
+     attention-coloured, so it never reads as something gone wrong. */
+  .notice-info {
+    background: rgba(10, 79, 60, 0.05);
+    border: 1px solid var(--brand-border);
+    color: var(--brand-text);
+    @apply rounded px-3 py-2 text-sm leading-6;
+  }
+
   .text-attention {
     color: var(--state-attention);
   }
