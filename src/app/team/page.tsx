@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Our Team",
   description:
-    "Meet the people who serve Sabbath Vesper Ministry — the ministry anchor, pastoral team, coordinators, and media team behind SAVEMI.",
+    "Meet the people who serve in  Sabbath Vesper Ministry — the ministry anchor, pastoral team, coordinators, and media team behind SAVEMI.",
   openGraph: {
     title: "Our Team | SAVEMI",
     description:

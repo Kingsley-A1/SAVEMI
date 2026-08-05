@@ -110,7 +110,7 @@ Required fix:
 - [ ] Confirm applied migration history in the actual CockroachDB environment.
 - [ ] Reconcile `durationSeconds` type between schema and migration/database.
 - [ ] Standardize generated SQL style for CockroachDB migrations.
-- [ ] Use `prisma migrate deploy` for production, not `migrate dev`.
+- [ ] Use **`pnpm db:migrate:deploy`** (+ `pnpm db:generate`) instead of `pnpm db:migrate` for this project — `migrate dev` will keep failing on this DB due to the schema-locked tables.
 
 Acceptance criteria:
 

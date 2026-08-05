@@ -114,7 +114,7 @@ npm run db:seed
 
 `npm run lint:strict` is the working ESLint quality gate. The `lint` script currently calls `next lint`, which is a legacy command for this installed Next.js version. Use `lint:strict` unless the script is changed.
 
-`npm run db:migrate` is for local development migrations. Production uses `npm run db:migrate:deploy`.
+**Use `pnpm db:migrate:deploy` (+ `pnpm db:generate`) instead of `pnpm db:migrate` for this project — `migrate dev` will keep failing on this DB due to the schema-locked tables.** `npm run db:migrate` runs `prisma migrate dev`, which validates against a throwaway shadow database; the dev CockroachDB was restored from a backup, so its tables are `schema_locked`, and replaying the first migration fails with `P3006`. `npm run db:migrate:deploy` applies pending migrations directly to the target database and is the reliable path here.
 
 `npm run db:seed` is safe only when the seed behavior is understood. In development, the seed script deletes content tables before inserting starter data. In production, it avoids destructive content deletion and only bootstraps the configured admin user.
 
@@ -590,6 +590,8 @@ The standard deployment flow is:
 
 As of 2026-06-03, `npm run db:migrate:deploy` has successfully applied all migrations in this codebase. A direct `_prisma_migrations` check confirms finished rows for `20260521000000_add_audit_log` and `20260521100000_add_external_media_url`.
 
+As of 2026-08-05, `pnpm db:migrate:deploy` applied `20260805000000_add_resource_type` (adds the `ResourceType` enum and `Book.resourceType` column) and `pnpm prisma migrate status` reports "Database schema is up to date". Use **`pnpm db:migrate:deploy`** (+ `pnpm db:generate`) instead of `pnpm db:migrate` for this project — `migrate dev` will keep failing on this DB due to the schema-locked tables.
+
 The repaired migration was `20260521000000_add_audit_log`. It was made CockroachDB-compatible by removing the unsupported `gen_random_id()` default from the `AuditLog.id` column. Prisma supplies string ids through the schema-level `cuid()` behavior, matching the existing admin user pattern. After the failed migration row was marked rolled back, `npm run db:migrate:deploy` applied both `20260521000000_add_audit_log` and `20260521100000_add_external_media_url`.
 
 `npx prisma migrate status` returned "Database schema is up to date" after the successful deploy, but later retries intermittently returned a generic schema-engine error while TCP connectivity to CockroachDB was open. Treat that as a Prisma/Cockroach connectivity issue to monitor during launch.
@@ -704,13 +706,15 @@ Change `prisma/schema.prisma` first. Think about nullability, defaults, indexes,
 Run:
 
 ```powershell
-npm run db:migrate
-npm run db:generate
+pnpm db:migrate:deploy
+pnpm db:generate
 ```
+
+Use **`pnpm db:migrate:deploy`** (+ `pnpm db:generate`) instead of `pnpm db:migrate` for this project — `migrate dev` will keep failing on this DB due to the schema-locked tables. `prisma migrate deploy` applies the pending migration directly to the target database.
 
 Then update affected query helpers, admin forms, admin APIs, public pages, tests, and docs.
 
-Before production, run the migration against a staging or disposable database if possible. Use `npm run db:migrate:deploy` in production.
+Before production, run the migration against a staging or disposable database if possible. Use `pnpm db:migrate:deploy` in production.
 
 Never edit a migration that has already been applied to a shared or production database unless the team has explicitly approved migration repair work.
 
