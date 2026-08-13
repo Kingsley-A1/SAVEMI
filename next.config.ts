@@ -86,6 +86,10 @@ const nextConfig: NextConfig = {
     // Reasonable quality/format defaults for a ministry site
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
+    // Next.js 16 only serves quality 75 unless every value in use is
+    // allowlisted here. The home hero requests 90 for a sharper full-bleed
+    // photo; without this, that request 400s and the hero never renders.
+    qualities: [75, 90],
   },
 
   // Ensure trailing slashes are handled consistently
