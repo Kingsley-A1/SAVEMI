@@ -13,6 +13,7 @@ import {
   FileText,
   RotateCcw,
 } from "lucide-react";
+import { matchesFileAccept } from "../lib/file-accept";
 
 type UploadState = "idle" | "uploading" | "done" | "error";
 type MediaKind = "video" | "audio" | "image" | "cover" | "document";
@@ -75,8 +76,10 @@ function formatBytes(bytes: number) {
 }
 
 function formatAccept(accept: string) {
+  if (accept.includes("audio/*")) {
+    return "Audio files (MP3, M4A, AAC, WAV, OGG, or Opus)";
+  }
   if (accept === "video/*") return "Video files";
-  if (accept === "audio/*") return "Audio files";
   if (accept === "image/*") return "Images";
 
   // Document pickers list explicit extensions — show them plainly.
@@ -89,24 +92,6 @@ function formatAccept(accept: string) {
   if (extensions.length > 0) return extensions.join(", ");
 
   return accept.replace(/\*/g, "files");
-}
-
-function fileMatchesAccept(file: File, accept: string) {
-  return accept
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .some((rule) => {
-      if (rule.endsWith("/*")) {
-        return file.type.startsWith(rule.replace("*", ""));
-      }
-
-      if (rule.startsWith(".")) {
-        return file.name.toLowerCase().endsWith(rule.toLowerCase());
-      }
-
-      return file.type === rule;
-    });
 }
 
 function formatFileSize(bytes: number) {
@@ -180,7 +165,7 @@ export default function AdminUploadField({
       return;
     }
 
-    if (!fileMatchesAccept(nextFile, accept)) {
+    if (!matchesFileAccept(nextFile, accept)) {
       onValidationError?.(`${nextFile.name} is not an accepted ${formatAccept(accept).toLowerCase()} type.`);
       return;
     }

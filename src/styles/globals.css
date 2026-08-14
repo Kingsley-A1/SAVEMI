@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --brand-primary: #0a4f3c;
-  --brand-primary-deep: #063727;
-  --brand-primary-soft: #2f6f5a;
-  --brand-accent: #f1e7c9;
-  --brand-surface: #fffdf7;
-  --brand-surface-strong: rgba(255, 253, 247, 0.98);
-  --brand-border: rgba(10, 79, 60, 0.11);
-  --brand-text: #16352b;
-  --brand-text-soft: #5a7268;
+  --brand-primary: #00291b;
+  --brand-primary-deep: #00291b;
+  --brand-primary-soft: color-mix(in srgb, #00291b 78%, #ffffff);
+  --brand-accent: #f0e7c2;
+  --brand-surface: #ffffff;
+  --brand-surface-strong: rgba(255, 255, 255, 0.98);
+  --brand-border: rgba(0, 41, 27, 0.14);
+  --brand-text: #00291b;
+  --brand-text-soft: color-mix(in srgb, #00291b 72%, #ffffff);
   --brand-shadow:
-    0 1px 3px rgba(6, 55, 39, 0.07), 0 1px 2px rgba(6, 55, 39, 0.04);
+    0 1px 3px rgba(0, 41, 27, 0.1), 0 1px 2px rgba(0, 41, 27, 0.05);
 
   /* ── Attention states ──────────────────────────────────────────────
      A muted clay rather than an alarm red. Nothing on this platform is an
@@ -33,7 +33,7 @@
 
 @layer base {
   html {
-    background: #f3efe4;
+    background: var(--brand-accent);
     /* `clip` (not `hidden`) so the full-bleed hero can never push a sideways
        scrollbar, while sticky positioning keeps working. */
     overflow-x: clip;
@@ -42,8 +42,10 @@
   body {
     min-height: 100vh;
     overflow-x: clip;
-    background: linear-gradient(180deg, #f6f2e8 0%, #faf8f2 60%, #f5f1e8 100%);
+    background: linear-gradient(180deg, var(--brand-accent) 0%, #ffffff 52%, var(--brand-accent) 100%);
     color: var(--brand-text);
+    font-family: var(--font-manrope), Arial, sans-serif;
+    font-synthesis: none;
   }
 
   a {
@@ -52,7 +54,7 @@
   }
 
   ::selection {
-    background: rgba(10, 79, 60, 0.15);
+    background: rgba(0, 41, 27, 0.18);
   }
 }
 
@@ -83,7 +85,7 @@
   .reflection-hero {
     /* Tall enough to breathe, never taller than the screen it opens on. */
     min-height: clamp(560px, calc(100svh - 3.5rem), 880px);
-    color: #fff8ea;
+    color: var(--brand-accent);
     isolation: isolate;
     /* No width utility here — `.full-bleed` owns the width, and a `w-full`
        declared later in this layer would quietly win over its 100vw. */
@@ -107,15 +109,15 @@
     background:
       linear-gradient(
         180deg,
-        rgba(4, 32, 23, 0.62) 0%,
-        rgba(4, 32, 23, 0.18) 30%,
-        rgba(3, 26, 19, 0.72) 74%,
-        rgba(2, 20, 15, 0.94) 100%
+        rgba(0, 41, 27, 0.68) 0%,
+        rgba(0, 41, 27, 0.2) 30%,
+        rgba(0, 41, 27, 0.78) 74%,
+        rgba(0, 0, 0, 0.94) 100%
       ),
       radial-gradient(
         120% 90% at 50% 0%,
-        rgba(6, 55, 39, 0.24) 0%,
-        rgba(6, 55, 39, 0) 62%
+        rgba(0, 41, 27, 0.28) 0%,
+        rgba(0, 41, 27, 0) 62%
       );
   }
 
@@ -124,21 +126,21 @@
   }
 
   .reflection-hero__eyebrow {
-    color: rgba(233, 250, 240, 0.82);
-    text-shadow: 0 1px 12px rgba(2, 20, 15, 0.55);
+    color: rgba(240, 231, 194, 0.86);
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
   }
 
   .reflection-hero__title {
     color: #ffffff;
     letter-spacing: -0.02em;
-    text-shadow: 0 2px 30px rgba(2, 20, 15, 0.5);
+    text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5);
     text-wrap: balance;
     @apply mt-4 max-w-3xl text-[2.1rem] font-semibold leading-[1.08] sm:text-5xl lg:text-[3.75rem];
   }
 
   .reflection-hero__copy {
     color: rgba(255, 255, 255, 0.84);
-    text-shadow: 0 1px 18px rgba(2, 20, 15, 0.55);
+    text-shadow: 0 1px 18px rgba(0, 0, 0, 0.55);
     text-wrap: pretty;
     @apply mt-5 max-w-xl text-[0.95rem] leading-7 sm:text-lg sm:leading-8;
   }
@@ -158,18 +160,18 @@
   /* Scripture reads as a quiet inscription on the photograph — a hairline
      rule, not a card. */
   .reflection-hero__scripture {
-    border-left: 2px solid rgba(134, 239, 172, 0.55);
+    border-left: 2px solid rgba(240, 231, 194, 0.68);
     @apply mt-10 max-w-lg pl-4 sm:mt-12 sm:pl-5;
   }
 
   .reflection-hero__verse {
     color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 16px rgba(2, 20, 15, 0.6);
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.6);
     @apply text-base font-medium italic leading-7 sm:text-lg sm:leading-8;
   }
 
   .reflection-hero__reference {
-    color: rgba(190, 242, 214, 0.86);
+    color: rgba(240, 231, 194, 0.86);
     @apply mt-2 text-xs font-semibold uppercase tracking-[0.16em];
   }
 
@@ -186,8 +188,8 @@
   .mission-card {
     background:
       linear-gradient(135deg, var(--brand-primary-deep) 0%, var(--brand-primary) 100%);
-    color: #fff8ea;
-    box-shadow: 0 8px 30px rgba(6, 55, 39, 0.18);
+    color: var(--brand-accent);
+    box-shadow: 0 8px 30px rgba(0, 41, 27, 0.24);
     @apply relative overflow-hidden rounded-lg px-6 py-8 sm:px-10 sm:py-10;
   }
 
@@ -201,14 +203,14 @@
     border-radius: 9999px;
     background: radial-gradient(
       circle,
-      rgba(134, 239, 172, 0.14) 0%,
-      rgba(134, 239, 172, 0) 68%
+      rgba(240, 231, 194, 0.18) 0%,
+      rgba(240, 231, 194, 0) 68%
     );
     pointer-events: none;
   }
 
   .mission-card__eyebrow {
-    color: rgba(190, 242, 214, 0.82);
+    color: rgba(240, 231, 194, 0.82);
     @apply relative z-10;
   }
 
@@ -220,8 +222,8 @@
   }
 
   .mission-card__seal {
-    border-top: 1px solid rgba(241, 231, 201, 0.22);
-    color: rgba(190, 242, 214, 0.78);
+    border-top: 1px solid rgba(240, 231, 194, 0.3);
+    color: rgba(240, 231, 194, 0.78);
     @apply relative z-10 mt-7 inline-flex items-center gap-2 pt-4 text-xs font-semibold uppercase tracking-[0.18em];
   }
 
@@ -233,7 +235,7 @@
   }
 
   .button-secondary {
-    border: 1px solid rgba(241, 231, 201, 0.3);
+    border: 1px solid rgba(240, 231, 194, 0.38);
     color: var(--brand-accent);
     @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium tracking-wide transition-colors duration-150 hover:bg-white/10;
   }
@@ -273,7 +275,7 @@
   /* ── Type / category badge ───────────────────────────── */
   .type-badge {
     color: var(--brand-primary);
-    background: rgba(10, 79, 60, 0.07);
+    background: rgba(0, 41, 27, 0.07);
     @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
   }
 
@@ -283,9 +285,9 @@
      name is kept on the element itself. */
   .media-badge {
     background: var(--brand-primary-deep);
-    color: #eafaf1;
+    color: var(--brand-accent);
     border: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 1px 6px rgba(2, 20, 15, 0.35);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
     @apply inline-flex items-center justify-center gap-1.5 rounded p-1.5 text-xs font-semibold uppercase tracking-[0.1em] sm:px-2.5 sm:py-1;
   }
 
@@ -293,16 +295,60 @@
     @apply sr-only sm:not-sr-only;
   }
 
+  /* Audio keeps the browser's dependable controls and frames them in one
+     quiet listening surface. No synthetic progress state can drift away from
+     the media element, and the card collapses naturally on narrow screens. */
+  .audio-player {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, #000000 180%);
+    border: 1px solid rgba(240, 231, 194, 0.24);
+    box-shadow: 0 12px 32px rgba(0, 41, 27, 0.22);
+    color: var(--brand-accent);
+    @apply grid gap-5 rounded-lg p-4 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:items-center sm:p-5;
+  }
+
+  .audio-player__art {
+    background: var(--brand-accent);
+    @apply relative aspect-square w-full max-w-52 justify-self-center overflow-hidden rounded sm:max-w-none;
+  }
+
+  .audio-player__fallback {
+    background:
+      linear-gradient(135deg, transparent 0 37%, rgba(0, 41, 27, 0.16) 37% 44%, transparent 44% 51%, rgba(0, 41, 27, 0.16) 51% 58%, transparent 58% 65%, rgba(0, 41, 27, 0.16) 65% 72%, transparent 72% 100%),
+      var(--brand-accent);
+    @apply absolute inset-0;
+  }
+
+  .audio-player__content {
+    @apply min-w-0;
+  }
+
+  .audio-player__eyebrow {
+    color: rgba(240, 231, 194, 0.74);
+    @apply text-[0.68rem] font-semibold uppercase tracking-[0.18em];
+  }
+
+  .audio-player__title {
+    color: #ffffff;
+    text-wrap: balance;
+    @apply mt-2 text-lg font-semibold leading-snug sm:text-xl;
+  }
+
+  .audio-player audio {
+    color-scheme: dark;
+    accent-color: var(--brand-accent);
+    @apply mt-5 w-full;
+  }
+
   /* Hero CTA buttons (on dark surfaces) */
   .hero-btn-primary {
-    background: #22c55e;
-    color: #ffffff;
+    background: var(--brand-accent);
+    color: var(--brand-primary);
     @apply inline-flex items-center justify-center rounded px-4 py-2.5 text-xs font-semibold tracking-wide transition-opacity duration-150 hover:opacity-90 active:opacity-75 sm:px-6 sm:text-sm;
   }
 
   .hero-btn-secondary {
-    border: 1.5px solid rgba(74, 222, 128, 0.55);
-    color: #86efac;
+    border: 1.5px solid rgba(240, 231, 194, 0.62);
+    color: var(--brand-accent);
     @apply inline-flex items-center justify-center rounded px-4 py-2.5 text-xs font-semibold tracking-wide backdrop-blur-sm transition-colors duration-150 hover:bg-white/10 sm:px-6 sm:text-sm;
   }
 
@@ -321,7 +367,7 @@
 
   .field-input:focus {
     border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px rgba(10, 79, 60, 0.09);
+    box-shadow: 0 0 0 3px rgba(0, 41, 27, 0.12);
   }
 
   /* ── Notices ─────────────────────────────────────────── */
@@ -344,7 +390,7 @@
   /* A fact worth knowing, not a problem to fix — brand-tinted rather than
      attention-coloured, so it never reads as something gone wrong. */
   .notice-info {
-    background: rgba(10, 79, 60, 0.05);
+    background: rgba(0, 41, 27, 0.05);
     border: 1px solid var(--brand-border);
     color: var(--brand-text);
     @apply rounded px-3 py-2 text-sm leading-6;
@@ -370,12 +416,12 @@
   /* ── Loading ─────────────────────────────────────────── */
   /* Shared shimmer for every skeleton in components/ui/Loading.tsx. */
   .savemi-shimmer {
-    background-color: rgba(10, 79, 60, 0.07);
+    background-color: rgba(0, 41, 27, 0.07);
     background-image: linear-gradient(
       90deg,
-      rgba(10, 79, 60, 0) 0%,
-      rgba(10, 79, 60, 0.09) 45%,
-      rgba(10, 79, 60, 0) 90%
+      rgba(0, 41, 27, 0) 0%,
+      rgba(0, 41, 27, 0.09) 45%,
+      rgba(0, 41, 27, 0) 90%
     );
     background-size: 220% 100%;
     background-repeat: no-repeat;
@@ -394,16 +440,16 @@
     background: linear-gradient(
       180deg,
       var(--brand-primary-deep) 0%,
-      #05412f 58%,
-      #04301f 100%
+      var(--brand-primary) 58%,
+      #000000 170%
     );
-    color: #eafaf1;
-    box-shadow: 8px 0 40px rgba(2, 20, 15, 0.32);
+    color: var(--brand-accent);
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.32);
     @apply flex h-full w-[min(20rem,86vw)] flex-col;
   }
 
   .public-sidebar__link {
-    color: rgba(234, 250, 241, 0.78);
+    color: rgba(240, 231, 194, 0.82);
     @apply relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors;
   }
 
@@ -420,18 +466,18 @@
   /* A leading rail marks the current page without relying on colour alone. */
   .public-sidebar__link[aria-current="page"]::before {
     content: "";
-    background: #86efac;
+    background: var(--brand-accent);
     @apply absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r;
   }
 
   .public-sidebar__section {
-    color: rgba(190, 242, 214, 0.6);
+    color: rgba(240, 231, 194, 0.68);
     @apply px-3 pb-1.5 pt-4 text-[0.65rem] font-semibold uppercase tracking-[0.2em];
   }
 
   /* Visible keyboard focus everywhere in the drawer. */
   .public-sidebar :is(a, button):focus-visible {
-    outline: 2px solid #86efac;
+    outline: 2px solid var(--brand-accent);
     outline-offset: 2px;
   }
 
@@ -439,7 +485,7 @@
      drawer so the hairlines stay visible. */
   .public-sidebar__social a {
     border-color: rgba(255, 255, 255, 0.22) !important;
-    color: #eafaf1;
+    color: var(--brand-accent);
   }
 
   .public-sidebar__social a:hover {

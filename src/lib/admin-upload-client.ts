@@ -555,7 +555,7 @@ async function uploadSinglePart(
     }),
   });
   const payload = (await response.json().catch(() => null)) as {
-    data?: { uploadUrl?: string; objectKey?: string };
+    data?: { uploadUrl?: string; objectKey?: string; contentType?: string };
     error?: string;
   } | null;
   if (!response.ok || !payload?.data?.uploadUrl || !payload.data.objectKey) {
@@ -573,6 +573,7 @@ async function uploadSinglePart(
   }
   const uploadUrl = payload.data.uploadUrl;
   const objectKey = payload.data.objectKey;
+  const contentType = payload.data.contentType || file.type || null;
 
   onStatus?.({ phase: "uploading", message: "Uploading…" });
 
@@ -582,7 +583,7 @@ async function uploadSinglePart(
         put({
           url: uploadUrl,
           body: file,
-          contentType: file.type,
+          contentType,
           onProgress: (loaded) => {
             const pct = 4 + Math.round((loaded / file.size) * 92);
             onProgress?.(Math.min(96, pct));

@@ -78,6 +78,42 @@ describe("validateUploadRequest", () => {
     if (result.success) expect(result.data.mediaKind).toBe("audio");
   });
 
+  it("canonicalises the browser's M4A MIME alias", () => {
+    const result = validateUploadRequest({
+      fileName: "reflection.m4a",
+      contentType: "audio/x-m4a",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.mediaKind).toBe("audio");
+    expect(result.data.contentType).toBe("audio/mp4");
+  });
+
+  it("identifies an OGG upload when the browser reports no MIME type", () => {
+    const result = validateUploadRequest({
+      fileName: "reflection.ogg",
+      contentType: "",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.mediaKind).toBe("audio");
+    expect(result.data.contentType).toBe("audio/ogg");
+  });
+
+  it("replaces a generic browser MIME type with the audio file type", () => {
+    const result = validateUploadRequest({
+      fileName: "reflection.mp3",
+      contentType: "application/octet-stream",
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.mediaKind).toBe("audio");
+    expect(result.data.contentType).toBe("audio/mpeg");
+  });
+
   it("rejects oversized video (> 5 GB)", () => {
     const result = validateUploadRequest({
       fileName: "huge.mp4",

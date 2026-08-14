@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import type { ReactNode } from "react";
 import "../styles/globals.css";
 import AppShell from "../components/AppShell";
@@ -17,12 +18,17 @@ import { auth } from "../../auth";
 // into the absolute URL WhatsApp and X require. It must match the domain the
 // site is actually served from, so it is read from the environment first.
 const SITE_URL = getSiteUrl();
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+});
 const SITE_NAME = "SAVEMI — Sabbath Vesper Ministry";
 const SITE_DESCRIPTION =
   "Sabbath Vesper Ministry (SAVEMI) in Calabar, Nigeria, sharing biblical reflection on the seventh-day Sabbath through teaching, worship, and Reflection at Eventide.";
 
 export const viewport: Viewport = {
-  themeColor: "#063727",
+  themeColor: "#00291b",
 };
 
 export const metadata: Metadata = {
@@ -108,7 +114,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="min-h-screen antialiased">
+      <body className={`${manrope.variable} min-h-screen antialiased`}>
         <AppShell
           header={<Navbar socialLinks={socialLinks} account={account} />}
           footer={<Footer settings={settings} socialLinks={socialLinks} />}

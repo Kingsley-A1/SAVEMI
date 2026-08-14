@@ -56,32 +56,26 @@ export default function MediaPlayer({ src, type, title, coverImageUrl }: MediaPl
   // ─── Native audio ───────────────────────────────────────────────
   if (type === "audio") {
     return (
-      <div className="flex flex-col items-center gap-4 py-4">
-        {coverImageUrl ? (
-          <div
-            className="relative aspect-square w-full max-w-[220px] overflow-hidden rounded-xl"
-            style={{ background: "var(--brand-primary-deep)" }}
-          >
+      <section className="audio-player" aria-label={`Audio player for ${title}`}>
+        <div className="audio-player__art">
+          {coverImageUrl ? (
             <Image
               src={coverImageUrl}
               alt=""
               fill
-              sizes="220px"
+              sizes="(max-width: 639px) 208px, 168px"
               className="object-cover"
             />
-          </div>
-        ) : null}
-        <p className="text-brand-primary px-4 text-center text-sm font-medium">
-          {title}
-        </p>
-        <audio
-          controls
-          src={src}
-          className="w-full"
-          aria-label={title}
-          preload="metadata"
-        />
-      </div>
+          ) : (
+            <div className="audio-player__fallback" aria-hidden="true" />
+          )}
+        </div>
+        <div className="audio-player__content">
+          <p className="audio-player__eyebrow">Audio message</p>
+          <h2 className="audio-player__title">{title}</h2>
+          <audio controls src={src} aria-label={title} preload="metadata" />
+        </div>
+      </section>
     );
   }
 

@@ -42,7 +42,13 @@ const MEDIA_RULES: MediaRule[] = [
   },
   {
     kind: "audio",
-    mimeTypes: ["audio/mpeg", "audio/mp4", "audio/wav", "audio/x-wav"],
+    mimeTypes: [
+      "audio/mpeg",
+      "audio/mp4",
+      "audio/aac",
+      "audio/wav",
+      "audio/ogg",
+    ],
     maxBytes: 2 * GB,
     compressionPlan: {
       stage: "pre-publish",
@@ -87,10 +93,18 @@ const MEDIA_RULES: MediaRule[] = [
 ];
 
 /**
- * Extension fallbacks for formats browsers report inconsistently (EPUB and
- * MOBI often arrive as an empty or generic content type).
+ * Extension fallbacks for formats browsers report inconsistently. Audio,
+ * EPUB, and MOBI files can arrive with an empty or generic content type.
  */
 const EXTENSION_CONTENT_TYPES: Record<string, string> = {
+  mp3: "audio/mpeg",
+  m4a: "audio/mp4",
+  aac: "audio/aac",
+  wav: "audio/wav",
+  wave: "audio/wav",
+  ogg: "audio/ogg",
+  oga: "audio/ogg",
+  opus: "audio/ogg",
   pdf: "application/pdf",
   epub: "application/epub+zip",
   mobi: "application/x-mobipocket-ebook",
@@ -99,6 +113,17 @@ const EXTENSION_CONTENT_TYPES: Record<string, string> = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   rtf: "application/rtf",
   txt: "text/plain",
+};
+
+/** Browser MIME aliases mapped to the canonical type stored in R2. */
+const CONTENT_TYPE_ALIASES: Record<string, string> = {
+  "audio/mp3": "audio/mpeg",
+  "audio/x-mp3": "audio/mpeg",
+  "audio/x-m4a": "audio/mp4",
+  "audio/x-wav": "audio/wav",
+  "audio/wave": "audio/wav",
+  "audio/x-wave": "audio/wav",
+  "audio/opus": "audio/ogg",
 };
 
 /** Best-effort content type for a file name, used when the browser sends none. */
@@ -139,22 +164,35 @@ export function validateUploadRequest(
     return { success: false, error: "fileName is required." };
   }
 
-  // Sign with exactly what the browser will send, or the upload signature
-  // will not match.
-  const contentType = candidate.contentType?.trim().toLowerCase() ?? "";
+  const reportedContentType =
+    candidate.contentType?.trim().toLowerCase() ?? "";
+  const browserContentType =
+    CONTENT_TYPE_ALIASES[reportedContentType] ?? reportedContentType;
 
   // Browsers report "" or a generic type for some e-book formats, so fall
   // back to the file extension when deciding whether the upload is allowed.
   const extensionType = contentTypeForFileName(fileName);
   const rule =
-    (contentType ? findRule(contentType) : undefined) ??
-    (extensionType ? findRule(extensionType) : undefined);
+    (browserContentType ? findRule(browserContentType) : undefined) ??
+    (!reportedContentType || reportedContentType === "application/octet-stream"
+      ? extensionType
+        ? findRule(extensionType)
+        : undefined
+      : undefined);
 
-  if (!contentType && !extensionType) {
+  const contentType =
+    (browserContentType && findRule(browserContentType)
+      ? browserContentType
+      : undefined) ??
+    (!reportedContentType || reportedContentType === "application/octet-stream"
+      ? extensionType
+      : undefined);
+
+  if (!reportedContentType && !extensionType) {
     return { success: false, error: "contentType is required." };
   }
 
-  if (!rule) {
+  if (!rule || !contentType) {
     return { success: false, error: "Unsupported media type." };
   }
 

@@ -46,7 +46,12 @@ function installFetch() {
 
     if (target.includes("/api/admin/upload-url")) {
       return Response.json({
-        data: { uploadUrl: "https://r2.example/put", objectKey: "video/x.mp4" },
+        data: {
+          uploadUrl: "https://r2.example/put",
+          objectKey: "video/x.mp4",
+          contentType:
+            body.contentType === "audio/mp3" ? "audio/mpeg" : body.contentType,
+        },
       });
     }
 
@@ -298,5 +303,20 @@ describe("status reporting", () => {
 
     expect(Math.max(...seen)).toBe(100);
     expect(seen.every((p) => p >= 0 && p <= 100)).toBe(true);
+  });
+});
+
+describe("direct upload content type", () => {
+  it("uses the canonical type returned by the signer", async () => {
+    const put = vi.fn(async () => ({ eTag: "etag-1" }));
+
+    await uploadAdminFile(
+      { file: fakeFile(4 * MB, "audio/mp3"), fileName: "reflection.mp3" },
+      put,
+    );
+
+    expect(put).toHaveBeenCalledWith(
+      expect.objectContaining({ contentType: "audio/mpeg" }),
+    );
   });
 });

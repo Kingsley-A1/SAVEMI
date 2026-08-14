@@ -17,6 +17,9 @@ const MESSAGE_TYPES = [
   { value: "IMAGE", label: "Image" },
 ] as const;
 
+const AUDIO_ACCEPT =
+  "audio/*,.mp3,.m4a,.aac,.wav,.wave,.ogg,.oga,.opus";
+
 type MessageType = (typeof MESSAGE_TYPES)[number]["value"];
 type SaveAction = "draft" | "preview" | "publish";
 type UploadState = "idle" | "uploading" | "done" | "error";
@@ -291,7 +294,7 @@ export default function NewMessagePage() {
                   form.type === "VIDEO"
                     ? "video/*"
                     : form.type === "AUDIO"
-                      ? "audio/*"
+                      ? AUDIO_ACCEPT
                       : "image/*"
                 }
                 file={file}
@@ -391,7 +394,7 @@ export default function NewMessagePage() {
                 <AdminUploadField
                   label="Audio download (optional)"
                   mediaKind="audio"
-                  accept="audio/*"
+                  accept={AUDIO_ACCEPT}
                   file={audioDownloadFile}
                   objectKey={audioDownloadKey}
                   externalUrl={audioDownloadUrl}
