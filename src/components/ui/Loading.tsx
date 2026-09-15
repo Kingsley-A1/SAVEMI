@@ -185,6 +185,11 @@ export function MediaCardSkeleton() {
   );
 }
 
+/** Pure image tile — matches the image / audio gallery cards (no text). */
+export function TileSkeleton() {
+  return <Skeleton className="aspect-[4/5] w-full" rounded="rounded-[12px]" />;
+}
+
 /** Portrait card — matches the resources library. */
 export function ResourceCardSkeleton() {
   return (
@@ -216,7 +221,7 @@ export function CardGridSkeleton({
   label = "Loading content",
 }: {
   count?: number;
-  variant?: "media" | "resource" | "text";
+  variant?: "media" | "resource" | "text" | "tile";
   className?: string;
   label?: string;
 }) {
@@ -225,7 +230,9 @@ export function CardGridSkeleton({
       ? ResourceCardSkeleton
       : variant === "text"
         ? CardSkeleton
-        : MediaCardSkeleton;
+        : variant === "tile"
+          ? TileSkeleton
+          : MediaCardSkeleton;
 
   return (
     <SkeletonRegion label={label}>

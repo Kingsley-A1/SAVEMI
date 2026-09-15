@@ -3,15 +3,13 @@ import Image from "next/image";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  Download,
   Film,
   Headphones,
   Image as ImageIcon,
+  Play,
   Search,
 } from "lucide-react";
 import type { Message, MessageType } from "../lib/messages";
-import MediaTypeBadge from "./MediaTypeBadge";
-import ShareButton from "./ShareButton";
 
 interface MessageTypeLibraryConfig {
   type: MessageType;
@@ -105,14 +103,9 @@ export const messageLibraryConfigs = {
   },
 } satisfies Record<"audio" | "video" | "image", MessageTypeLibraryConfig>;
 
-function getMediaStatus(message: Message, config: MessageTypeLibraryConfig) {
-  if (message.downloadUrl || message.externalMediaUrl) {
-    return `${config.typeLabel} available`;
-  }
-
-  return "Media coming soon";
-}
-
+// Video: a face — title, preacher, one CTA — everything else waits behind
+// the click. Image / audio: the photograph carries the whole card; no text
+// sits on top of it until the visitor opens it.
 function MessageTypeCard({
   message,
   config,
@@ -124,112 +117,95 @@ function MessageTypeCard({
   const detailHref = `/messages/${message.slug}`;
   const previewUrl =
     config.type === "image"
-      ? message.coverImageUrl ?? message.downloadUrl
-      : config.type === "video"
-        ? message.coverImageUrl
-        : null;
+      ? (message.coverImageUrl ?? message.downloadUrl)
+      : message.coverImageUrl;
 
-  return (
-    <article className="site-panel flex h-full flex-col overflow-hidden">
-      {previewUrl ? (
+  if (config.type === "video") {
+    return (
+      <article className="site-panel flex h-full flex-col overflow-hidden">
         <Link href={detailHref} className="group block">
           <div
             className="relative aspect-video overflow-hidden"
             style={{ background: "var(--brand-primary-deep)" }}
           >
-            <Image
-              src={previewUrl}
-              alt=""
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <MediaTypeBadge type={config.type} className="absolute left-3 top-3" />
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt=""
+                fill
+                quality={90}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <Icon size={34} style={{ color: "#86efac" }} />
+              </div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/45 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
+                <Play size={20} className="ml-0.5 fill-white text-white" />
+              </span>
+            </div>
           </div>
         </Link>
-      ) : null}
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          {!previewUrl ? (
-            <div
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded"
-              style={{ background: "rgba(10,79,60,0.08)" }}
-            >
-              <Icon size={21} style={{ color: "var(--brand-primary)" }} />
-            </div>
+        <div className="flex flex-1 flex-col gap-1 p-4 sm:p-5">
+          <Link href={detailHref} className="group">
+            <h2 className="text-base font-semibold leading-snug transition-colors group-hover:text-brand-primary">
+              {message.title}
+            </h2>
+          </Link>
+          {message.speaker ? (
+            <p className="text-brand-muted text-sm">{message.speaker}</p>
           ) : null}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {!previewUrl ? <MediaTypeBadge type={config.type} /> : null}
-              <span className="text-brand-muted text-xs">{message.date}</span>
-            </div>
+          <Link
+            href={detailHref}
+            className="button-primary mt-3 w-fit gap-1.5"
+            aria-label={`${config.actionLabel} ${message.title}`}
+          >
+            <Icon size={14} aria-hidden="true" />
+            {config.actionLabel}
+          </Link>
+        </div>
+      </article>
+    );
+  }
 
-            <Link href={detailHref} className="group">
-              <h2 className="mt-3 text-base font-semibold leading-snug transition-colors group-hover:text-brand-primary">
-                {message.title}
-              </h2>
-            </Link>
+  return (
+    <Link
+      href={detailHref}
+      className="media-tile group block"
+      aria-label={`${message.title}${message.speaker ? ` — ${message.speaker}` : ""}`}
+    >
+      <div
+        className="relative aspect-[4/5] w-full overflow-hidden"
+        style={{ background: "var(--brand-primary-deep)" }}
+      >
+        {previewUrl ? (
+          <Image
+            src={previewUrl}
+            alt=""
+            fill
+            quality={90}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Icon size={34} style={{ color: "#86efac" }} />
           </div>
-        </div>
+        )}
 
-        <div className="mt-3 space-y-2">
-          {message.speaker || message.scriptureReference ? (
-            <dl className="text-brand-muted flex flex-col gap-1 text-xs">
-              {message.speaker ? (
-                <div>
-                  <dt className="inline font-medium">Speaker: </dt>
-                  <dd className="inline">{message.speaker}</dd>
-                </div>
-              ) : null}
-              {message.scriptureReference ? (
-                <div>
-                  <dt className="inline font-medium">Scripture: </dt>
-                  <dd className="inline">{message.scriptureReference}</dd>
-                </div>
-              ) : null}
-            </dl>
-          ) : null}
-
-          <p className="text-brand-muted line-clamp-3 text-sm leading-6">
-            {message.summary}
-          </p>
-        </div>
-
-        <div className="mt-auto flex flex-col gap-3 pt-5">
-          <p className="text-brand-muted text-xs">
-            {getMediaStatus(message, config)}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={detailHref}
-              className="button-primary gap-1.5"
-              aria-label={`${config.actionLabel} to ${message.title}`}
-            >
-              <Icon size={14} aria-hidden="true" />
-              {config.actionLabel}
-            </Link>
-            {/* Same-origin endpoint: one click saves the file under the
-                message's own title. */}
-            {message.downloadHref ? (
-              <a
-                href={message.downloadHref}
-                className="button-tertiary gap-1.5"
-                aria-label={`${config.downloadLabel} for ${message.title}`}
-              >
-                <Download size={14} aria-hidden="true" />
-                Download
-              </a>
-            ) : null}
-            <ShareButton
-              path={detailHref}
-              title={message.title}
-              summary={message.summary}
-            />
+        {config.type === "audio" ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 opacity-90 backdrop-blur-sm">
+              <Headphones size={18} className="text-white" />
+            </span>
           </div>
-        </div>
+        ) : null}
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -338,7 +314,13 @@ export default function MessageTypeLibrary({
           </p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ul
+          className={
+            config.type === "video"
+              ? "grid grid-cols-1 gap-4 lg:grid-cols-2"
+              : "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+          }
+        >
           {items.map((message) => (
             <li key={message.id}>
               <MessageTypeCard message={message} config={config} />

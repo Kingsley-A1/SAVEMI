@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Headphones, ArrowRight } from "lucide-react";
 import { CardGridSkeleton } from "./ui/Loading";
@@ -10,56 +11,44 @@ interface AudioItem {
   title: string;
   summary: string;
   speaker?: string | null;
-  scriptureReference?: string | null;
-  durationSeconds?: number | null;
+  coverImageUrl?: string | null;
   slug: string;
 }
 
-function formatDuration(seconds: number) {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
+// The cover art carries the card — no title or speaker text on top of it
+// until the visitor opens it, matching the audio library's gallery cards.
 function AudioCard({ item }: { item: AudioItem }) {
   return (
-    <article className="site-panel flex items-start gap-3 p-4">
-      {/* Icon */}
+    <Link
+      href={`/messages/${item.slug}`}
+      className="media-tile group block"
+      aria-label={`${item.title}${item.speaker ? ` — ${item.speaker}` : ""}`}
+    >
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded"
-        style={{ background: "rgba(10,79,60,0.08)" }}
+        className="relative aspect-[4/5] w-full overflow-hidden"
+        style={{ background: "var(--brand-primary-deep)" }}
       >
-        <Headphones size={19} style={{ color: "var(--brand-primary)" }} />
+        {item.coverImageUrl ? (
+          <Image
+            src={item.coverImageUrl}
+            alt=""
+            fill
+            quality={90}
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Headphones size={30} style={{ color: "#86efac" }} />
+          </div>
+        )}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 opacity-90 backdrop-blur-sm">
+            <Headphones size={16} className="text-white" />
+          </span>
+        </div>
       </div>
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        {item.speaker && (
-          <p className="eyebrow text-brand-primary mb-0.5">{item.speaker}</p>
-        )}
-        <h3 className="text-sm font-semibold leading-snug line-clamp-2">
-          {item.title}
-        </h3>
-        {item.scriptureReference && (
-          <p className="text-brand-muted mt-0.5 text-xs italic">
-            {item.scriptureReference}
-          </p>
-        )}
-        {item.durationSeconds && (
-          <p className="text-brand-muted mt-1 text-xs">
-            {formatDuration(item.durationSeconds)}
-          </p>
-        )}
-        <Link
-          href={`/messages/${item.slug}`}
-          className="text-brand-primary mt-2 inline-flex items-center gap-1 text-xs font-medium hover:underline"
-          aria-label={`Listen to ${item.title}`}
-        >
-          <Headphones size={11} />
-          Listen
-        </Link>
-      </div>
-    </article>
+    </Link>
   );
 }
 
@@ -120,9 +109,9 @@ export default function FeaturedAudios({
 
       {isLoading && displayItems.length === 0 ? (
         <CardGridSkeleton
-          count={3}
-          variant="text"
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          count={6}
+          variant="tile"
+          className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6"
           label="Loading featured audio messages"
         />
       ) : displayItems.length === 0 ? (
@@ -130,7 +119,7 @@ export default function FeaturedAudios({
           No published audio messages are available yet.
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {displayItems.map((item) => (
             <AudioCard key={item.id} item={item} />
           ))}

@@ -92,6 +92,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
               src={resource.coverImageUrl}
               alt={`Cover of ${resource.title}`}
               fill
+              quality={90}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -107,19 +108,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
-        <div className="mb-1.5 flex flex-wrap items-center gap-1 sm:mb-2 sm:gap-2">
-          {resource.format ? (
-            <span className="type-badge px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs">
-              {resource.format}
-            </span>
-          ) : null}
-          {resource.pageCount ? (
-            <span className="text-brand-muted text-[10px] sm:text-xs">
-              {resource.pageCount} pages
-            </span>
-          ) : null}
-        </div>
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={`/resources/${resource.slug}`} className="group">
           <h3 className="text-sm font-semibold leading-snug group-hover:text-brand-primary transition-colors sm:text-base lg:text-lg">
             {resource.title}
@@ -128,12 +117,6 @@ function ResourceCard({ resource }: { resource: Resource }) {
         <p className="text-brand-primary mt-1 text-[11px] font-semibold sm:text-xs">
           {resource.author}
         </p>
-
-        {resource.tagline ? (
-          <p className="text-brand-muted mt-2 line-clamp-2 text-xs leading-5 sm:mt-3 sm:line-clamp-3 sm:text-sm sm:leading-6">
-            {resource.tagline}
-          </p>
-        ) : null}
 
         <div className="mt-auto pt-3 sm:pt-4">
           {resource.availability === "free" ? (

@@ -279,6 +279,18 @@
     @apply inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-[0.1em];
   }
 
+  /* ── Pure visual media tile (image / audio) ───────────
+     The photograph is the whole card — no title, date, or summary sits on
+     top of it. 12px corners, a hairline border so it still reads as a card
+     against the page, and nothing else. */
+  .media-tile {
+    background: var(--brand-surface-strong);
+    border: 1px solid var(--brand-border);
+    box-shadow: var(--brand-shadow);
+    border-radius: 12px;
+    @apply block overflow-hidden;
+  }
+
   /* ── Media type badge (Image | Audio | Video) ─────────
      Solid dark green so it stays legible over any cover photo. On phones the
      label collapses and the icon alone carries the meaning — the accessible

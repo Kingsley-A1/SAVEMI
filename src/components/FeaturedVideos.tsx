@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Play, ArrowRight } from "lucide-react";
-import MediaTypeBadge from "./MediaTypeBadge";
 import { CardGridSkeleton } from "./ui/Loading";
 
 interface MediaItem {
@@ -30,6 +29,7 @@ function VideoCard({ item }: { item: MediaItem }) {
             src={item.coverImageUrl}
             alt={item.title}
             fill
+            quality={90}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -42,24 +42,20 @@ function VideoCard({ item }: { item: MediaItem }) {
             />
           </div>
         )}
-        <MediaTypeBadge type="video" className="absolute left-2 top-2" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
+            <Play size={18} className="ml-0.5 fill-white text-white" />
+          </span>
+        </div>
       </div>
 
       <div className="p-4">
-        {item.speaker && (
-          <p className="eyebrow text-brand-primary mb-1">{item.speaker}</p>
-        )}
         <h3 className="text-sm font-semibold leading-snug line-clamp-2">
           {item.title}
         </h3>
-        {item.scriptureReference && (
-          <p className="text-brand-muted mt-1 text-xs italic">
-            {item.scriptureReference}
-          </p>
+        {item.speaker && (
+          <p className="text-brand-muted mt-0.5 text-xs">{item.speaker}</p>
         )}
-        <p className="text-brand-muted mt-2 text-xs leading-5 line-clamp-2">
-          {item.summary}
-        </p>
         <Link
           href={`/messages/${item.slug}`}
           className="button-tertiary mt-3 w-full"
