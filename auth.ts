@@ -8,6 +8,8 @@ import {
 } from "./src/lib/admin-access";
 import { verifyPassword } from "./src/lib/site-users";
 import { prisma } from "./src/lib/db";
+import { redeemEmailCode } from "./src/lib/email-code";
+import { codeVerifyLimiter, getClientIp } from "./src/lib/rate-limit";
 
 export type SessionRole = "admin" | "user";
 
@@ -127,6 +129,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           (await authorizeAdmin(email, password)) ??
           (await authorizeSiteUser(email, password))
         );
+      },
+    }),
+    // Passwordless members: an emailed 6-digit code, no password at all.
+    Credentials({
+      id: "email-code",
+      name: "email-code",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials, request) {
+        if (
+          typeof credentials?.email !== "string" ||
+          typeof credentials?.code !== "string"
+        ) {
+          return null;
+        }
+
+        // Outer wall on guessing; each code also dies after 5 wrong tries.
+        const ip = request ? getClientIp(request) : "unknown";
+        if (!codeVerifyLimiter.check(`email-code:${ip}`).allowed) return null;
+
+        try {
+          const user = await redeemEmailCode(
+            normalizeAdminEmail(credentials.email),
+            credentials.code,
+          );
+          return user ? { ...user, role: "user" as const } : null;
+        } catch {
+          return null;
+        }
       },
     }),
   ],

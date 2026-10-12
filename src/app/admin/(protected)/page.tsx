@@ -67,6 +67,9 @@ export default async function AdminDashboard() {
   const session = await auth();
   const isSuperAdmin = isSuperAdminEmail(session?.user?.email);
   const stats = await getStats();
+  const heldComments = isDatabaseConfigured()
+    ? await prisma.comment.count({ where: { status: "HELD" } }).catch(() => 0)
+    : 0;
 
   const cards = [
     {
@@ -149,6 +152,20 @@ export default async function AdminDashboard() {
           Welcome back. Overview of the ministry content.
         </p>
       </div>
+
+      {heldComments > 0 ? (
+        <Link
+          href="/admin/comments"
+          className="site-panel flex items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-black/5"
+          style={{ borderColor: "var(--state-attention-border)" }}
+        >
+          <span>
+            <strong>{heldComments}</strong>{" "}
+            {heldComments === 1 ? "comment is" : "comments are"} waiting for review
+          </span>
+          <span className="text-brand-primary font-medium">Review →</span>
+        </Link>
+      ) : null}
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">

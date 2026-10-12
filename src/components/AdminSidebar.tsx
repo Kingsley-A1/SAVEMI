@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   Globe,
   ExternalLink,
+  BarChart3,
+  MessagesSquare,
 } from "lucide-react";
 
 const NAV = [
@@ -31,6 +33,8 @@ const NAV = [
   { href: "/admin/quotes", label: "Quotes", icon: Quote },
   { href: "/admin/team", label: "Team", icon: Users },
   { href: "/admin/users", label: "Members", icon: UserRound },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/comments", label: "Comments", icon: MessagesSquare },
   { href: "/admin/contacts", label: "Contacts", icon: Mail },
   { href: "/admin/compose", label: "Compose Email", icon: Send },
   { href: "/admin/settings", label: "Site Settings", icon: Settings },

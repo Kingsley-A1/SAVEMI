@@ -8,6 +8,7 @@ import MediaTypeBadge from "../../../components/MediaTypeBadge";
 import { isEmbeddableUrl } from "../../../lib/embed";
 import { buildShareMetadata } from "../../../lib/share";
 import ShareButton from "../../../components/ShareButton";
+import EngagementSection from "../../../components/engagement/EngagementSection";
 
 export const dynamic = "force-dynamic";
 
@@ -108,6 +109,7 @@ export default async function MessageDetail({
             title={message.title}
             coverImageUrl={message.coverImageUrl}
             posterUrl={message.thumbnailUrl}
+            trackId={message.id}
           />
         </div>
       ) : (
@@ -156,6 +158,10 @@ export default async function MessageDetail({
             </a>
           ) : null}
         </div>
+      </div>
+
+      <div>
+        <EngagementSection kind="MESSAGE" targetId={message.id} title={message.title} />
       </div>
 
       <Link

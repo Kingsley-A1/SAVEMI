@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
 import { getEmbedInfo } from "../lib/embed";
+import { sendTrack } from "./engagement/PageTracker";
 
 interface MediaPlayerProps {
   /** Direct file URL or external platform URL (YouTube, Facebook, etc.) */
@@ -12,7 +14,11 @@ interface MediaPlayerProps {
   coverImageUrl?: string | null;
   /** Still shown on a native video before it plays. */
   posterUrl?: string | null;
+  /** Message id: a real listen (30s, or half a short clip) counts as a play. */
+  trackId?: string;
 }
+
+const PLAY_THRESHOLD_SECONDS = 30;
 
 /**
  * Unified media player.
@@ -26,7 +32,21 @@ export default function MediaPlayer({
   title,
   coverImageUrl,
   posterUrl,
+  trackId,
 }: MediaPlayerProps) {
+  const counted = useRef(false);
+  const onTimeUpdate = (event: React.SyntheticEvent<HTMLMediaElement>) => {
+    if (counted.current || !trackId) return;
+    const media = event.currentTarget;
+    const threshold = Number.isFinite(media.duration)
+      ? Math.min(PLAY_THRESHOLD_SECONDS, media.duration / 2)
+      : PLAY_THRESHOLD_SECONDS;
+    if (media.currentTime >= threshold) {
+      counted.current = true;
+      sendTrack({ type: "play", kind: "MESSAGE", id: trackId });
+    }
+  };
+
   // ─── Embed check ────────────────────────────────────────────────
   const embed = getEmbedInfo(src);
 
@@ -56,6 +76,7 @@ export default function MediaPlayer({
         // Without a poster, `#t=0.1` paints a real frame instead of black.
         src={posterUrl ? src : `${src}#t=0.1`}
         poster={posterUrl ?? undefined}
+        onTimeUpdate={onTimeUpdate}
         className="w-full rounded-xl bg-black"
         aria-label={title}
         preload="metadata"
@@ -83,7 +104,13 @@ export default function MediaPlayer({
         <div className="audio-player__content">
           <p className="audio-player__eyebrow">Audio message</p>
           <h2 className="audio-player__title">{title}</h2>
-          <audio controls src={src} aria-label={title} preload="metadata" />
+          <audio
+            controls
+            src={src}
+            aria-label={title}
+            preload="metadata"
+            onTimeUpdate={onTimeUpdate}
+          />
         </div>
       </section>
     );

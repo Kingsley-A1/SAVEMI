@@ -42,7 +42,10 @@ export type AuditAction =
   | "team.update"
   | "team.delete"
   | "member.update"
-  | "member.delete";
+  | "member.delete"
+  | "comment.show"
+  | "comment.hide"
+  | "comment.delete";
 
 export type AuditEntityType =
   | "Message"
@@ -52,7 +55,8 @@ export type AuditEntityType =
   | "SiteSetting"
   | "SentEmail"
   | "TeamMember"
-  | "SiteUser";
+  | "SiteUser"
+  | "Comment";
 
 export interface AuditParams {
   /** The NextAuth session object from `await auth()`. */

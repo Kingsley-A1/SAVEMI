@@ -1,9 +1,14 @@
+import { after } from "next/server";
 import { auth } from "../../../../../../auth";
 import { isDatabaseConfigured, prisma } from "../../../../../lib/db";
 import {
   buildDownloadFileName,
   streamAttachment,
 } from "../../../../../lib/download";
+import {
+  getRequestContext,
+  recordEvent,
+} from "../../../../../lib/engagement";
 
 export const dynamic = "force-dynamic";
 
@@ -33,14 +38,17 @@ export async function GET(
   // Visitors only ever reach published media; a signed-in admin can also pull
   // a draft down from the preview screen.
   const session = await auth().catch(() => null);
+  // Members are signed in too — only an admin may pull down a draft.
+  const isAdmin = session?.user?.role === "admin";
 
   const message = await prisma.message
     .findFirst({
       where: {
-        ...(session ? {} : { status: "PUBLISHED" as const }),
+        ...(isAdmin ? {} : { status: "PUBLISHED" as const }),
         OR: [{ slug }, { id: slug }],
       },
       select: {
+        id: true,
         title: true,
         type: true,
         mediaKey: true,
@@ -66,6 +74,21 @@ export async function GET(
     variant === "audio"
       ? "audio"
       : (message.type.toLowerCase() as "video" | "audio" | "image");
+
+  // Count a download once: a resumed or chunked transfer re-requests with
+  // a Range header past byte 0, and admin checks are not audience activity.
+  const range = request.headers.get("range");
+  if (!isAdmin && (!range || /^bytes=0-/.test(range))) {
+    after(() =>
+      recordEvent({
+        type: "DOWNLOAD",
+        kind: "MESSAGE",
+        targetId: message.id,
+        userId: session?.user?.role === "user" ? session.user.id : null,
+        context: getRequestContext(request),
+      }),
+    );
+  }
 
   return streamAttachment({
     key,

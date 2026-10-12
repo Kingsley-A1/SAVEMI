@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import AuthCard from "../../components/AuthCard";
 import { LoadingButton } from "../../components/ui/Loading";
+import AuthSheet from "../../components/engagement/AuthSheet";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [codeSheet, setCodeSheet] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -148,6 +150,25 @@ export default function LoginForm() {
           Sign in
         </LoadingButton>
       </form>
+
+      <button
+        type="button"
+        onClick={() => setCodeSheet(true)}
+        className="button-tertiary mt-3 w-full"
+      >
+        Email me a sign-in code instead
+      </button>
+
+      <AuthSheet
+        open={codeSheet}
+        reason="No password needed — we'll email you a 6-digit code."
+        onClose={() => setCodeSheet(false)}
+        onSignedIn={() => {
+          setCodeSheet(false);
+          router.replace(callbackUrl);
+          router.refresh();
+        }}
+      />
     </AuthCard>
   );
 }

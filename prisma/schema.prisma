@@ -140,6 +140,9 @@ model SiteUser {
   resetAttempts   Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  comments        Comment[]
+  likes           Like[]
+  commentReports  CommentReport[]
 
   @@index([createdAt])
 }
@@ -262,4 +265,114 @@ model SentEmail {
   createdAt          DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// A pending passwordless sign-in. One row per address: requesting a new code
+/// replaces the old one. The member account itself is only created once the
+/// code is proven, so unverified addresses never become accounts.
+model EmailCode {
+  email     String   @id
+  /// Name given at request time, used only if the account is new.
+  name      String?
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+/// Anything people can like, comment on, or engage with.
+enum TargetKind {
+  MESSAGE
+  RESOURCE
+  QUOTE
+  COMMENT
+}
+
+enum CommentStatus {
+  VISIBLE
+  /// Waiting for an admin — seen only by its author until approved.
+  HELD
+  HIDDEN
+}
+
+model Comment {
+  id          String        @id @default(cuid())
+  /// MESSAGE, RESOURCE or QUOTE — never COMMENT; replies use parentId.
+  targetKind  TargetKind
+  targetId    String
+  userId      String
+  /// One level of replies: a reply's parent is always a top-level comment.
+  parentId    String?
+  body        String
+  status      CommentStatus @default(VISIBLE)
+  /// Why it was held, e.g. "link", "first comment", "reported".
+  heldReason  String?
+  reportCount Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        SiteUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[]     @relation("CommentReplies")
+  reports     CommentReport[]
+
+  @@index([targetKind, targetId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([parentId])
+}
+
+model CommentReport {
+  commentId String
+  userId    String
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      SiteUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+}
+
+/// One like per person per item — content or a comment.
+model Like {
+  id         String     @id @default(cuid())
+  targetKind TargetKind
+  targetId   String
+  userId     String
+  createdAt  DateTime   @default(now())
+  user       SiteUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([targetKind, targetId, userId])
+  @@index([targetKind, targetId])
+  @@index([userId, createdAt])
+}
+
+enum EngagementType {
+  VIEW
+  PLAY
+  DOWNLOAD
+  LIKE
+  COMMENT
+}
+
+/// First-party engagement analytics. Anonymous visitors carry only a random
+/// first-party id plus coarse country and device — never an IP address.
+model EngagementEvent {
+  id         String         @id @default(cuid())
+  type       EngagementType
+  targetKind TargetKind?
+  targetId   String?
+  path       String?
+  /// Signed-in member, when there is one.
+  userId     String?
+  visitorId  String
+  /// ISO 3166-1 alpha-2, from the edge's geo header.
+  country    String?
+  /// "mobile" | "tablet" | "desktop"
+  device     String?
+  createdAt  DateTime       @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([targetKind, targetId, type])
+  @@index([userId, createdAt])
+  @@index([visitorId, createdAt])
 }
