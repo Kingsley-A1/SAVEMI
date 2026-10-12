@@ -1,6 +1,7 @@
 import { prisma, isDatabaseConfigured } from "../../../../../../lib/db";
 import { notFound } from "next/navigation";
 import EditMessageForm from "./EditMessageForm";
+import { resolveAssetUrl } from "../../../../../../lib/r2";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +46,15 @@ export default async function EditMessagePage({ params }: Props) {
   }
   if (!message) notFound();
 
+  const coverPreviewUrl = await resolveAssetUrl(message.coverImageKey).catch(
+    () => null,
+  );
+
   return (
     <EditMessageForm
       message={{
         ...message,
+        coverPreviewUrl,
         durationSeconds:
           typeof message.durationSeconds === "bigint"
             ? Number(message.durationSeconds)

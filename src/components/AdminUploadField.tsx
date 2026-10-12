@@ -12,6 +12,7 @@ import {
   Music,
   FileText,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { matchesFileAccept } from "../lib/file-accept";
 
@@ -48,6 +49,10 @@ interface AdminUploadFieldProps {
   onUrlChange?: (url: string) => void;
   onRetry?: () => void;
   onValidationError?: (message: string) => void;
+  /** Public URL of the asset already saved, so it can be previewed. */
+  currentUrl?: string | null;
+  /** Offered when something is set; clears it back to empty. */
+  onRemove?: () => void;
 }
 
 const KIND_ICONS: Record<MediaKind, ReactNode> = {
@@ -124,6 +129,8 @@ export default function AdminUploadField({
   onUrlChange,
   onRetry,
   onValidationError,
+  currentUrl,
+  onRemove,
 }: AdminUploadFieldProps) {
   const [source, setSource] = useState<UploadSource>(externalUrl ? "url" : "file");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -141,7 +148,10 @@ export default function AdminUploadField({
   }, [file]);
 
   const resolvedPreview =
-    previewUrl ?? (isImageKind && externalUrl ? externalUrl : null);
+    previewUrl ??
+    (isImageKind && externalUrl ? externalUrl : null) ??
+    (isImageKind && objectKey && currentUrl ? currentUrl : null);
+  const hasValue = Boolean(objectKey || file || externalUrl);
   const isDone = objectKey || uploadState === "done";
   const isUploading = uploadState === "uploading";
   const isError = uploadState === "error";
@@ -416,7 +426,7 @@ export default function AdminUploadField({
               className="truncate text-xs"
               style={{ color: "var(--brand-text-soft)" }}
             >
-              {file?.name ?? externalUrl}
+              {file?.name ?? (externalUrl || "Current cover")}
             </p>
           </div>
         </div>
@@ -508,6 +518,21 @@ export default function AdminUploadField({
       >
         {statusText}
       </p>
+
+      {onRemove && hasValue && !isUploading ? (
+        <button
+          type="button"
+          onClick={() => {
+            setPreviewUrl(null);
+            onRemove();
+          }}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold"
+          style={{ color: "var(--state-attention)" }}
+        >
+          <Trash2 size={13} />
+          Remove
+        </button>
+      ) : null}
     </div>
   );
 }

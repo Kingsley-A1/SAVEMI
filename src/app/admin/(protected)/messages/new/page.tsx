@@ -538,6 +538,12 @@ export default function NewMessagePage() {
               file={coverFile}
               objectKey={coverKey}
               externalUrl={coverImageUrl}
+              onRemove={() => {
+                setCoverFile(null);
+                setCoverKey("");
+                setCoverImageUrl("");
+                setCoverUpload(initialUploadSlot());
+              }}
               uploadState={coverUpload.state}
               progress={coverUpload.progress}
                 statusMessage={coverUpload.status}
