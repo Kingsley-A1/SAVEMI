@@ -49,35 +49,53 @@ export async function POST(request: Request) {
     );
   }
 
+  // Admins sign in with the shared access code, never an emailed code.
+  // Saying so (rather than pretending a code was sent) is the difference
+  // between an admin waiting on an email that never comes and signing in.
+  const admin = await prisma.adminUser
+    .findUnique({ where: { email }, select: { id: true } })
+    .catch(() => null);
+  if (admin) {
+    return NextResponse.json(
+      {
+        error: "This is a SAVEMI admin email. Sign in with your access code instead.",
+        code: "ADMIN_ACCOUNT",
+      },
+      { status: 409 },
+    );
+  }
+
   try {
-    // Admins sign in at the admin door; a member account on the same address
-    // would be shadowed by it.
-    const admin = await prisma.adminUser.findUnique({
+    const member = await prisma.siteUser.findUnique({
       where: { email },
-      select: { id: true },
+      select: { name: true, status: true },
     });
 
-    if (!admin) {
-      const member = await prisma.siteUser.findUnique({
-        where: { email },
-        select: { name: true, status: true },
+    // Suspended accounts get no code — silently, to avoid disclosing status.
+    if (!member || member.status === "ACTIVE") {
+      const code = await issueEmailCode(email, name || null);
+      const { subject, html } = renderSignInCodeEmail({
+        name: member?.name ?? (name || null),
+        code,
+        minutes: MINUTES,
       });
-
-      if (!member || member.status === "ACTIVE") {
-        const code = await issueEmailCode(email, name || null);
-        const { subject, html } = renderSignInCodeEmail({
-          name: member?.name ?? (name || null),
-          code,
-          minutes: MINUTES,
-        });
-        const sent = await sendEmail({ to: email, subject, html });
-        if (!sent.ok) throw new Error(sent.error);
-      }
+      const sent = await sendEmail({ to: email, subject, html });
+      if (!sent.ok) throw new Error(sent.error ?? "Email provider rejected the send");
     }
-  } catch {
+  } catch (error) {
+    // The provider's own reason (e.g. an unverified sending domain) is the
+    // only way to diagnose a delivery failure — keep it in the logs.
+    console.error("[account/code] sign-in code not sent", {
+      to: email.replace(/^(.).*(@.*)$/, "$1***$2"),
+      reason: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
-      { error: "We couldn't send a code just now. Please try again." },
-      { status: 500 },
+      {
+        error:
+          "We couldn't send the email just now. Try again in a minute, or sign in with your password.",
+        code: "SEND_FAILED",
+      },
+      { status: 502 },
     );
   }
 

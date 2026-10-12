@@ -10,7 +10,12 @@ import {
 import { getActiveMember, SIGN_IN_REQUIRED } from "../../../lib/member-session";
 import { rateLimitResponse, reactionLimiter } from "../../../lib/rate-limit";
 
-/** POST /api/likes  { kind, id } — toggles the member's like. */
+/**
+ * POST /api/likes  { kind, id, liked? }
+ *
+ * Sets the member's like to `liked` when given — so a tap made while signed
+ * out can never undo a like they already had — and toggles otherwise.
+ */
 export async function POST(request: Request) {
   if (!isDatabaseConfigured()) {
     return NextResponse.json({ error: "Unavailable" }, { status: 503 });
@@ -43,16 +48,17 @@ export async function POST(request: Request) {
 
   const key = { targetKind_targetId_userId: { targetKind: kind, targetId, userId: member.id } };
   const existing = await prisma.like.findUnique({ where: key, select: { id: true } });
+  const want = typeof body?.liked === "boolean" ? body.liked : !existing;
 
-  if (existing) {
+  if (existing && !want) {
     await prisma.like.delete({ where: { id: existing.id } });
-  } else {
+  } else if (!existing && want) {
     await prisma.like
       .create({ data: { targetKind: kind, targetId, userId: member.id } })
       .catch(() => {}); // A double tap racing itself is not an error.
 
     const contentKind = parseContentKind(kind);
-    if (contentKind) {
+    if (contentKind && !member.isAdmin) {
       after(() =>
         recordEvent({
           type: "LIKE",
@@ -66,5 +72,5 @@ export async function POST(request: Request) {
   }
 
   const count = await prisma.like.count({ where: { targetKind: kind, targetId } });
-  return NextResponse.json({ liked: !existing, count });
+  return NextResponse.json({ liked: want, count });
 }

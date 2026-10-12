@@ -161,6 +161,14 @@ function CommentItem({
       <div className="min-w-0 flex-1">
         <p className="text-xs">
           <span className="font-semibold">{comment.authorName}</span>
+          {comment.isTeam ? (
+            <span
+              className="ml-1.5 rounded px-1.5 py-px align-[1px] text-[10px] font-semibold uppercase tracking-wide"
+              style={{ background: "var(--brand-primary)", color: "var(--brand-accent)" }}
+            >
+              SAVEMI
+            </span>
+          ) : null}
           <span className="text-brand-muted"> · {timeAgo(comment.createdAt)}</span>
         </p>
         <p className="mt-0.5 whitespace-pre-line break-words text-sm leading-6">{comment.body}</p>
@@ -269,31 +277,38 @@ export default function Engagement({
     return response;
   }
 
-  async function toggleLike(targetKind: string, id: string): Promise<{ liked: boolean; count: number } | null> {
+  async function setLike(
+    targetKind: string,
+    id: string,
+    liked: boolean,
+  ): Promise<{ liked: boolean; count: number } | null> {
     const response = await call("/api/likes", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ kind: targetKind, id }),
+      body: JSON.stringify({ kind: targetKind, id, liked }),
     });
     if (!response?.ok) return null;
     return (await response.json()) as { liked: boolean; count: number };
   }
 
-  const likeContent = () =>
-    requireMember("Sign in to like this — it takes a few seconds.", async () => {
+  const likeContent = () => {
+    // The state the person is asking for, fixed at the moment they tapped.
+    const want = !liked;
+    return requireMember("Sign in to like this — it takes a few seconds.", async () => {
       // Optimistic, then reconciled with the server's count.
-      setLiked((v) => !v);
-      setLikeCount((n) => n + (liked ? -1 : 1));
-      const result = await toggleLike(kind, targetId);
+      setLiked(want);
+      setLikeCount((n) => n + (want ? 1 : -1));
+      const result = await setLike(kind, targetId, want);
       if (result) {
         setLiked(result.liked);
         setLikeCount(result.count);
       }
     });
+  };
 
   const likeComment = (comment: CommentView) =>
     requireMember("Sign in to like comments.", async () => {
-      const result = await toggleLike("COMMENT", comment.id);
+      const result = await setLike("COMMENT", comment.id, !comment.liked);
       if (!result) return;
       const apply = (c: CommentView): CommentView =>
         c.id === comment.id
