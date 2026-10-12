@@ -61,9 +61,14 @@ export async function POST(request: Request) {
     parentId = parent.parentId ?? parent.id;
   }
 
-  const hasApprovedBefore =
-    (await prisma.comment.count({ where: { userId: member.id, status: "VISIBLE" } })) > 0;
-  const decision = decideCommentStatus({ body, hasApprovedBefore });
+  // The ministry's own team is trusted; everyone else goes through the rules.
+  const decision = member.isAdmin
+    ? { status: "VISIBLE" as const, reason: null }
+    : decideCommentStatus({
+        body,
+        hasApprovedBefore:
+          (await prisma.comment.count({ where: { userId: member.id, status: "VISIBLE" } })) > 0,
+      });
 
   const comment = await prisma.comment.create({
     data: {
@@ -78,15 +83,18 @@ export async function POST(request: Request) {
     select: { id: true, status: true },
   });
 
-  after(() =>
-    recordEvent({
-      type: "COMMENT",
-      kind,
-      targetId: content.id,
-      userId: member.id,
-      context: getRequestContext(request),
-    }),
-  );
+  // Team activity is not audience engagement.
+  if (!member.isAdmin) {
+    after(() =>
+      recordEvent({
+        type: "COMMENT",
+        kind,
+        targetId: content.id,
+        userId: member.id,
+        context: getRequestContext(request),
+      }),
+    );
+  }
 
   return NextResponse.json(
     { id: comment.id, pending: comment.status === "HELD" },

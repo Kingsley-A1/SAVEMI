@@ -12,7 +12,11 @@ async function getSiteUsers(): Promise<SiteUserRow[]> {
   if (!isDatabaseConfigured()) return [];
 
   try {
+    // Admins get a profile row the first time they comment or like; they are
+    // the ministry team, not public members, so they are left out here.
+    const admins = await prisma.adminUser.findMany({ select: { email: true } });
     const users = await prisma.siteUser.findMany({
+      where: { email: { notIn: admins.map((a) => a.email) } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

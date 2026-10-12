@@ -13,6 +13,8 @@ export interface CommentView {
   id: string;
   body: string;
   authorName: string;
+  /** Written by someone on the ministry team (an admin). */
+  isTeam: boolean;
   createdAt: string;
   pending: boolean;
   isMine: boolean;
@@ -96,7 +98,7 @@ export async function getCommentThread(
         status: true,
         userId: true,
         createdAt: true,
-        user: { select: { name: true } },
+        user: { select: { name: true, email: true } },
         replies: {
           where: visibleTo(viewerId),
           orderBy: { createdAt: "asc" },
@@ -106,19 +108,27 @@ export async function getCommentThread(
             status: true,
             userId: true,
             createdAt: true,
-            user: { select: { name: true } },
+            user: { select: { name: true, email: true } },
           },
         },
       },
     });
 
     const ids = rows.flatMap((r) => [r.id, ...r.replies.map((x) => x.id)]);
-    const { counts, mine } = await likeStats("COMMENT", ids, viewerId);
+    const emails = [...new Set(rows.flatMap((r) => [r.user.email, ...r.replies.map((x) => x.user.email)]))];
+    const [{ counts, mine }, team] = await Promise.all([
+      likeStats("COMMENT", ids, viewerId),
+      emails.length
+        ? prisma.adminUser.findMany({ where: { email: { in: emails } }, select: { email: true } })
+        : Promise.resolve([] as Array<{ email: string }>),
+    ]);
+    const teamEmails = new Set(team.map((t) => t.email));
 
     const toView = (r: (typeof rows)[number]["replies"][number]): CommentView => ({
       id: r.id,
       body: r.body,
       authorName: r.user.name,
+      isTeam: teamEmails.has(r.user.email),
       createdAt: r.createdAt.toISOString(),
       pending: r.status === "HELD",
       isMine: r.userId === viewerId,
