@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Play, ArrowRight } from "lucide-react";
+import VideoThumbnail from "./VideoThumbnail";
 import { CardGridSkeleton } from "./ui/Loading";
 
 interface MediaItem {
@@ -13,59 +13,41 @@ interface MediaItem {
   speaker?: string | null;
   scriptureReference?: string | null;
   coverImageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  previewVideoUrl?: string | null;
   slug: string;
 }
 
+// The video's own thumbnail is the card; title and speaker sit beneath it.
 function VideoCard({ item }: { item: MediaItem }) {
   return (
-    <article className="site-panel overflow-hidden group">
-      {/* Thumbnail placeholder */}
+    <Link
+      href={`/messages/${item.slug}`}
+      className="group block"
+      aria-label={`Watch ${item.title}`}
+    >
       <div
-        className="relative aspect-video w-full overflow-hidden"
+        className="relative aspect-video w-full overflow-hidden rounded-xl"
         style={{ background: "var(--brand-primary-deep)" }}
       >
-        {item.coverImageUrl ? (
-          <Image
-            src={item.coverImageUrl}
-            alt={item.title}
-            fill
-            quality={90}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <Play
-              size={36}
-              className="opacity-40"
-              style={{ color: "#4ade80" }}
-            />
-          </div>
-        )}
+        <VideoThumbnail
+          imageUrl={item.thumbnailUrl ?? item.coverImageUrl}
+          videoUrl={item.previewVideoUrl}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm">
             <Play size={18} className="ml-0.5 fill-white text-white" />
           </span>
         </div>
       </div>
-
-      <div className="p-4">
-        <h3 className="text-sm font-semibold leading-snug line-clamp-2">
-          {item.title}
-        </h3>
-        {item.speaker && (
-          <p className="text-brand-muted mt-0.5 text-xs">{item.speaker}</p>
-        )}
-        <Link
-          href={`/messages/${item.slug}`}
-          className="button-tertiary mt-3 w-full"
-          aria-label={`Watch ${item.title}`}
-        >
-          <Play size={13} className="mr-1.5" />
-          Watch
-        </Link>
-      </div>
-    </article>
+      <h3 className="mt-2.5 line-clamp-2 text-sm font-semibold leading-snug transition-colors group-hover:text-brand-primary">
+        {item.title}
+      </h3>
+      {item.speaker ? (
+        <p className="text-brand-muted mt-0.5 truncate text-xs">{item.speaker}</p>
+      ) : null}
+    </Link>
   );
 }
 
@@ -110,16 +92,15 @@ export default function FeaturedVideos({
 
   return (
     <section>
-      <div className="mb-5 flex items-end justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="eyebrow text-brand-primary">Featured</p>
-          <h2 className="section-title mt-1">Video Messages</h2>
+          <h2 className="section-title">Video Messages</h2>
         </div>
         <Link
           href="/videos"
           className="button-tertiary flex items-center gap-1.5"
         >
-          See more
+          All
           <ArrowRight size={14} />
         </Link>
       </div>
@@ -136,7 +117,7 @@ export default function FeaturedVideos({
           No published video messages are available yet.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
           {displayItems.map((item) => (
             <VideoCard key={item.id} item={item} />
           ))}

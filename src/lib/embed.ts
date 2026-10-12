@@ -21,12 +21,18 @@ export function parseYouTubeId(url: string): string | null {
     if (u.hostname === "youtu.be") {
       return u.pathname.slice(1) || null;
     }
-    // youtube.com/embed/ID
+    // youtube.com/embed/ID, /shorts/ID, /live/ID
     if (
-      (u.hostname === "www.youtube.com" || u.hostname === "youtube.com") &&
-      u.pathname.startsWith("/embed/")
+      (u.hostname === "www.youtube.com" ||
+        u.hostname === "youtube.com" ||
+        u.hostname === "m.youtube.com") &&
+      /^\/(embed|shorts|live)\//.test(u.pathname)
     ) {
       return u.pathname.split("/")[2] || null;
+    }
+    // m.youtube.com/watch?v=ID
+    if (u.hostname === "m.youtube.com" && u.pathname === "/watch") {
+      return u.searchParams.get("v");
     }
   } catch {
     // not a valid URL
@@ -90,4 +96,17 @@ export function isEmbeddableUrl(url: string): boolean {
 export function isExternalUrl(value: string | null | undefined): boolean {
   if (!value) return false;
   return value.startsWith("http://") || value.startsWith("https://");
+}
+
+/**
+ * The platform's own thumbnail for a hosted video, when it has a public one.
+ * YouTube serves `hqdefault` for every video; Facebook needs an API token,
+ * so it returns null and the caller falls back to a frame of the file.
+ */
+export function getVideoThumbnailUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+  const ytId = parseYouTubeId(url);
+  return ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : null;
 }

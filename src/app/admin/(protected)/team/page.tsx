@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Edit2, PlusCircle, Users } from "lucide-react";
+import { Edit2, ExternalLink, PlusCircle, Users } from "lucide-react";
+import PublishMemberButton from "./PublishMemberButton";
 import {
   getAllTeamMembers,
   getInitials,
@@ -14,6 +15,12 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Team | SAVEMI Admin",
   description: "Manage the ministry team shown on the public team page.",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  PUBLISHED: "Public",
+  DRAFT: "Hidden · Draft",
+  ARCHIVED: "Hidden · Archived",
 };
 
 const STATUS_STYLE: Record<string, { background: string; color: string }> = {
@@ -54,6 +61,7 @@ function Avatar({ member, size = 40 }: { member: TeamMember; size?: number }) {
 
 export default async function AdminTeamPage() {
   const members = await getAllTeamMembers();
+  const hiddenCount = members.filter((m) => m.status !== "PUBLISHED").length;
 
   return (
     <div className="space-y-6">
@@ -61,16 +69,29 @@ export default async function AdminTeamPage() {
         <div>
           <h1 className="text-2xl font-semibold">Team</h1>
           <p className="text-brand-muted mt-1 text-sm">
-            {members.length} {members.length === 1 ? "member" : "members"} —
-            ordered by role hierarchy, then by the order set on each member.
+            {members.length} {members.length === 1 ? "member" : "members"}
+            {hiddenCount > 0 ? (
+              <span style={{ color: "var(--state-attention)" }}>
+                {" "}· {hiddenCount} hidden from the public page
+              </span>
+            ) : null}
           </p>
         </div>
-        <Link
-          href="/admin/team/new"
-          className="button-primary flex items-center gap-1.5"
-        >
-          <PlusCircle size={14} /> New Member
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/team"
+            target="_blank"
+            className="button-tertiary flex items-center gap-1.5"
+          >
+            <ExternalLink size={14} /> View public page
+          </Link>
+          <Link
+            href="/admin/team/new"
+            className="button-primary flex items-center gap-1.5"
+          >
+            <PlusCircle size={14} /> New Member
+          </Link>
+        </div>
       </div>
 
       {members.length === 0 ? (
@@ -130,12 +151,24 @@ export default async function AdminTeamPage() {
                         </p>
                       </div>
 
-                      <span
-                        className="hidden shrink-0 rounded px-2 py-0.5 text-xs font-semibold sm:inline-block"
-                        style={STATUS_STYLE[member.status]}
-                      >
-                        {member.status}
-                      </span>
+                      {member.status === "PUBLISHED" ? (
+                        <span
+                          className="shrink-0 rounded px-2 py-0.5 text-xs font-semibold"
+                          style={STATUS_STYLE.PUBLISHED}
+                        >
+                          {STATUS_LABEL.PUBLISHED}
+                        </span>
+                      ) : (
+                        <>
+                          <span
+                            className="hidden shrink-0 rounded px-2 py-0.5 text-xs font-semibold sm:inline-block"
+                            style={STATUS_STYLE[member.status]}
+                          >
+                            {STATUS_LABEL[member.status]}
+                          </span>
+                          <PublishMemberButton id={member.id} />
+                        </>
+                      )}
 
                       <span className="text-brand-muted hidden shrink-0 text-xs sm:inline">
                         #{member.sortOrder}

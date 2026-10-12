@@ -527,12 +527,23 @@ export default function NewMessagePage() {
             </div>
 
             <AdminUploadField
-              label="Cover image"
+              label={form.type === "VIDEO" ? "Custom cover (optional)" : "Cover image"}
               mediaKind="cover"
               accept="image/*"
+              helperText={
+                form.type === "VIDEO"
+                  ? "Leave empty to use the video's own thumbnail."
+                  : undefined
+              }
               file={coverFile}
               objectKey={coverKey}
               externalUrl={coverImageUrl}
+              onRemove={() => {
+                setCoverFile(null);
+                setCoverKey("");
+                setCoverImageUrl("");
+                setCoverUpload(initialUploadSlot());
+              }}
               uploadState={coverUpload.state}
               progress={coverUpload.progress}
                 statusMessage={coverUpload.status}

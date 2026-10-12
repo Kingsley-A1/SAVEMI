@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "../../../../../auth";
 import { isDatabaseConfigured, prisma } from "../../../../lib/db";
 import { audit } from "../../../../lib/audit";
@@ -113,6 +114,8 @@ export async function POST(req: NextRequest) {
       detail: { name: member.name, role: member.role, status: member.status },
     });
 
+    // Drop any cached render of the public page so the change shows at once.
+    revalidatePath("/team");
     return NextResponse.json(member, { status: 201 });
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;

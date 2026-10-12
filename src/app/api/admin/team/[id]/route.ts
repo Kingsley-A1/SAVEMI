@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "../../../../../../auth";
 import { isDatabaseConfigured, prisma } from "../../../../../lib/db";
 import { audit } from "../../../../../lib/audit";
@@ -125,6 +126,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       detail: { name: updated.name, role: updated.role, status: updated.status },
     });
 
+    revalidatePath("/team");
     return NextResponse.json(updated);
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;
@@ -173,6 +175,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       detail: { name: existing?.name },
     });
 
+    revalidatePath("/team");
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const code = (err as { code?: string })?.code;

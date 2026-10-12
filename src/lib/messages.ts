@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { MessageType as DbMessageType } from "@prisma/client";
 import { isDatabaseConfigured, prisma } from "./db";
 import { resolveAssetUrl } from "./r2";
+import { getVideoThumbnailUrl, isEmbeddableUrl } from "./embed";
 
 export type MessageType = "video" | "audio" | "image";
 
@@ -17,6 +18,16 @@ export interface Message {
   scriptureReference: string | null;
   category: string | null;
   coverImageUrl: string | null;
+  /**
+   * What a card shows. A cover the admin chose always wins; otherwise a video
+   * shows its own thumbnail (YouTube) and an image shows itself.
+   */
+  thumbnailUrl: string | null;
+  /**
+   * A playable video file for cards to draw their first frame from — set only
+   * when there is no thumbnail image to show instead.
+   */
+  previewVideoUrl: string | null;
   /** Direct storage URL — used for in-page playback only. */
   downloadUrl: string | null;
   externalMediaUrl: string | null;
@@ -146,6 +157,21 @@ function buildWhereClause(
 }
 
 async function mapMessage(message: MessageRecord): Promise<Message> {
+  const type = message.type.toLowerCase() as MessageType;
+  const coverImageUrl = await resolveAssetUrl(message.coverImageKey);
+  const downloadUrl = await resolveAssetUrl(message.mediaKey);
+  const external = message.externalMediaUrl;
+
+  const thumbnailUrl =
+    coverImageUrl ??
+    (type === "video" ? getVideoThumbnailUrl(external) : null) ??
+    (type === "image" ? downloadUrl : null);
+
+  const previewVideoUrl =
+    type === "video" && !thumbnailUrl
+      ? (downloadUrl ?? (external && !isEmbeddableUrl(external) ? external : null))
+      : null;
+
   return {
     id: message.id,
     slug: message.slug,
@@ -155,12 +181,14 @@ async function mapMessage(message: MessageRecord): Promise<Message> {
     date: formatDate(
       message.eventDate ?? message.publishedAt ?? message.createdAt,
     ),
-    type: message.type.toLowerCase() as MessageType,
+    type,
     speaker: message.speaker,
     scriptureReference: message.scriptureReference,
     category: message.category?.name ?? null,
-    coverImageUrl: await resolveAssetUrl(message.coverImageKey),
-    downloadUrl: await resolveAssetUrl(message.mediaKey),
+    coverImageUrl,
+    thumbnailUrl,
+    previewVideoUrl,
+    downloadUrl,
     externalMediaUrl: message.externalMediaUrl,
     audioDownloadUrl: await resolveAssetUrl(message.audioDownloadKey),
     downloadHref: message.mediaKey
@@ -195,7 +223,8 @@ export async function getMessages(
     return Promise.all(
       records.map((message) => mapMessage(message as MessageRecord)),
     );
-  } catch {
+  } catch (error) {
+    console.error("[messages] getMessages failed", error);
     return [];
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isDatabaseConfigured, prisma } from "../../../lib/db";
 import { buildPageMeta, parsePaginationParams } from "../../../lib/pagination";
 import { resolveAssetUrl } from "../../../lib/r2";
+import { getVideoThumbnailUrl } from "../../../lib/embed";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,9 @@ export async function GET(req: NextRequest) {
     const { items, meta } = buildPageMeta(raw, take);
 
     const data = await Promise.all(
-      items.map(async (m) => ({
+      items.map(async (m) => {
+        const coverImageUrl = await resolveAssetUrl(m.coverImageKey);
+        return {
         id: m.id,
         slug: m.slug,
         title: m.title,
@@ -77,14 +80,18 @@ export async function GET(req: NextRequest) {
         type: m.type.toLowerCase(),
         speaker: m.speaker,
         category: m.category?.name ?? null,
-        coverImageUrl: await resolveAssetUrl(m.coverImageKey),
+        coverImageUrl,
+        thumbnailUrl:
+          coverImageUrl ??
+          (m.type === "VIDEO" ? getVideoThumbnailUrl(m.externalMediaUrl) : null),
         downloadUrl: await resolveAssetUrl(m.mediaKey),
         externalMediaUrl: m.externalMediaUrl,
         audioDownloadUrl: await resolveAssetUrl(m.audioDownloadKey),
         date: new Intl.DateTimeFormat("en-US", {
           month: "long", day: "numeric", year: "numeric",
         }).format(m.eventDate ?? m.publishedAt ?? m.createdAt),
-      }))
+        };
+      })
     );
 
     return NextResponse.json({ data, meta });

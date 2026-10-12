@@ -10,6 +10,8 @@ interface MediaPlayerProps {
   title: string;
   /** Shown as cover art above an audio player — audio has no visual of its own. */
   coverImageUrl?: string | null;
+  /** Still shown on a native video before it plays. */
+  posterUrl?: string | null;
 }
 
 /**
@@ -18,7 +20,13 @@ interface MediaPlayerProps {
  * - YouTube / Facebook URLs → responsive iframe embed
  * - Direct file URLs → native <video>, <audio>, or <img>
  */
-export default function MediaPlayer({ src, type, title, coverImageUrl }: MediaPlayerProps) {
+export default function MediaPlayer({
+  src,
+  type,
+  title,
+  coverImageUrl,
+  posterUrl,
+}: MediaPlayerProps) {
   // ─── Embed check ────────────────────────────────────────────────
   const embed = getEmbedInfo(src);
 
@@ -45,7 +53,9 @@ export default function MediaPlayer({ src, type, title, coverImageUrl }: MediaPl
     return (
       <video
         controls
-        src={src}
+        // Without a poster, `#t=0.1` paints a real frame instead of black.
+        src={posterUrl ? src : `${src}#t=0.1`}
+        poster={posterUrl ?? undefined}
         className="w-full rounded-xl bg-black"
         aria-label={title}
         preload="metadata"

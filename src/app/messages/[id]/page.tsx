@@ -41,7 +41,7 @@ export async function generateMetadata({
     title: message.title,
     description: message.summary,
     path: `/messages/${message.slug}`,
-    imageUrl: message.coverImageUrl,
+    imageUrl: message.thumbnailUrl,
     imageAlt: `Cover image for ${message.title}`,
   });
 }
@@ -107,6 +107,7 @@ export default async function MessageDetail({
             type={message.type}
             title={message.title}
             coverImageUrl={message.coverImageUrl}
+            posterUrl={message.thumbnailUrl}
           />
         </div>
       ) : (

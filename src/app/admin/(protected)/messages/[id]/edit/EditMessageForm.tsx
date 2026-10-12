@@ -56,6 +56,8 @@ interface MessageData {
   durationSeconds: number | null;
   mediaKey: string | null;
   coverImageKey: string | null;
+  /** Resolved URL of the saved cover, for its preview. */
+  coverPreviewUrl?: string | null;
   externalMediaUrl: string | null;
   audioDownloadKey: string | null;
 }
@@ -109,7 +111,9 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioDownloadFile, setAudioDownloadFile] = useState<File | null>(null);
   const [mediaKey, setMediaKey] = useState(message.mediaKey ?? "");
-  const [coverKey, setCoverKey] = useState(message.coverImageKey ?? "");
+  const [coverKey, setCoverKey] = useState(
+    message.coverImageKey?.startsWith("http") ? "" : message.coverImageKey ?? "",
+  );
   const [audioDownloadKey, setAudioDownloadKey] = useState(
     message.audioDownloadKey?.startsWith("http") ? "" : message.audioDownloadKey ?? "",
   );
@@ -667,11 +671,23 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
             </div>
 
             <AdminUploadField
-              label="Cover image"
+              label={form.type === "VIDEO" ? "Custom cover (optional)" : "Cover image"}
               mediaKind="cover"
               accept="image/*"
+              helperText={
+                form.type === "VIDEO"
+                  ? "Leave empty — or remove it — to use the video's own thumbnail."
+                  : undefined
+              }
               file={coverFile}
-              objectKey={coverKey && !coverKey.startsWith("http") ? coverKey : ""}
+              objectKey={coverKey}
+              currentUrl={coverFile ? null : message.coverPreviewUrl}
+              onRemove={() => {
+                setCoverFile(null);
+                setCoverKey("");
+                setCoverImageUrl("");
+                setCoverUpload(initialUploadSlot());
+              }}
               externalUrl={coverImageUrl}
               uploadState={coverUpload.state}
               progress={coverUpload.progress}

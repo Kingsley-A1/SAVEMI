@@ -24,9 +24,9 @@ type UploadState = "idle" | "uploading" | "done" | "error";
 export type { TeamMemberFormValues };
 
 const STATUSES = [
-  { value: "DRAFT", label: "Draft" },
-  { value: "PUBLISHED", label: "Published" },
-  { value: "ARCHIVED", label: "Archived" },
+  { value: "PUBLISHED", label: "Public — shown on /team" },
+  { value: "DRAFT", label: "Draft — hidden" },
+  { value: "ARCHIVED", label: "Archived — hidden" },
 ] as const;
 
 export default function TeamMemberForm({
@@ -182,6 +182,31 @@ export default function TeamMemberForm({
         </div>
 
         <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="min-w-0 sm:col-span-2">
+            <label htmlFor="status" className="field-label">
+              Visibility
+            </label>
+            <select
+              id="status"
+              className="field-input sm:max-w-xs"
+              value={form.status}
+              onChange={(e) =>
+                update("status", e.target.value as TeamMemberFormValues["status"])
+              }
+              style={
+                form.status === "PUBLISHED"
+                  ? undefined
+                  : { borderColor: "var(--state-attention-border)" }
+              }
+            >
+              {STATUSES.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="min-w-0">
             <label htmlFor="name" className="field-label">
               Full name *
@@ -389,36 +414,6 @@ export default function TeamMemberForm({
           </div>
         </div>
       </details>
-
-      <section className="site-panel space-y-4 p-5">
-        <div>
-          <p className="eyebrow text-brand-primary">Visibility</p>
-          <h2 className="mt-1 text-base font-semibold">Publish settings</h2>
-        </div>
-
-        <div className="max-w-xs">
-          <label htmlFor="status" className="field-label">
-            Status
-          </label>
-          <select
-            id="status"
-            className="field-input"
-            value={form.status}
-            onChange={(e) =>
-              update("status", e.target.value as TeamMemberFormValues["status"])
-            }
-          >
-            {STATUSES.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
-              </option>
-            ))}
-          </select>
-          <p className="text-brand-muted mt-1 text-xs">
-            Only published members appear on the public team page.
-          </p>
-        </div>
-      </section>
 
       {error ? (
         <p
