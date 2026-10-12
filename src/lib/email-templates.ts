@@ -252,6 +252,38 @@ Enter this code on the reset page to choose a new password. It expires in ${para
   };
 }
 
+/** Passwordless sign-in for a public member — 6-digit code. */
+export function renderSignInCodeEmail(params: {
+  name: string | null;
+  code: string;
+  minutes: number;
+}): RenderedEmail {
+  const heading = params.name
+    ? `Welcome, ${greetingName(params.name)}`
+    : "Your SAVEMI sign-in code";
+  const bodyHtml = paragraphsToHtml(
+    `Enter this code on SAVEMI to continue. It expires in ${params.minutes} minutes.`,
+  );
+  const footerHtml = paragraphsToHtml(
+    `If you did not ask for this, you can ignore this email — nobody can sign in without the code.`,
+  );
+
+  return {
+    subject: `Your SAVEMI code: ${params.code}`,
+    html: renderLayout({
+      preheader: `Your sign-in code is ${params.code}.`,
+      heading,
+      bodyHtml,
+      code: params.code,
+      trailingHtml: footerHtml,
+      scripture: {
+        verse: "Behold, how good and how pleasant it is for brethren to dwell together in unity!",
+        reference: "Psalm 133:1",
+      },
+    }),
+  };
+}
+
 /** Welcome email after an admin verifies (or when verification is skipped). */
 export function renderWelcomeEmail(params: {
   name: string;

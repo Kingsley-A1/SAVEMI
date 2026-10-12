@@ -6,6 +6,7 @@ import { Download } from "lucide-react";
 import { getResourceBySlug, RESOURCE_TYPE_SINGULAR } from "../../../lib/resources";
 import { buildShareMetadata } from "../../../lib/share";
 import ShareButton from "../../../components/ShareButton";
+import EngagementSection from "../../../components/engagement/EngagementSection";
 
 export const dynamic = "force-dynamic";
 
@@ -177,6 +178,10 @@ export default async function ResourceDetailPage({ params }: Props) {
           </p>
         </div>
       ) : null}
+
+      <div>
+        <EngagementSection kind="RESOURCE" targetId={resource.id} title={resource.title} />
+      </div>
 
       <Link
         href="/resources"

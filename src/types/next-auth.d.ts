@@ -13,6 +13,8 @@ declare module "next-auth" {
 
   interface User {
     role?: SessionRole;
+    /** Unix seconds of the last request; drives the admin idle timeout. */
+    lastSeen?: number;
   }
 }
 
@@ -20,5 +22,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     role?: SessionRole;
+    /** Unix seconds of the last request; drives the admin idle timeout. */
+    lastSeen?: number;
   }
 }

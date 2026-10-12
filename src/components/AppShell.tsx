@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import RouteProgress from "./ui/RouteProgress";
 import InstallPrompt from "./InstallPrompt";
 import OfflineNotice from "./OfflineNotice";
+import PageTracker from "./engagement/PageTracker";
 
 interface AppShellProps {
   children: ReactNode;
@@ -57,6 +58,7 @@ export default function AppShell({ children, header, footer }: AppShellProps) {
       </main>
 
       {footer}
+      <PageTracker />
       <OfflineNotice />
       <InstallPrompt />
     </div>

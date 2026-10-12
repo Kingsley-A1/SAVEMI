@@ -128,3 +128,21 @@ export const codeVerifyLimiter = new RateLimiter({
   windowMs: 15 * 60_000,
   max: 12,
 });
+
+/** Posting comments: 6 per 10 minutes per member. */
+export const commentLimiter = new RateLimiter({
+  windowMs: 10 * 60_000,
+  max: 6,
+});
+
+/** Likes and reports: 60 per 10 minutes per member — taps, not essays. */
+export const reactionLimiter = new RateLimiter({
+  windowMs: 10 * 60_000,
+  max: 60,
+});
+
+/** Analytics beacons: 120 per minute per IP — far above any real reader. */
+export const trackLimiter = new RateLimiter({
+  windowMs: 60_000,
+  max: 120,
+});

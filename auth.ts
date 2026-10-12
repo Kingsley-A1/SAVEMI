@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import {
   getConfiguredAdminAccessCode,
@@ -8,6 +9,9 @@ import {
 } from "./src/lib/admin-access";
 import { verifyPassword } from "./src/lib/site-users";
 import { prisma } from "./src/lib/db";
+import { redeemEmailCode } from "./src/lib/email-code";
+import { codeVerifyLimiter, getClientIp } from "./src/lib/rate-limit";
+import { applyIdlePolicy, MEMBER_SESSION_SECONDS } from "./src/lib/session-policy";
 
 export type SessionRole = "admin" | "user";
 
@@ -129,13 +133,46 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
       },
     }),
+    // Passwordless members: an emailed 6-digit code, no password at all.
+    Credentials({
+      id: "email-code",
+      name: "email-code",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        code: { label: "Code", type: "text" },
+      },
+      async authorize(credentials, request) {
+        if (
+          typeof credentials?.email !== "string" ||
+          typeof credentials?.code !== "string"
+        ) {
+          return null;
+        }
+
+        // Outer wall on guessing; each code also dies after 5 wrong tries.
+        const ip = request ? getClientIp(request) : "unknown";
+        if (!codeVerifyLimiter.check(`email-code:${ip}`).allowed) return null;
+
+        try {
+          const user = await redeemEmailCode(
+            normalizeAdminEmail(credentials.email),
+            credentials.code,
+          );
+          return user ? { ...user, role: "user" as const } : null;
+        } catch {
+          return null;
+        }
+      },
+    }),
   ],
   pages: {
     signIn: "/admin/login",
   },
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60 * 8, // 8 hours
+    // The cookie lives as long as the longest role allows; the jwt callback
+    // below cuts admin sessions short. Both windows slide with activity.
+    maxAge: MEMBER_SESSION_SECONDS,
   },
   callbacks: {
     jwt({ token, user }) {
@@ -143,7 +180,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.role = (user as { role?: SessionRole }).role ?? "user";
       }
-      return token;
+
+      // Null ends the session and clears the cookie.
+      return applyIdlePolicy<JWT>(token, Math.floor(Date.now() / 1000));
     },
     session({ session, token }) {
       if (session.user) {

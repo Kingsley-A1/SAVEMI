@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getQuoteBySlug } from "../../../lib/quotes";
 import { buildShareMetadata } from "../../../lib/share";
 import ShareButton from "../../../components/ShareButton";
+import EngagementSection from "../../../components/engagement/EngagementSection";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,10 @@ export default async function QuoteDetailPage({ params }: Props) {
             summary={quote.text}
           />
         </div>
+      </div>
+
+      <div>
+        <EngagementSection kind="QUOTE" targetId={quote.id} title={quote.title} />
       </div>
 
       <Link

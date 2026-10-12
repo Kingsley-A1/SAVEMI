@@ -76,6 +76,10 @@ export default function Footer({
         <p className="text-brand-muted mt-5 text-xs">
           &copy; {new Date().getFullYear()} SAVEMI. All rights reserved.
         </p>
+        <p className="text-brand-muted mt-1 text-xs opacity-80">
+          We count visits, plays and downloads to serve you better — by country
+          and device only, never your IP address.
+        </p>
       </div>
     </footer>
   );
