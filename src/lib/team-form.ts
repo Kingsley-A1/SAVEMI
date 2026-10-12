@@ -35,7 +35,8 @@ export function emptyTeamMember(): TeamMemberFormValues {
     name: "",
     title: "",
     role: "MEMBER",
-    status: "DRAFT",
+    // Adding someone to the team means showing them; hiding is the exception.
+    status: "PUBLISHED",
     sortOrder: 0,
     bio: "",
     photoKey: "",

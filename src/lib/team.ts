@@ -123,7 +123,8 @@ async function toTeamMember(record: TeamMemberRecord): Promise<TeamMember> {
     role: record.role,
     title: record.title,
     bio: record.bio,
-    photoUrl: await resolveAssetUrl(record.photoKey),
+    // One unreadable photo must not blank the whole team page.
+    photoUrl: await resolveAssetUrl(record.photoKey).catch(() => null),
     email: record.email,
     phone: record.phone,
     facebookUrl: record.facebookUrl,
@@ -180,8 +181,10 @@ export async function getPublishedTeam(): Promise<TeamMember[]> {
         a.sortOrder - b.sortOrder ||
         a.name.localeCompare(b.name),
     );
-  } catch {
-    // A team outage must never take the public site down.
+  } catch (error) {
+    // A team outage must never take the public site down — but it must be
+    // visible in the logs, not silently rendered as an empty team.
+    console.error("[team] getPublishedTeam failed", error);
     return [];
   }
 }

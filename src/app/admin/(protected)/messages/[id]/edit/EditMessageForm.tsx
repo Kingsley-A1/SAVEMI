@@ -667,9 +667,14 @@ export default function EditMessageForm({ message }: { message: MessageData }) {
             </div>
 
             <AdminUploadField
-              label="Cover image"
+              label={form.type === "VIDEO" ? "Custom cover (optional)" : "Cover image"}
               mediaKind="cover"
               accept="image/*"
+              helperText={
+                form.type === "VIDEO"
+                  ? "Leave empty to use the video's own thumbnail."
+                  : undefined
+              }
               file={coverFile}
               objectKey={coverKey && !coverKey.startsWith("http") ? coverKey : ""}
               externalUrl={coverImageUrl}

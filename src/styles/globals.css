@@ -291,6 +291,25 @@
     @apply block overflow-hidden;
   }
 
+  /* ── Audio row: square art · title · play ─────────── */
+  .audio-row {
+    background: var(--brand-surface-strong);
+    border: 1px solid var(--brand-border);
+    @apply flex items-center gap-3 rounded-xl p-2 pr-3 transition-colors duration-150 hover:border-[color:var(--brand-primary-soft)];
+  }
+
+  .audio-row__art {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-deep) 100%);
+    color: var(--brand-accent);
+    @apply relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg;
+  }
+
+  .audio-row__play {
+    background: rgba(10, 79, 60, 0.08);
+    color: var(--brand-primary);
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors duration-150 group-hover:bg-[color:var(--brand-primary)] group-hover:text-white;
+  }
+
   /* ── Media type badge (Image | Audio | Video) ─────────
      Solid dark green so it stays legible over any cover photo. On phones the
      label collapses and the icon alone carries the meaning — the accessible

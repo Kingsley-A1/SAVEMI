@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Headphones, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import AudioRow from "./AudioRow";
 import { CardGridSkeleton } from "./ui/Loading";
 
 interface AudioItem {
@@ -13,43 +13,6 @@ interface AudioItem {
   speaker?: string | null;
   coverImageUrl?: string | null;
   slug: string;
-}
-
-// The cover art carries the card — no title or speaker text on top of it
-// until the visitor opens it, matching the audio library's gallery cards.
-function AudioCard({ item }: { item: AudioItem }) {
-  return (
-    <Link
-      href={`/messages/${item.slug}`}
-      className="media-tile group block"
-      aria-label={`${item.title}${item.speaker ? ` — ${item.speaker}` : ""}`}
-    >
-      <div
-        className="relative aspect-[4/5] w-full overflow-hidden"
-        style={{ background: "var(--brand-primary-deep)" }}
-      >
-        {item.coverImageUrl ? (
-          <Image
-            src={item.coverImageUrl}
-            alt=""
-            fill
-            quality={90}
-            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, 16vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <Headphones size={30} style={{ color: "#86efac" }} />
-          </div>
-        )}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover:bg-black/15">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 opacity-90 backdrop-blur-sm">
-            <Headphones size={16} className="text-white" />
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
 }
 
 export default function FeaturedAudios({
@@ -93,16 +56,15 @@ export default function FeaturedAudios({
 
   return (
     <section>
-      <div className="mb-5 flex items-end justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="eyebrow text-brand-primary">Featured</p>
-          <h2 className="section-title mt-1">Audio Messages</h2>
+          <h2 className="section-title">Audio Messages</h2>
         </div>
         <Link
           href="/audio"
           className="button-tertiary flex items-center gap-1.5"
         >
-          See more
+          All
           <ArrowRight size={14} />
         </Link>
       </div>
@@ -110,8 +72,8 @@ export default function FeaturedAudios({
       {isLoading && displayItems.length === 0 ? (
         <CardGridSkeleton
           count={6}
-          variant="tile"
-          className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6"
+          variant="text"
+          className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
           label="Loading featured audio messages"
         />
       ) : displayItems.length === 0 ? (
@@ -119,11 +81,18 @@ export default function FeaturedAudios({
           No published audio messages are available yet.
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {displayItems.map((item) => (
-            <AudioCard key={item.id} item={item} />
+            <li key={item.id}>
+              <AudioRow
+                slug={item.slug}
+                title={item.title}
+                speaker={item.speaker}
+                coverImageUrl={item.coverImageUrl}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </section>
   );

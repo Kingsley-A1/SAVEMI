@@ -18,6 +18,8 @@ import {
   RESOURCE_TYPE_ORDER,
 } from "../../lib/resources";
 import type { Resource, ResourceType } from "../../lib/resources";
+import { LibraryHeader } from "../../components/MessageTypeLibrary";
+import AutoSubmitSelect from "../../components/AutoSubmitSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -38,13 +40,6 @@ const TYPE_ICON: Record<ResourceType, LucideIcon> = {
   devotional: Sparkles,
   pulpit: Mic,
   article: Newspaper,
-};
-
-const TYPE_DESCRIPTION: Record<ResourceType, string> = {
-  book: "Full-length titles for devotional study — free downloads and paid resources.",
-  devotional: "Short daily readings to steady the heart before the day begins.",
-  pulpit: "Messages preached from the pulpit, kept here for those who missed them.",
-  article: "Shorter reflections on scripture, faith, and Sabbath living.",
 };
 
 function AvailabilityBadge({
@@ -167,20 +162,6 @@ function ResourceCard({ resource }: { resource: Resource }) {
   );
 }
 
-function SectionEmptyState({ resourceType }: { resourceType: ResourceType }) {
-  const TypeIcon = TYPE_ICON[resourceType];
-
-  return (
-    <div className="site-panel flex flex-col items-center gap-2 p-8 text-center">
-      <TypeIcon size={26} style={{ color: "var(--brand-primary-soft)" }} aria-hidden="true" />
-      <p className="text-brand-muted text-sm">
-        No {RESOURCE_TYPE_LABEL[resourceType].toLowerCase()} published yet.
-      </p>
-      <p className="text-brand-muted text-xs">Check back soon — more is on the way.</p>
-    </div>
-  );
-}
-
 function WholeLibraryEmptyState() {
   return (
     <div className="site-panel flex flex-col items-center gap-3 p-10 text-center sm:p-14">
@@ -190,11 +171,7 @@ function WholeLibraryEmptyState() {
       >
         <Feather size={26} style={{ color: "var(--brand-primary)" }} aria-hidden="true" />
       </div>
-      <h2 className="text-lg font-semibold">The library is being prepared</h2>
-      <p className="text-brand-muted max-w-md text-sm leading-6">
-        Books, devotionals, pastor&apos;s pulpit messages, and articles will
-        appear here as they are published. Check back soon.
-      </p>
+      <p className="text-brand-muted text-sm">Resources will appear here soon.</p>
     </div>
   );
 }
@@ -204,7 +181,7 @@ interface ResourcesPageProps {
 }
 
 const availabilityOptions = [
-  { label: "All resources", value: "" },
+  { label: "All", value: "" },
   { label: "Free", value: "free" },
   { label: "Paid", value: "paid" },
 ] as const;
@@ -238,99 +215,55 @@ export default async function ResourcesPage({ searchParams }: ResourcesPageProps
 
   return (
     <section className="space-y-6">
-      <div className="site-panel p-5 sm:p-7">
-        <p className="eyebrow text-brand-primary">Library</p>
-        <h1 className="section-title mt-2">Resources</h1>
-        <p className="section-copy mt-2">
-          Books, devotionals, pastor&apos;s pulpit messages, and articles
-          curated for devotional study. Free items download in one click;
-          paid titles link to where they can be purchased.
-        </p>
-      </div>
-
-      <form className="site-panel grid gap-3 p-4 sm:grid-cols-[1fr_12rem_auto] sm:items-end">
-        <div>
-          <label htmlFor="resource-search" className="field-label">
-            Search resources
-          </label>
-          <input
-            id="resource-search"
-            name="search"
-            className="field-input"
-            placeholder="Title, author, or topic"
-            defaultValue={search}
-          />
-        </div>
-        <div>
-          <label htmlFor="resource-availability" className="field-label">
-            Availability
-          </label>
-          <select
-            id="resource-availability"
-            name="availability"
-            className="field-input"
-            defaultValue={availability ?? ""}
-          >
-            {availabilityOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex gap-2">
-          <button type="submit" className="button-primary">
-            Filter
-          </button>
-          {hasFilters ? (
-            <a href="/resources" className="button-tertiary">
-              Clear
-            </a>
-          ) : null}
-        </div>
-      </form>
+      <LibraryHeader
+        title="Resources"
+        path="/resources"
+        search={search}
+        searchLabel="Search resources"
+      >
+        <AutoSubmitSelect
+          name="availability"
+          aria-label="Availability"
+          className="field-input w-auto shrink-0"
+          defaultValue={availability ?? ""}
+        >
+          {availabilityOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </AutoSubmitSelect>
+      </LibraryHeader>
 
       {totalMatches === 0 && !hasFilters ? (
         <WholeLibraryEmptyState />
       ) : totalMatches === 0 ? (
         <div className="site-panel p-8 text-center">
-          <p className="text-brand-muted text-sm">No resources match your filters.</p>
-          <p className="text-brand-muted mt-1 text-xs">
-            Try a broader search or clear the filters.
-          </p>
+          <p className="text-brand-muted text-sm">No resources match.</p>
         </div>
       ) : (
         <div className="space-y-8">
           {RESOURCE_TYPE_ORDER.map((type) => {
             const items = byType[type];
             const TypeIcon = TYPE_ICON[type];
+            if (items.length === 0) return null;
 
             return (
               <div key={type} id={type} className="space-y-3 scroll-mt-20">
-                <div className="flex items-baseline gap-2.5">
+                <div className="flex items-center gap-2.5">
                   <TypeIcon size={18} style={{ color: "var(--brand-primary)" }} aria-hidden="true" />
                   <h2 className="text-lg font-semibold sm:text-xl">
                     {RESOURCE_TYPE_LABEL[type]}
                   </h2>
-                  <span className="text-brand-muted text-xs">
-                    {items.length} {items.length === 1 ? "item" : "items"}
-                  </span>
                 </div>
-                <p className="text-brand-muted -mt-1.5 text-sm">
-                  {TYPE_DESCRIPTION[type]}
-                </p>
 
-                {items.length === 0 ? (
-                  <SectionEmptyState resourceType={type} />
-                ) : (
-                  <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+                <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                     {items.map((resource) => (
                       <li key={resource.id}>
                         <ResourceCard resource={resource} />
                       </li>
                     ))}
-                  </ul>
-                )}
+                </ul>
               </div>
             );
           })}
